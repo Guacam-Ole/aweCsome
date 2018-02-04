@@ -157,6 +157,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\LookupAttribute.cs" />
+    <Compile Include="Attributes\LookupIdAttribute.cs" />
+    <Compile Include="Attributes\NullableAttribute.cs" />
+    <Compile Include="Attributes\NumberAttribute.cs" />
+    <Compile Include="Attributes\TextAttribute.cs" />
+    <Compile Include="Exceptions\ItemNotFoundException.cs" />
+    <Compile Include="Exceptions\TableNotFoundException.cs" />
     <Compile Include="IAcsomeTable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
