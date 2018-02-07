@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 
 namespace AweCsomeO365
 {
-    public interface IAcsomeTable
+    public interface IAweCsomeTable
     {
         void CreateTable(Type entityType);
         void DeleteTable(Type entityType);
         void DeleteTableIfExisting(Type entityType);
 
         int InsertItem<T>(T entity);
-
         
         T SelectItemById<T>(int id);
         List<T> SelectAllItems<T>();
