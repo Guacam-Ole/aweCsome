@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365.Attributes
+namespace AweCsomeO365.Attributes.FieldAttributes
 {
-    public class TextAttribute : Attribute
+    public class LookupIdAttribute : LookupBaseAttribute
     {
     }
 }

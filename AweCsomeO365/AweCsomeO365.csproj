@@ -155,12 +155,32 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\LookupAttribute.cs" />
-    <Compile Include="Attributes\LookupIdAttribute.cs" />
-    <Compile Include="Attributes\NullableAttribute.cs" />
-    <Compile Include="Attributes\NumberAttribute.cs" />
-    <Compile Include="Attributes\TextAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\AddToDefaultViewAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\ChoiceAttribute.cs" />
+    <Compile Include="Attributes\DescriptionAttribute.cs" />
+    <Compile Include="Attributes\DisplayNameAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\CurrencyAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\DateTimeAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\HyperlinkAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\LookupBaseAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\ManagedMetadataAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\PersonAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\YesNoAttribute.cs" />
+    <Compile Include="Attributes\TableAttributes\DocumentTemplateTypeAttribute.cs" />
+    <Compile Include="Attributes\InternalNameAttribute.cs" />
+    <Compile Include="Attributes\TableAttributes\ListTemplateTypeAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\LookupAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\LookupIdAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\NoteAttribute.cs" />
+    <Compile Include="Attributes\RequiredAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\NumberAttribute.cs" />
+    <Compile Include="Attributes\TableAttributes\QuickLaunchOptionAttribute.cs" />
+    <Compile Include="Attributes\TableAttributes\TemplateFeatureIdAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\TextAttribute.cs" />
+    <Compile Include="Attributes\TableAttributes\UrlAttribute.cs" />
     <Compile Include="AweCsomeConfiguration.cs" />
+    <Compile Include="AweCsomeTable.cs" />
+    <Compile Include="EntityHelper.cs" />
     <Compile Include="Exceptions\ItemNotFoundException.cs" />
     <Compile Include="Exceptions\TableNotFoundException.cs" />
     <Compile Include="IAweCsomeTable.cs" />
