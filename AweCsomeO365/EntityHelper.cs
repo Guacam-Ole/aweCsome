@@ -1,4 +1,5 @@
 ﻿using AweCsomeO365.Attributes;
+using AweCsomeO365.Attributes.FieldAttributes;
 using AweCsomeO365.Attributes.TableAttributes;
 using Microsoft.SharePoint.Client;
 using System;
@@ -28,6 +29,12 @@ namespace AweCsomeO365
         {
             var listTemplateTypeAttribute = entityType.GetCustomAttribute<ListTemplateTypeAttribute>();
             return listTemplateTypeAttribute == null ? (int)ListTemplateType.GenericList : listTemplateTypeAttribute.TemplateTypeId;
+        }
+
+        public static string GetDescriptionFromEntityType(Type entityType)
+        {
+            var descriptionAttribute = entityType.GetCustomAttribute<DescriptionAttribute>();
+            return descriptionAttribute?.Description;
         }
 
 
