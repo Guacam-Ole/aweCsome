@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace AweCsomeO365.Attributes.FieldAttributes
 {
-    public class HyperlinkAttribute:Attribute
+    public class BooleanAttribute : Attribute
     {
-        UrlFieldFormatType UrlFieldFormatType { get; set; } = UrlFieldFormatType.Hyperlink;
+        public bool DefaultValue { get; set; }
+        public  const FieldType AssociatedFieldType = FieldType.Boolean;
     }
 }

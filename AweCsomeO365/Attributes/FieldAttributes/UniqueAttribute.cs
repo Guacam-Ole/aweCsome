@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace AweCsomeO365.Attributes.FieldAttributes
 {
-    public class YesNoAttribute:Attribute
+    public class UniqueAttribute:Attribute
     {
-        public bool DefaultValue { get; set; }
+        public bool IsUnique { get; set; } = true;
     }
 }

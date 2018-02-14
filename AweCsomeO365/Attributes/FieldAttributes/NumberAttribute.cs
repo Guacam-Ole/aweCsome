@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Microsoft.SharePoint.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365.Attributes.FieldAttributes.FieldAttributes
+namespace AweCsomeO365.Attributes.FieldAttributes
 {
     public class NumberAttribute : Attribute
     {
@@ -13,6 +14,6 @@ namespace AweCsomeO365.Attributes.FieldAttributes.FieldAttributes
         public int? NumberOfDecimalPlaces { get; set; }
         public double? DefaultValue { get; set; }
         public bool ShowAsPercentage { get; set; }
-
+        public const FieldType AssociatedFieldType = FieldType.Number;
     }
 }

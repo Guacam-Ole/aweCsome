@@ -7,11 +7,9 @@ using System.Threading.Tasks;
 
 namespace AweCsomeO365.Attributes.FieldAttributes
 {
-    public class TextAttribute : Attribute
+    public class UrlAttribute:Attribute
     {
-        public int MaxCharacters { get; set; } = 255;
-        public string DefaultValue { get; set; }
-        public  const FieldType AssociatedFieldType = FieldType.Text;
-
+        UrlFieldFormatType UrlFieldFormatType { get; set; } = UrlFieldFormatType.Hyperlink;
+        public  const FieldType AssociatedFieldType = FieldType.URL;
     }
 }

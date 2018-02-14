@@ -25,7 +25,7 @@ namespace AweCsomeO365
 
         private string GetTableUrl(Type entityType)
         {
-            var descriptionAttribute = entityType.GetCustomAttribute<UrlAttribute>();
+            var descriptionAttribute = entityType.GetCustomAttribute<Attributes.TableAttributes.UrlAttribute>();
             return descriptionAttribute?.Url;
         }
 
