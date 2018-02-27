@@ -9,8 +9,8 @@ namespace AweCsomeO365.Attributes.FieldAttributes
 {
     public class UserAttribute : Attribute
     {
-        bool AllowMultipleValues { get; set; }
-        FieldUserSelectionMode FieldUserSelectionMode { get; set; } = FieldUserSelectionMode.PeopleOnly;
+      //  bool AllowMultipleValues { get; set; }
+        public FieldUserSelectionMode FieldUserSelectionMode { get; set; } = FieldUserSelectionMode.PeopleOnly;
         public int? UserSelectionScope { get; set; }
         public const FieldType AssociatedFieldType = FieldType.User;
 

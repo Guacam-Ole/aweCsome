@@ -5,6 +5,6 @@ namespace AweCsomeO365
 {
     public interface IAweCsomeField
     {
-        void AddFieldToList(ClientContext clientContext, List sharePointList, PropertyInfo property);
+        void AddFieldToList( List sharePointList, PropertyInfo property);
     }
 }

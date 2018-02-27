@@ -9,7 +9,8 @@ namespace AweCsomeO365.Attributes.FieldAttributes
 {
     public class LookupBaseAttribute : Attribute
     {
-        public string LookupList { get; set; }
+        public string List { get; set; }
+        public string Field { get; set; } = "Title";
         RelationshipDeleteBehaviorType RelationshipDeleteBehaviorType { get; set; } = RelationshipDeleteBehaviorType.None;
         public  const FieldType AssociatedFieldType = FieldType.Lookup;
     }

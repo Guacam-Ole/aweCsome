@@ -47,11 +47,11 @@ namespace AweCsomeO365
 
             foreach (var lookupAttribute in lookupAttributes.Distinct())
             {
-                if (lookupTableIds.ContainsKey(lookupAttribute.LookupList)) continue;
-                List lookupList = clientContext.Web.Lists.GetByTitle(lookupAttribute.LookupList);
+                if (lookupTableIds.ContainsKey(lookupAttribute.List)) continue;
+                List lookupList = clientContext.Web.Lists.GetByTitle(lookupAttribute.List);
                 clientContext.Load(lookupList, l => l.Id);
                 clientContext.ExecuteQuery();
-                lookupTableIds.Add(lookupAttribute.LookupList, lookupList.Id);
+                lookupTableIds.Add(lookupAttribute.List, lookupList.Id);
             }
             return lookupTableIds;
         }
@@ -95,7 +95,7 @@ namespace AweCsomeO365
         {
             string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
 
-            using (var clientContext = new SharePointEssentials().GetClientContext())
+            using (var clientContext = AweCsomeConfiguration.ClientContext)
             {
                 try
                 {
@@ -121,8 +121,10 @@ namespace AweCsomeO365
         {
             foreach (var property in properties)
             {
-                _awecsomeField.AddFieldToList(context, sharePointList, property);
+                _awecsomeField.AddFieldToList( sharePointList, property);
             }
+            context.ExecuteQuery();
+            // TODO: Very Loooong tables: Split executeQuery
         }
 
         public void DeleteItemById(Type entityType, int id)

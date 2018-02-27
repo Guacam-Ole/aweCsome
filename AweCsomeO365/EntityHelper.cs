@@ -37,6 +37,17 @@ namespace AweCsomeO365
             return descriptionAttribute?.Description;
         }
 
+        public static bool IsGenericList(this Type type)
+        {
+            return (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(List<>)));
+        }
+
+        public static bool IsDictionary(this Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
+
+        }
+
 
     }
 }

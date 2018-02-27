@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Microsoft.SharePoint.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace AweCsomeO365
 {
@@ -13,5 +15,6 @@ namespace AweCsomeO365
 
         public static TargetWebs TargetWeb { get; set; }
         public static PermissionScopes PermissionScope { get; set; }
+        public static ClientContext ClientContext { get; set; }
     }
 }

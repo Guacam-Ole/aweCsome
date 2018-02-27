@@ -11,7 +11,7 @@ namespace AweCsomeO365.Attributes.FieldAttributes
     {
         public int MaxCharacters { get; set; } = 255;
         public string DefaultValue { get; set; }
-        public  const FieldType AssociatedFieldType = FieldType.Text;
+        public const FieldType AssociatedFieldType = FieldType.Text;
 
     }
 }

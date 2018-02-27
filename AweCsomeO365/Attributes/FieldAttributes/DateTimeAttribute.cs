@@ -12,7 +12,7 @@ namespace AweCsomeO365.Attributes.FieldAttributes
     {
         public DateTimeFormat  DateTimeFormat { get; set; }
         public DateTimeFieldFriendlyFormatType DateTimeFieldFriendlyFormatType { get; set; }
-        public DateTime? DefaultValue { get; set; }
+        public string DefaultValue { get; set; }
         public  const FieldType AssociatedFieldType = FieldType.DateTime;
 
     }

@@ -9,7 +9,7 @@ namespace AweCsomeO365.Attributes.FieldAttributes
 {
     public class UrlAttribute:Attribute
     {
-        UrlFieldFormatType UrlFieldFormatType { get; set; } = UrlFieldFormatType.Hyperlink;
+        public UrlFieldFormatType UrlFieldFormatType { get; set; } = UrlFieldFormatType.Hyperlink;
         public  const FieldType AssociatedFieldType = FieldType.URL;
     }
 }
