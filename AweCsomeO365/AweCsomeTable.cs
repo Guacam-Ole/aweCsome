@@ -16,6 +16,21 @@ namespace AweCsomeO365
     {
         private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IAweCsomeField _awecsomeField = new AweCsomeField();
+        private ClientContext _clientContext;
+
+        public ClientContext ClientContext
+        {
+            set
+            {
+                _clientContext = value;
+            }
+        }
+
+        private ClientContext GetClientContext()
+        {
+            if (_clientContext == null) throw new MissingFieldException("Please provide a valid ClientContext");
+            return _clientContext;
+        }
 
         private int? GetTableDocumentTemplateType(Type entityType)
         {
@@ -95,7 +110,7 @@ namespace AweCsomeO365
         {
             string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
 
-            using (var clientContext = AweCsomeConfiguration.ClientContext)
+            using (var clientContext = GetClientContext())
             {
                 try
                 {
