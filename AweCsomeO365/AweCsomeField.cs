@@ -18,10 +18,7 @@ namespace AweCsomeO365
             Type propertyType = property.PropertyType;
             var ignoreOnCreationAttribute = propertyType.GetCustomAttribute<IgnoreOnCreationAttribute>();
             if (ignoreOnCreationAttribute != null && ignoreOnCreationAttribute.IgnoreOnCreation) return;
-
             var addToDefaultViewAttribute= propertyType.GetCustomAttribute<AddToDefaultViewAttribute>();
-
-
             string fieldXml = GetFieldCreationXml(property);
             Field field = sharePointList.Fields.AddFieldAsXml(fieldXml, addToDefaultViewAttribute != null, AddFieldOptions.AddFieldInternalNameHint);
         }
@@ -30,8 +27,8 @@ namespace AweCsomeO365
         {
             Type propertyType = property.PropertyType;
 
-            string internalName = EntityHelper.GetInternalNameFromEntityType(propertyType);
-            string displayName = EntityHelper.GetDisplayNameFromEntityType(propertyType);
+            string internalName = EntityHelper.GetInternalNameFromProperty(property);
+            string displayName = EntityHelper.GetDisplayNameFromEntityType(property);
             string description = EntityHelper.GetDescriptionFromEntityType(propertyType);
 
             bool isRequired = PropertyIsRequired(property);

@@ -13,16 +13,24 @@ namespace AweCsomeO365
 {
     public static class EntityHelper
     {
+        public static string GetInternalNameFromProperty(PropertyInfo propertyInfo)
+        {
+            Type propertyType = propertyInfo.PropertyType;
+            var internalNameAttribute = propertyType.GetCustomAttribute<InternalNameAttribute>();
+            return internalNameAttribute == null ? propertyInfo.Name : internalNameAttribute.InternalName;
+        }
+
         public static string GetInternalNameFromEntityType(Type entityType)
         {
             var internalNameAttribute = entityType.GetCustomAttribute<InternalNameAttribute>();
             return internalNameAttribute == null ? entityType.Name : internalNameAttribute.InternalName;
         }
 
-        public static string GetDisplayNameFromEntityType(Type entityType)
+        public static string GetDisplayNameFromEntityType(PropertyInfo propertyInfo)
         {
-            var displayNameAttribute = entityType.GetCustomAttribute<DisplayNameAttribute>();
-            return displayNameAttribute == null ? entityType.Name : displayNameAttribute.DisplayName;
+            Type propertyType = propertyInfo.PropertyType;
+            var displayNameAttribute = propertyType.GetCustomAttribute<DisplayNameAttribute>();
+            return displayNameAttribute == null ? propertyInfo.Name : displayNameAttribute.DisplayName;
         }
 
         public static int GetListTemplateType(Type entityType)
