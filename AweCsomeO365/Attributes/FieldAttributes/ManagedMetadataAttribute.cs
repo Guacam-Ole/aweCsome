@@ -9,7 +9,6 @@ namespace AweCsomeO365.Attributes.FieldAttributes
 {
     public class ManagedMetadataAttribute: Attribute
     {
-        public bool AllowMultipleValues { get; set; }
         public Guid TermSetId { get; set; }
         public string TermSetName { get; set; }
         public bool AllowFillIn { get; set; }

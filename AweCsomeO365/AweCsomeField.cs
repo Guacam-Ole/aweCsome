@@ -7,23 +7,42 @@ using System.Threading.Tasks;
 using Microsoft.SharePoint.Client;
 using AweCsomeO365.Attributes.FieldAttributes;
 using AweCsomeO365.Attributes.IgnoreAttributes;
+using log4net;
 
 namespace AweCsomeO365
 {
     public class AweCsomeField : IAweCsomeField
     {
+        private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private const string SuffixId = "Id";
+        private const string SuffixIds = "Ids";
 
-        public void AddFieldToList(List sharePointList, PropertyInfo property)
+
+        public void AddFieldToList(List sharePointList, PropertyInfo property, Dictionary<string, Guid> lookupTableIds)
         {
-            Type propertyType = property.PropertyType;
-            var ignoreOnCreationAttribute = propertyType.GetCustomAttribute<IgnoreOnCreationAttribute>();
+            var ignoreOnCreationAttribute = property.GetCustomAttribute<IgnoreOnCreationAttribute>();
             if (ignoreOnCreationAttribute != null && ignoreOnCreationAttribute.IgnoreOnCreation) return;
-            var addToDefaultViewAttribute= propertyType.GetCustomAttribute<AddToDefaultViewAttribute>();
-            string fieldXml = GetFieldCreationXml(property);
+            var addToDefaultViewAttribute = property.GetCustomAttribute<AddToDefaultViewAttribute>();
+            string fieldXml = GetFieldCreationXml(property, lookupTableIds);
             Field field = sharePointList.Fields.AddFieldAsXml(fieldXml, addToDefaultViewAttribute != null, AddFieldOptions.AddFieldInternalNameHint);
         }
 
-        private string GetFieldCreationXml(PropertyInfo property)
+        private void RemoveSuffixFromName(ref string name, string suffix)
+        {
+            if (name == null) return;
+            if (name.EndsWith(suffix)) name = name.Substring(0, name.Length - suffix.Length);
+        }
+
+        private void RemoveLookupIdFromFieldName(ref string internalName, ref string displayName)
+        {
+            RemoveSuffixFromName(ref internalName, SuffixIds);
+            RemoveSuffixFromName(ref internalName, SuffixId);
+
+            RemoveSuffixFromName(ref displayName, SuffixIds);
+            RemoveSuffixFromName(ref displayName, SuffixId);
+        }
+
+        private string GetFieldCreationXml(PropertyInfo property, Dictionary<string, Guid> lookupTableIds)
         {
             Type propertyType = property.PropertyType;
 
@@ -33,11 +52,12 @@ namespace AweCsomeO365
 
             bool isRequired = PropertyIsRequired(property);
             bool isUnique = IsTrue(propertyType.GetCustomAttribute<UniqueAttribute>()?.IsUnique);
-            FieldType fieldType = GetFieldType(propertyType);
+            FieldType fieldType = GetFieldType(property);
+            if (fieldType == FieldType.Lookup) RemoveLookupIdFromFieldName(ref internalName, ref displayName);
 
             bool isMulti = IsMulti(propertyType);
 
-            GetFieldCreationAdditionalXmlForFieldType(fieldType, propertyType, out string fieldAttributes, out string fieldAdditional);
+            GetFieldCreationAdditionalXmlForFieldType(fieldType, property, lookupTableIds, out string fieldAttributes, out string fieldAdditional);
             string fieldTypeString = fieldType.ToString();
             if (fieldAttributes == null) fieldAttributes = string.Empty;
             if (fieldAttributes == null) fieldAdditional = string.Empty;
@@ -64,7 +84,7 @@ namespace AweCsomeO365
             return csomCreateCaml;
         }
 
-        private void GetFieldCreationAdditionalXmlForFieldType(FieldType fieldType, Type propertyType, out string fieldAttributes, out string fieldAdditional)
+        private void GetFieldCreationAdditionalXmlForFieldType(FieldType fieldType, PropertyInfo property, Dictionary<string, Guid> lookupTableIds, out string fieldAttributes, out string fieldAdditional)
         {
             fieldAttributes = string.Empty;
             fieldAdditional = string.Empty;
@@ -72,35 +92,35 @@ namespace AweCsomeO365
             {
 
                 case FieldType.Boolean:
-                    GetFieldCreationDetailsBoolean(propertyType, out fieldAdditional);
+                    GetFieldCreationDetailsBoolean(property, out fieldAdditional);
                     break;
                 case FieldType.Choice:
-                    GetFieldCreationDetailsChoice(propertyType, out fieldAttributes, out fieldAdditional);
+                    GetFieldCreationDetailsChoice(property, out fieldAttributes, out fieldAdditional);
                     break;
                 case FieldType.Currency:
-                    GetFieldCreationDetailsCurrency(propertyType, out fieldAttributes);
+                    GetFieldCreationDetailsCurrency(property, out fieldAttributes);
                     break;
                 case FieldType.DateTime:
-                    GetFieldCreationDetailsDateTime(propertyType, out fieldAttributes, out fieldAdditional);
+                    GetFieldCreationDetailsDateTime(property, out fieldAttributes, out fieldAdditional);
                     break;
                 case FieldType.Lookup:
-                    GetFieldCreationDetailsLookup(propertyType, out fieldAttributes);
+                    GetFieldCreationDetailsLookup(property, lookupTableIds, out fieldAttributes);
                     break;
                 case FieldType.Note:
-                    GetFieldCreationDetailsNote(propertyType, out fieldAttributes);
+                    GetFieldCreationDetailsNote(property, out fieldAttributes);
                     break;
 
                 case FieldType.Number:
-                    GetFieldCreationDetailsNumber(propertyType, out fieldAttributes);
+                    GetFieldCreationDetailsNumber(property, out fieldAttributes);
                     break;
                 case FieldType.Text:
-                    GetFieldCreationDetailsText(propertyType, out fieldAttributes, out fieldAdditional);
+                    GetFieldCreationDetailsText(property, out fieldAttributes, out fieldAdditional);
                     break;
                 case FieldType.URL:
-                    GetFieldCreationDetailsUrl(propertyType, out fieldAttributes);
+                    GetFieldCreationDetailsUrl(property, out fieldAttributes);
                     break;
                 case FieldType.User:
-                    GetFieldCreationDetailsUser(propertyType, out fieldAttributes);
+                    GetFieldCreationDetailsUser(property, out fieldAttributes);
                     break;
                 default:
                     throw new NotImplementedException($"FieldType {fieldType} is unexpected and cannot be created");
@@ -112,19 +132,19 @@ namespace AweCsomeO365
         #region FieldCreationProperties
 
 
-        private void GetFieldCreationDetailsBoolean(Type propertyType, out string fieldAdditional)
+        private void GetFieldCreationDetailsBoolean(PropertyInfo property, out string fieldAdditional)
         {
             fieldAdditional = null;
-            var booleanAttribute = propertyType.GetCustomAttribute<BooleanAttribute>();
+            var booleanAttribute = property.GetCustomAttribute<BooleanAttribute>();
             if (booleanAttribute != null) fieldAdditional = $"<Default>{(booleanAttribute.DefaultValue ? "1" : "0")}</Default>";
         }
 
-        private void GetFieldCreationDetailsChoice(Type propertyType, out string fieldAttributes, out string fieldAdditional)
+        private void GetFieldCreationDetailsChoice(PropertyInfo property, out string fieldAttributes, out string fieldAdditional)
         {
             fieldAttributes = null;
             fieldAdditional = null;
             string[] choices = null;
-            var choiceAttribute = propertyType.GetCustomAttribute<ChoiceAttribute>();
+            var choiceAttribute = property.GetCustomAttribute<ChoiceAttribute>();
             if (choiceAttribute != null)
             {
                 fieldAttributes = $"Format='{choiceAttribute.DisplayChoices}'";
@@ -132,6 +152,7 @@ namespace AweCsomeO365
                 if (choiceAttribute.DefaultValue != null) fieldAdditional = $"<Default>{choiceAttribute.DefaultValue}</Default>";
                 if (choiceAttribute.AllowFillIn) fieldAttributes += " FillInChoice='TRUE'";
             }
+            Type propertyType = property.PropertyType;
             if (choices == null && propertyType.IsEnum) choices = Enum.GetNames(propertyType);
             string choiceXml = string.Empty;
             if (choices != null)
@@ -144,10 +165,10 @@ namespace AweCsomeO365
             fieldAdditional += $"<CHOICES>{choiceXml}</CHOICES>";
         }
 
-        private void GetFieldCreationDetailsCurrency(Type propertyType, out string fieldAttributes)
+        private void GetFieldCreationDetailsCurrency(PropertyInfo property, out string fieldAttributes)
         {
             fieldAttributes = null;
-            var currencyAttribute = propertyType.GetCustomAttribute<CurrencyAttribute>();
+            var currencyAttribute = property.GetCustomAttribute<CurrencyAttribute>();
             if (currencyAttribute != null)
             {
                 fieldAttributes = $"Commas='{(currencyAttribute.NumberOfDecimalPlaces == null || currencyAttribute.NumberOfDecimalPlaces == 0 ? "FALSE" : "TRUE")}'";
@@ -157,12 +178,12 @@ namespace AweCsomeO365
             }
         }
 
-        private void GetFieldCreationDetailsDateTime(Type propertyType, out string fieldAttributes, out string fieldAdditional)
+        private void GetFieldCreationDetailsDateTime(PropertyInfo property, out string fieldAttributes, out string fieldAdditional)
         {
             fieldAttributes = null;
             fieldAdditional = null;
 
-            var dateTimeAttribute = propertyType.GetCustomAttribute<DateTimeAttribute>();
+            var dateTimeAttribute = property.GetCustomAttribute<DateTimeAttribute>();
             if (dateTimeAttribute != null)
             {
                 fieldAttributes = $"Format='{dateTimeAttribute.DateTimeFormat}'";
@@ -171,25 +192,50 @@ namespace AweCsomeO365
             }
         }
 
-        private void GetFieldCreationDetailsLookup(Type propertyType, out string fieldAttributes)
+        public static string GetLookupListName(PropertyInfo property, out string fieldname)
         {
-            var lookupAttribute = propertyType.GetCustomAttribute<LookupBaseAttribute>(true);
-            // Can't be null (And if it is this SHOULD throw an error)
-            fieldAttributes = $"List='{lookupAttribute.List}' ShowField='{lookupAttribute.Field}'";
+            fieldname = "Title";
+            var lookupAttribute = property.GetCustomAttribute<LookupBaseAttribute>(true);
+            if (lookupAttribute == null)
+            {
+                Type propertyType = property.PropertyType;
+
+                if (propertyType.IsArray)
+                {
+                    propertyType = propertyType.GetElementType();
+                }
+                if (propertyType.GetProperty(SuffixId) != null)
+                {
+                    return propertyType.Name;
+                }
+            }
+            else
+            {
+                fieldname = lookupAttribute.Field;
+                return lookupAttribute.List;
+            }
+            return null;
         }
 
-        private void GetFieldCreationDetailsNote(Type propertyType, out string fieldAttributes)
+        private void GetFieldCreationDetailsLookup(PropertyInfo property, Dictionary<string, Guid> lookupTableIds, out string fieldAttributes)
         {
-            var noteAttribute = propertyType.GetCustomAttribute<NoteAttribute>();
+            string list = GetLookupListName(property, out string field);
+            if (list == null) throw new Exception("Missing list-information for Lookup-Field");
+            fieldAttributes = $"List='{lookupTableIds[list]}' ShowField='{field}'";
+        }
+
+        private void GetFieldCreationDetailsNote(PropertyInfo property, out string fieldAttributes)
+        {
+            var noteAttribute = property.GetCustomAttribute<NoteAttribute>();
             // Can't be null (And if it is this SHOULD throw an error)
             fieldAttributes = $"NumLines='{noteAttribute.NumberOfLinesForEditing}' RichText='{noteAttribute.AllowRichText}'";
             // TODO: AppendChangesToExistingText
         }
 
-        private void GetFieldCreationDetailsNumber(Type propertyType, out string fieldAttributes)
+        private void GetFieldCreationDetailsNumber(PropertyInfo property, out string fieldAttributes)
         {
             fieldAttributes = null;
-            var numberAttribute = propertyType.GetCustomAttribute<NumberAttribute>();
+            var numberAttribute = property.GetCustomAttribute<NumberAttribute>();
             if (numberAttribute != null)
             {
                 fieldAttributes = $"Commas='{(numberAttribute.NumberOfDecimalPlaces == null || numberAttribute.NumberOfDecimalPlaces == 0 ? "FALSE" : "TRUE")}'";
@@ -199,11 +245,11 @@ namespace AweCsomeO365
             }
         }
 
-        private void GetFieldCreationDetailsText(Type propertyType, out string fieldAttributes, out string fieldAdditional)
+        private void GetFieldCreationDetailsText(PropertyInfo property, out string fieldAttributes, out string fieldAdditional)
         {
             fieldAttributes = null;
             fieldAdditional = null;
-            var textAttribute = propertyType.GetCustomAttribute<TextAttribute>();
+            var textAttribute = property.GetCustomAttribute<TextAttribute>();
             if (textAttribute != null)
             {
                 fieldAttributes = $"MaxLength={textAttribute.MaxCharacters}";
@@ -211,10 +257,10 @@ namespace AweCsomeO365
             }
         }
 
-        private void GetFieldCreationDetailsUrl(Type propertyType, out string fieldAttributes)
+        private void GetFieldCreationDetailsUrl(PropertyInfo property, out string fieldAttributes)
         {
             fieldAttributes = null;
-            var urlAttribute = propertyType.GetCustomAttribute<UrlAttribute>();
+            var urlAttribute = property.GetCustomAttribute<UrlAttribute>();
             if (urlAttribute != null)
             {
                 fieldAttributes = $"Format='{urlAttribute.UrlFieldFormatType}'";
@@ -225,10 +271,10 @@ namespace AweCsomeO365
             }
         }
 
-        private void GetFieldCreationDetailsUser(Type propertyType, out string fieldAttributes)
+        private void GetFieldCreationDetailsUser(PropertyInfo property, out string fieldAttributes)
         {
             fieldAttributes = null;
-            var userAttribute = propertyType.GetCustomAttribute<UserAttribute>();
+            var userAttribute = property.GetCustomAttribute<UserAttribute>();
             if (userAttribute != null)
             {
                 fieldAttributes = $"UserSelectionMode='{userAttribute.FieldUserSelectionMode}'";
@@ -243,12 +289,13 @@ namespace AweCsomeO365
             return propertyType.IsArray || propertyType.IsGenericList() || propertyType.IsDictionary();
         }
 
-        private FieldType GetFieldType(Type propertyType)
+        private FieldType GetFieldType(PropertyInfo property)
         {
-            if (PropertyTypeIsLookup(propertyType)) return FieldType.Lookup;
+            if (PropertyIsLookup(property)) return FieldType.Lookup;
+            Type propertyType = property.PropertyType;
 
             if (propertyType.IsArray) propertyType = propertyType.GetElementType();
-            FieldType? detectedFieldType = GetFieldTypeFromAttribute(propertyType);
+            FieldType? detectedFieldType = GetFieldTypeFromAttribute(property);
             if (detectedFieldType != null) return detectedFieldType.Value;
 
             if (propertyType.IsEnum) return FieldType.Choice;
@@ -277,36 +324,37 @@ namespace AweCsomeO365
             }
         }
 
-        private FieldType? GetFieldTypeFromAttribute(Type propertyType)
+        private FieldType? GetFieldTypeFromAttribute(PropertyInfo property)
         {
             FieldType? detectedFieldType = null;
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<BooleanAttribute>(propertyType);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<ChoiceAttribute>(propertyType);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<CurrencyAttribute>(propertyType);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<DateTimeAttribute>(propertyType);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<LookupBaseAttribute>(propertyType);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<ManagedMetadataAttribute>(propertyType);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<NoteAttribute>(propertyType);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<NumberAttribute>(propertyType);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<TextAttribute>(propertyType);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<UrlAttribute>(propertyType);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<UserAttribute>(propertyType);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<BooleanAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<ChoiceAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<CurrencyAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<DateTimeAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<LookupBaseAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<ManagedMetadataAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<NoteAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<NumberAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<TextAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<UrlAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<UserAttribute>(property);
             return detectedFieldType;
         }
 
-        private FieldType? GetFieldTypeByAttribute<T>(Type propertyType) where T : Attribute
+        private FieldType? GetFieldTypeByAttribute<T>(PropertyInfo property) where T : Attribute
         {
-            if (propertyType.GetCustomAttribute(typeof(T), true) == null) return null;
+            if (property.GetCustomAttribute(typeof(T), true) == null) return null;
             return (FieldType)typeof(T).GetField(nameof(BooleanAttribute.AssociatedFieldType)).GetRawConstantValue();
         }
 
-        private bool PropertyTypeIsLookup(Type propertyType)
+        public static bool PropertyIsLookup(PropertyInfo property)
         {
-            if (propertyType.GetCustomAttribute<LookupBaseAttribute>(true) != null) return true;
+            if (property.GetCustomAttribute<LookupBaseAttribute>(true) != null) return true;
+            Type propertyType = property.PropertyType;
             if (propertyType == typeof(KeyValuePair<int, string>)) return true; // Single-Lookup
             if (propertyType == typeof(Dictionary<int, string>)) return true; // Multi-Lookup
-            if (propertyType.GetProperty("Id") != null) return true; // Single Lookup with complex type
-            if (propertyType.IsArray && propertyType.GetElementType().GetProperty("Id") != null) return true; // Multi Lookup with complex type
+            if (propertyType.GetProperty(SuffixId) != null) return true; // Single Lookup with complex type
+            if (propertyType.IsArray && propertyType.GetElementType().GetProperty(SuffixId) != null) return true; // Multi Lookup with complex type
             return false;
         }
 
@@ -320,7 +368,12 @@ namespace AweCsomeO365
             var isRequiredAttribute = property.GetCustomAttribute<RequiredAttribute>();
             if (isRequiredAttribute != null) return isRequiredAttribute.IsRequired;
 
-            return (Nullable.GetUnderlyingType(property.PropertyType) == null); // property isn't nullable
+            Type propertyType = property.PropertyType;
+            if (propertyType.IsGenericType)
+            {
+                return propertyType.GetGenericTypeDefinition() != typeof(Nullable<>);
+            }
+            return false;
         }
 
         private string GetEnumCaml(Type enumType)

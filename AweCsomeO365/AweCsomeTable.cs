@@ -53,21 +53,24 @@ namespace AweCsomeO365
         private Dictionary<string, Guid> GetLookupTableIds(ClientContext clientContext, Type entityType)
         {
             var lookupTableIds = new Dictionary<string, Guid>();
-            var lookupAttributes = new List<LookupBaseAttribute>();
 
             foreach (var property in entityType.GetProperties())
             {
-                lookupAttributes.AddRange(property.GetCustomAttributes<LookupBaseAttribute>(true));
+                string listname = AweCsomeField.GetLookupListName(property, out string fieldname);
+                if (!string.IsNullOrWhiteSpace(listname) && !lookupTableIds.ContainsKey(listname))
+                {
+                    lookupTableIds.Add(listname, Guid.Empty);
+                }
             }
 
-            foreach (var lookupAttribute in lookupAttributes.Distinct())
+            foreach (var listname in lookupTableIds.Keys.ToList())
             {
-                if (lookupTableIds.ContainsKey(lookupAttribute.List)) continue;
-                List lookupList = clientContext.Web.Lists.GetByTitle(lookupAttribute.List);
+                List lookupList = clientContext.Web.Lists.GetByTitle(listname);
                 clientContext.Load(lookupList, l => l.Id);
                 clientContext.ExecuteQuery();
-                lookupTableIds.Add(lookupAttribute.List, lookupList.Id);
+                lookupTableIds[listname] = lookupList.Id;
             }
+
             return lookupTableIds;
         }
 
@@ -120,7 +123,7 @@ namespace AweCsomeO365
                     ListCreationInformation listCreationInfo = BuildListCreationInformation(clientContext, entityType);
 
                     var newList = clientContext.Web.Lists.Add(listCreationInfo);
-                    AddFieldsToTable(clientContext, newList, entityType.GetProperties());
+                    AddFieldsToTable(clientContext, newList, entityType.GetProperties(), lookupTableIds);
                     clientContext.ExecuteQuery();
                 }
                 catch (Exception ex)
@@ -132,11 +135,21 @@ namespace AweCsomeO365
             _log.Debug($"List '{listName}' created.");
         }
 
-        private void AddFieldsToTable(ClientContext context, List sharePointList, PropertyInfo[] properties)
+        private void AddFieldsToTable(ClientContext context, List sharePointList, PropertyInfo[] properties, Dictionary<string, Guid> lookupTableIds)
         {
             foreach (var property in properties)
             {
-                _awecsomeField.AddFieldToList( sharePointList, property);
+                try
+                {
+                    _awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
+                    context.ExecuteQuery();
+                }
+                catch (Exception ex)
+                {
+                    _log.Error($"Failed to create field '{property.Name}'", ex);
+                    throw;
+                }
+
             }
             context.ExecuteQuery();
             // TODO: Very Loooong tables: Split executeQuery
