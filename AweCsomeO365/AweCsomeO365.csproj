@@ -188,7 +188,7 @@
     <Compile Include="EntityHelper.cs" />
     <Compile Include="Exceptions\ItemAlreadyExistsException.cs" />
     <Compile Include="Exceptions\ItemNotFoundException.cs" />
-    <Compile Include="Exceptions\TableNotFoundException.cs" />
+    <Compile Include="Exceptions\ListNotFoundException.cs" />
     <Compile Include="IAweCsomeField.cs" />
     <Compile Include="IAweCsomeTable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

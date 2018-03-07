@@ -14,8 +14,8 @@ namespace AweCsomeO365
     public class AweCsomeField : IAweCsomeField
     {
         private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private const string SuffixId = "Id";
-        private const string SuffixIds = "Ids";
+        public const string SuffixId = "Id";
+        public const string SuffixIds = "Ids";
 
 
         public void AddFieldToList(List sharePointList, PropertyInfo property, Dictionary<string, Guid> lookupTableIds)
@@ -27,20 +27,7 @@ namespace AweCsomeO365
             Field field = sharePointList.Fields.AddFieldAsXml(fieldXml, addToDefaultViewAttribute != null, AddFieldOptions.AddFieldInternalNameHint);
         }
 
-        private void RemoveSuffixFromName(ref string name, string suffix)
-        {
-            if (name == null) return;
-            if (name.EndsWith(suffix)) name = name.Substring(0, name.Length - suffix.Length);
-        }
-
-        private void RemoveLookupIdFromFieldName(ref string internalName, ref string displayName)
-        {
-            RemoveSuffixFromName(ref internalName, SuffixIds);
-            RemoveSuffixFromName(ref internalName, SuffixId);
-
-            RemoveSuffixFromName(ref displayName, SuffixIds);
-            RemoveSuffixFromName(ref displayName, SuffixId);
-        }
+   
 
         private string GetFieldCreationXml(PropertyInfo property, Dictionary<string, Guid> lookupTableIds)
         {
@@ -53,9 +40,8 @@ namespace AweCsomeO365
             bool isRequired = PropertyIsRequired(property);
             bool isUnique = IsTrue(propertyType.GetCustomAttribute<UniqueAttribute>()?.IsUnique);
             FieldType fieldType = GetFieldType(property);
-            if (fieldType == FieldType.Lookup) RemoveLookupIdFromFieldName(ref internalName, ref displayName);
-
             bool isMulti = IsMulti(propertyType);
+            if (fieldType == FieldType.Lookup) EntityHelper.RemoveLookupIdFromFieldName(isMulti, ref internalName, ref displayName);
 
             GetFieldCreationAdditionalXmlForFieldType(fieldType, property, lookupTableIds, out string fieldAttributes, out string fieldAdditional);
             string fieldTypeString = fieldType.ToString();

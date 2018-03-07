@@ -1,4 +1,5 @@
 ﻿using AweCsomeO365.Attributes.FieldAttributes;
+using AweCsomeO365.Attributes.IgnoreAttributes;
 using AweCsomeO365.Attributes.TableAttributes;
 using AweCsomeO365.Exceptions;
 using log4net;
@@ -155,6 +156,8 @@ namespace AweCsomeO365
             // TODO: Very Loooong tables: Split executeQuery
         }
 
+
+
         public void DeleteItemById(Type entityType, int id)
         {
             throw new NotImplementedException();
@@ -172,7 +175,35 @@ namespace AweCsomeO365
 
         public int InsertItem<T>(T entity)
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItem newItem = list.AddItem(new ListItemCreationInformation());
+                    foreach (var property in entityType.GetProperties())
+                    {
+                        if (!property.CanRead) continue;
+                        if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
+                        newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetPropertyValueForItem(property, entity);
+                    }
+                    newItem.Update();
+                    clientContext.ExecuteQuery();
+                    return newItem.Id;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot insert data from entity of type '{entityType.Name}'", ex);
+                throw;
+            }
         }
 
         public List<T> SelectAllItems<T>()

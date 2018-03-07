@@ -13,11 +13,28 @@ namespace AweCsomeO365
 {
     public static class EntityHelper
     {
+
+        private static void RemoveSuffixFromName(ref string name, string suffix)
+        {
+            if (name == null) return;
+            if (name.EndsWith(suffix)) name = name.Substring(0, name.Length - suffix.Length);
+        }
+
+        public static void RemoveLookupIdFromFieldName(bool isArray, ref string internalName, ref string displayName)
+        {
+            RemoveSuffixFromName(ref internalName, isArray ? AweCsomeField.SuffixIds : AweCsomeField.SuffixId);
+            RemoveSuffixFromName(ref displayName, isArray ? AweCsomeField.SuffixIds : AweCsomeField.SuffixId);
+        }
+
+
         public static string GetInternalNameFromProperty(PropertyInfo propertyInfo)
         {
             Type propertyType = propertyInfo.PropertyType;
             var internalNameAttribute = propertyType.GetCustomAttribute<InternalNameAttribute>();
-            return internalNameAttribute == null ? propertyInfo.Name : internalNameAttribute.InternalName;
+            string internalName= internalNameAttribute == null ? propertyInfo.Name : internalNameAttribute.InternalName;
+            string displayName = null;
+            if (AweCsomeField.PropertyIsLookup(propertyInfo)) RemoveLookupIdFromFieldName(propertyType.IsArray, ref internalName, ref displayName);
+            return internalName;
         }
 
         public static string GetInternalNameFromEntityType(Type entityType)
@@ -53,9 +70,37 @@ namespace AweCsomeO365
         public static bool IsDictionary(this Type type)
         {
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
-
         }
 
 
+        public static object GetPropertyValueForItem<T>(PropertyInfo property, T entity)
+        {
+            Type propertyType = property.PropertyType;
+            if (AweCsomeField.PropertyIsLookup(property))
+            {
+                if (propertyType == typeof(KeyValuePair<int, string>)) return ((KeyValuePair<int, string>)property.GetValue(entity)).Key;
+                if (propertyType == typeof(Dictionary<int, string>)) return ((Dictionary<int, string>)property.GetValue(entity)).Select(q => q.Key).ToArray();
+                if (propertyType.IsArray && propertyType.GetElementType().GetProperty(AweCsomeField.SuffixId) != null)
+                {
+                    List<int> ids = new List<int>();
+                    foreach (var item in (object[])property.GetValue(entity))
+                    {
+                        ids.Add((int)item.GetType().GetProperty(AweCsomeField.SuffixId).GetValue(item));
+                    }
+                    return ids.ToArray();
+                    // TODO: One liner
+                }
+                if (propertyType.GetProperty(AweCsomeField.SuffixId) != null)
+                {
+                    var item = property.GetValue(entity);
+                    return ((int)item.GetType().GetProperty(AweCsomeField.SuffixId).GetValue(item));
+                }
+            }
+            if (propertyType.IsEnum)
+            {
+                return Enum.GetName(property.PropertyType, property.GetValue(entity));
+            }
+            return property.GetValue(entity);
+        }
     }
 }
