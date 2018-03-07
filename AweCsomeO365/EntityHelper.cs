@@ -31,7 +31,7 @@ namespace AweCsomeO365
         {
             Type propertyType = propertyInfo.PropertyType;
             var internalNameAttribute = propertyType.GetCustomAttribute<InternalNameAttribute>();
-            string internalName= internalNameAttribute == null ? propertyInfo.Name : internalNameAttribute.InternalName;
+            string internalName = internalNameAttribute == null ? propertyInfo.Name : internalNameAttribute.InternalName;
             string displayName = null;
             if (AweCsomeField.PropertyIsLookup(propertyInfo)) RemoveLookupIdFromFieldName(propertyType.IsArray, ref internalName, ref displayName);
             return internalName;
@@ -72,14 +72,23 @@ namespace AweCsomeO365
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
         }
 
+        public static FieldLookupValue CreateLookupFromId(int id)
+        {
+            return new FieldLookupValue { LookupId = id };
+        }
+
+        public static FieldLookupValue[] CreateLookupsFromIds(int[] ids)
+        {
+            return ids.Select(id => new FieldLookupValue { LookupId = id }).ToArray();
+        }
 
         public static object GetPropertyValueForItem<T>(PropertyInfo property, T entity)
         {
             Type propertyType = property.PropertyType;
             if (AweCsomeField.PropertyIsLookup(property))
             {
-                if (propertyType == typeof(KeyValuePair<int, string>)) return ((KeyValuePair<int, string>)property.GetValue(entity)).Key;
-                if (propertyType == typeof(Dictionary<int, string>)) return ((Dictionary<int, string>)property.GetValue(entity)).Select(q => q.Key).ToArray();
+                if (propertyType == typeof(KeyValuePair<int, string>)) return CreateLookupFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key);
+                if (propertyType == typeof(Dictionary<int, string>)) return CreateLookupsFromIds(((Dictionary<int, string>)property.GetValue(entity)).Select(q => q.Key).ToArray());
                 if (propertyType.IsArray && propertyType.GetElementType().GetProperty(AweCsomeField.SuffixId) != null)
                 {
                     List<int> ids = new List<int>();
@@ -87,13 +96,12 @@ namespace AweCsomeO365
                     {
                         ids.Add((int)item.GetType().GetProperty(AweCsomeField.SuffixId).GetValue(item));
                     }
-                    return ids.ToArray();
-                    // TODO: One liner
+                    return CreateLookupsFromIds(ids.ToArray());
                 }
                 if (propertyType.GetProperty(AweCsomeField.SuffixId) != null)
                 {
                     var item = property.GetValue(entity);
-                    return ((int)item.GetType().GetProperty(AweCsomeField.SuffixId).GetValue(item));
+                    return CreateLookupFromId(((int)item.GetType().GetProperty(AweCsomeField.SuffixId).GetValue(item)));
                 }
             }
             if (propertyType.IsEnum)
