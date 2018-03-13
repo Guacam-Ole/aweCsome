@@ -259,13 +259,33 @@ namespace AweCsomeO365
             Type entityType = typeof(T);
             foreach (var property in entityType.GetProperties())
             {
-                if (!property.CanWrite) continue;
-                if (property.GetCustomAttribute<IgnoreOnSelectAttribute>() != null) continue;
-                string fieldname = EntityHelper.GetInternalNameFromProperty(property);
-                if (item.FieldValues.ContainsKey(fieldname) && item.FieldValues[fieldname]!=null)
+                string fieldname=null;
+                object sourceValue = null;
+                Type sourceType = null;
+                Type targetType = null;
+                try
                 {
-                    object propertyValue = EntityHelper.GetItemValueForProperty(property, item.FieldValues[fieldname]);
-                    property.SetValue(entity, Convert.ChangeType(propertyValue,property.PropertyType));
+                    if (!property.CanWrite) continue;
+                    if (property.GetCustomAttribute<IgnoreOnSelectAttribute>() != null) continue;
+                    fieldname = EntityHelper.GetInternalNameFromProperty(property);
+                    if (item.FieldValues.ContainsKey(fieldname) && item.FieldValues[fieldname] != null)
+                    {
+                        sourceValue = item.FieldValues[fieldname];
+                        targetType = property.PropertyType;
+                        sourceType = sourceValue.GetType();
+
+                        object propertyValue = EntityHelper.GetItemValueForProperty(property, item.FieldValues[fieldname]);
+                        property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
+                    }
+                } catch (Exception ex)
+                {
+                    string errorMessage = $"Could not store data from field '{fieldname}' ";
+                    _log.Error(errorMessage, ex);
+                    var exception = new Exception(errorMessage, ex);
+                    exception.Data.Add("Field", fieldname);
+                    exception.Data.Add("SourceValue", sourceValue);
+                    exception.Data.Add("SourceType", sourceType);
+                    exception.Data.Add("TargetType", targetType);
                 }
             }
         }
