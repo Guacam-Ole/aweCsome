@@ -19,13 +19,7 @@ namespace AweCsomeO365
         private IAweCsomeField _awecsomeField = new AweCsomeField();
         private ClientContext _clientContext;
 
-        public ClientContext ClientContext
-        {
-            set
-            {
-                _clientContext = value;
-            }
-        }
+        public ClientContext ClientContext { set { _clientContext = value; } }
 
         private ClientContext GetClientContext()
         {
@@ -110,8 +104,9 @@ namespace AweCsomeO365
             return listCreationInfo;
         }
 
-        public void CreateTable(Type entityType)
+        public void CreateTable<T>()
         {
+            Type entityType = typeof(T);
             string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
 
             using (var clientContext = GetClientContext())
@@ -158,21 +153,69 @@ namespace AweCsomeO365
 
 
 
-        public void DeleteItemById(Type entityType, int id)
+        public void DeleteItemById<T>(int id)
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItem item = list.GetItemById(id);
+                    item.DeleteObject();
+                    clientContext.ExecuteQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot delete item from table of entity of type '{entityType.Name}' with id '{id}'", ex);
+                throw;
+            }
         }
 
-        public void DeleteTable(Type entityType)
+        public void DeleteTable<T>()
         {
-            throw new NotImplementedException();
+            DeleteTable(typeof(T), true);
         }
 
-        public void DeleteTableIfExisting(Type entityType)
+        private void DeleteTable(Type entityType, bool throwErrorIfMissing)
         {
-            throw new NotImplementedException();
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null)
+                    {
+                        if (throwErrorIfMissing) throw new ListNotFoundException();
+                        return;
+                    }
+                    list.DeleteObject();
+                    clientContext.ExecuteQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot delete table from entity of type '{entityType.Name}'", ex);
+                throw;
+            }
         }
 
+        public void DeleteTableIfExisting<T>()
+        {
+            DeleteTable(typeof(T), false);
+        }
         public int InsertItem<T>(T entity)
         {
             Type entityType = typeof(T);
@@ -211,9 +254,51 @@ namespace AweCsomeO365
             throw new NotImplementedException();
         }
 
-        public T SelectItemById<T>(int id)
+        private void StoreFromListItem<T>(T entity, ListItem item)
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            foreach (var property in entityType.GetProperties())
+            {
+                if (!property.CanWrite) continue;
+                if (property.GetCustomAttribute<IgnoreOnSelectAttribute>() != null) continue;
+                string fieldname = EntityHelper.GetInternalNameFromProperty(property);
+                if (item.FieldValues.ContainsKey(fieldname) && item.FieldValues[fieldname]!=null)
+                {
+                    object propertyValue = EntityHelper.GetItemValueForProperty(property, item.FieldValues[fieldname]);
+                    property.SetValue(entity, Convert.ChangeType(propertyValue,property.PropertyType));
+                }
+            }
+        }
+
+        public T SelectItemById<T>(int id) where T:new()
+        {
+            Type entityType = typeof(T);
+            var entity = new T();
+
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItem item = list.GetItemById(id);
+                    clientContext.Load(item);
+                    clientContext.ExecuteQuery();
+                    StoreFromListItem(entity, item);
+                }
+                return entity;
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot delete item from table of entity of type '{entityType.Name}' with id '{id}'", ex);
+                throw;
+            }
+
         }
 
         public List<T> SelectItemsByLookupId<T>(string fieldName, int lookupId)
@@ -238,7 +323,40 @@ namespace AweCsomeO365
 
         public void UpdateItem<T>(T entity)
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            try
+            {
+                PropertyInfo idProperty = entityType.GetProperty(AweCsomeField.SuffixId);
+                if (idProperty == null) throw new FieldMissingException("Field 'Id' is required for Update-Operations on Lists", AweCsomeField.SuffixId);
+                int? idValue = idProperty.GetValue(entity) as int?;
+                if (!idValue.HasValue) throw new FieldMissingException("Field 'Id' is has no value. Update failed", AweCsomeField.SuffixId);
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItem existingItem = list.GetItemById(idValue.Value);
+                    foreach (var property in entityType.GetProperties())
+                    {
+                        if (!property.CanRead) continue;
+                        if (property.GetCustomAttribute<IgnoreOnUpdateAttribute>() != null) continue;
+                        existingItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetPropertyValueForItem(property, entity);
+                    }
+                    existingItem.Update();
+                    clientContext.ExecuteQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot update data from entity of type '{entityType.Name}'", ex);
+                throw;
+            }
         }
+
+       
     }
 }

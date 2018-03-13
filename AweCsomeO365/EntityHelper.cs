@@ -3,6 +3,7 @@ using AweCsomeO365.Attributes.FieldAttributes;
 using AweCsomeO365.Attributes.TableAttributes;
 using Microsoft.SharePoint.Client;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +14,18 @@ namespace AweCsomeO365
 {
     public static class EntityHelper
     {
+        //public static T[] ConvertToArray<T>(IList list)
+        //{
+        //    return list.Cast<T>().ToArray();
+        //}
+
+        //public static object[] ConvertToArrayRuntime(IList list, Type elementType)
+        //{
+        //    var convertMethod = typeof(EntityHelper).GetMethod("ConvertToArray", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(IList) }, null);
+        //    var genericMethod = convertMethod.MakeGenericMethod(elementType);
+        //    return (object[])genericMethod.Invoke(null, new object[] { list });
+        //}
+
 
         private static void RemoveSuffixFromName(ref string name, string suffix)
         {
@@ -80,6 +93,73 @@ namespace AweCsomeO365
         public static FieldLookupValue[] CreateLookupsFromIds(int[] ids)
         {
             return ids.Select(id => new FieldLookupValue { LookupId = id }).ToArray();
+        }
+
+        public static object GetItemValueForProperty(PropertyInfo property, object itemValue)
+        {
+            Type propertyType = property.PropertyType;
+            if (AweCsomeField.PropertyIsLookup(property))
+            {
+                if (itemValue.GetType().IsArray)
+                {
+                    var fieldLookupValues = (FieldLookupValue[])itemValue;
+                    if (propertyType == typeof(Dictionary<int, string>)) return fieldLookupValues.ToDictionary(q => q.LookupId, q => q.LookupValue);
+                    if (propertyType == typeof(int[])) return fieldLookupValues.Select(q => q.LookupId).ToArray();
+                    Type elementType = propertyType.GetElementType();
+
+                    if (elementType.GetProperty(AweCsomeField.SuffixId) != null)
+                    {
+                        //var listType = typeof(List<>);
+                        //var genericArgs = propertyType.GetGenericArguments();
+                        //var concreteType = listType.MakeGenericType(genericArgs);
+                        //var newList = Activator.CreateInstance(concreteType) as IList;
+                        
+               //         var objectType = propertyType.GetGenericArguments().First();
+                        var newList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType)) as IList;
+
+
+                        var targetEntityObject = Activator.CreateInstance(elementType);
+                        PropertyInfo idProperty = elementType.GetProperty(AweCsomeField.SuffixId);
+                        PropertyInfo titleProperty = elementType.GetProperty(AweCsomeField.Title);
+
+                        foreach (var fieldLookupValue in fieldLookupValues)
+                        {
+                            idProperty.SetValue(targetEntityObject, fieldLookupValue.LookupId);
+                            if (titleProperty != null) titleProperty.SetValue(targetEntityObject, fieldLookupValue.LookupValue);
+                            newList.Add(targetEntityObject);
+                        }
+
+                        var array = Array.CreateInstance(elementType, newList.Count);
+                        newList.CopyTo(array, 0);
+                        return array;
+                    }
+                }
+                else
+                {
+                    var fieldLookupValue = (FieldLookupValue)itemValue;
+                    int lookupId = fieldLookupValue?.LookupId ?? 0;
+                    string lookupValue = fieldLookupValue?.LookupValue;
+                    if (propertyType == typeof(KeyValuePair<int, string>)) return new KeyValuePair<int, string>(lookupId, lookupValue);
+                    if (propertyType == typeof(int)) return lookupId;
+                    if (propertyType == typeof(string)) return lookupValue;
+
+                    if (propertyType.GetProperty(AweCsomeField.SuffixId) != null)
+                    {
+                        var targetEntityObject = Activator.CreateInstance(propertyType);
+                        PropertyInfo idProperty = propertyType.GetProperty(AweCsomeField.SuffixId);
+                        PropertyInfo titleProperty = propertyType.GetProperty(AweCsomeField.Title);
+
+                        idProperty.SetValue(targetEntityObject, fieldLookupValue.LookupId);
+                        if (titleProperty != null) titleProperty.SetValue(targetEntityObject, fieldLookupValue.LookupValue);
+                        return targetEntityObject;
+                    }
+                }
+            }
+            if (propertyType.IsEnum)
+            {
+                return Enum.Parse(property.PropertyType, itemValue as string);
+            }
+            return itemValue;
         }
 
         public static object GetPropertyValueForItem<T>(PropertyInfo property, T entity)

@@ -16,6 +16,7 @@ namespace AweCsomeO365
         private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public const string SuffixId = "Id";
         public const string SuffixIds = "Ids";
+        public const string Title = "Title";
 
 
         public void AddFieldToList(List sharePointList, PropertyInfo property, Dictionary<string, Guid> lookupTableIds)

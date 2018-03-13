@@ -186,6 +186,7 @@
     <Compile Include="AweCsomeField.cs" />
     <Compile Include="AweCsomeTable.cs" />
     <Compile Include="EntityHelper.cs" />
+    <Compile Include="Exceptions\FieldMissingException.cs" />
     <Compile Include="Exceptions\ItemAlreadyExistsException.cs" />
     <Compile Include="Exceptions\ItemNotFoundException.cs" />
     <Compile Include="Exceptions\ListNotFoundException.cs" />
