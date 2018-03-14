@@ -1,4 +1,5 @@
 ﻿using AweCsomeO365.Attributes.FieldAttributes;
+using AweCsomeO365.Attributes.IgnoreAttributes;
 using AweCsomeO365.Attributes.TableAttributes;
 using AweCsomeO365.Exceptions;
 using log4net;
@@ -18,13 +19,9 @@ namespace AweCsomeO365
         private IAweCsomeField _awecsomeField = new AweCsomeField();
         private ClientContext _clientContext;
 
-        public ClientContext ClientContext
-        {
-            set
-            {
-                _clientContext = value;
-            }
-        }
+        public ClientContext ClientContext { set { _clientContext = value; } }
+
+        #region Helpers
 
         private ClientContext GetClientContext()
         {
@@ -89,6 +86,9 @@ namespace AweCsomeO365
             }
         }
 
+        #endregion Helpers
+
+        #region Structure
         private ListCreationInformation BuildListCreationInformation(ClientContext context, Type entityType)
         {
             ListCreationInformation listCreationInfo = new ListCreationInformation
@@ -109,8 +109,9 @@ namespace AweCsomeO365
             return listCreationInfo;
         }
 
-        public void CreateTable(Type entityType)
+        public void CreateTable<T>()
         {
+            Type entityType = typeof(T);
             string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
 
             using (var clientContext = GetClientContext())
@@ -155,59 +156,293 @@ namespace AweCsomeO365
             // TODO: Very Loooong tables: Split executeQuery
         }
 
-        public void DeleteItemById(Type entityType, int id)
+        public void DeleteTable<T>()
         {
-            throw new NotImplementedException();
+            DeleteTable(typeof(T), true);
         }
 
-        public void DeleteTable(Type entityType)
+        private void DeleteTable(Type entityType, bool throwErrorIfMissing)
         {
-            throw new NotImplementedException();
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null)
+                    {
+                        if (throwErrorIfMissing) throw new ListNotFoundException();
+                        return;
+                    }
+                    list.DeleteObject();
+                    clientContext.ExecuteQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot delete table from entity of type '{entityType.Name}'", ex);
+                throw;
+            }
         }
 
-        public void DeleteTableIfExisting(Type entityType)
+        public void DeleteTableIfExisting<T>()
         {
-            throw new NotImplementedException();
+            DeleteTable(typeof(T), false);
         }
 
+        #endregion Structure
+
+
+        #region Insert
         public int InsertItem<T>(T entity)
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItem newItem = list.AddItem(new ListItemCreationInformation());
+                    foreach (var property in entityType.GetProperties())
+                    {
+                        if (!property.CanRead) continue;
+                        if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
+                        newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetPropertyValueForItem(property, entity);
+                    }
+                    newItem.Update();
+                    clientContext.ExecuteQuery();
+                    return newItem.Id;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot insert data from entity of type '{entityType.Name}'", ex);
+                throw;
+            }
+        }
+        #endregion Insert
+
+        #region Select
+
+        private string WrapCamlQuery(string innerConditions)
+        {
+            return $"<View><Query>{innerConditions}</Query></View>";
         }
 
-        public List<T> SelectAllItems<T>()
+        private string CreateLookupCaml(string fieldname, int fieldvalue)
         {
-            throw new NotImplementedException();
+            return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' LookupId='TRUE' /><Value Type='Lookup'>{fieldvalue}</Value></Eq>");
         }
 
-        public T SelectItemById<T>(int id)
+        private string CreateFieldEqCaml(PropertyInfo property, object fieldvalue)
         {
-            throw new NotImplementedException();
+            string fieldname = EntityHelper.GetInternalNameFromProperty(property);
+            FieldType fieldType = EntityHelper.GetFieldType(property);
+            return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' /><Value Type='{fieldType.ToString()}'>{fieldvalue}</Value></Eq>");
         }
 
-        public List<T> SelectItemsByLookupId<T>(string fieldName, int lookupId)
+        public List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new()
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            PropertyInfo fieldProperty = entityType.GetProperty(fieldname);
+
+            if (EntityHelper.PropertyIsLookup(fieldProperty)) return SelectItems<T>(new CamlQuery { ViewXml = CreateLookupCaml(fieldname, (int)value) });
+            return SelectItems<T>(new CamlQuery { ViewXml = CreateFieldEqCaml(fieldProperty, value) });
         }
 
-        public List<T> SelectItemsByNumber<T>(string fieldName, int number)
+        private void StoreFromListItem<T>(T entity, ListItem item)
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            foreach (var property in entityType.GetProperties())
+            {
+                string fieldname = null;
+                object sourceValue = null;
+                Type sourceType = null;
+                Type targetType = null;
+                try
+                {
+                    if (!property.CanWrite) continue;
+                    if (property.GetCustomAttribute<IgnoreOnSelectAttribute>() != null) continue;
+                    fieldname = EntityHelper.GetInternalNameFromProperty(property);
+                    if (item.FieldValues.ContainsKey(fieldname) && item.FieldValues[fieldname] != null)
+                    {
+                        sourceValue = item.FieldValues[fieldname];
+                        targetType = property.PropertyType;
+                        sourceType = sourceValue.GetType();
+
+                        object propertyValue = EntityHelper.GetItemValueForProperty(property, item.FieldValues[fieldname]);
+                        property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string errorMessage = $"Could not store data from field '{fieldname}' ";
+                    _log.Error(errorMessage, ex);
+                    var exception = new Exception(errorMessage, ex);
+                    exception.Data.Add("Field", fieldname);
+                    exception.Data.Add("SourceValue", sourceValue);
+                    exception.Data.Add("SourceType", sourceType);
+                    exception.Data.Add("TargetType", targetType);
+                }
+            }
         }
 
-        public List<T> SelectItemsByQuery<T>(string query)
+        public List<T> SelectAllItems<T>() where T : new()
         {
-            throw new NotImplementedException();
+            return SelectItems<T>(CamlQuery.CreateAllItemsQuery());
         }
 
-        public List<T> SelectItemsByString<T>(string fieldName, string queryValue)
+        public T SelectItemById<T>(int id) where T : new()
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            var entity = new T();
+
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItem item = list.GetItemById(id);
+                    clientContext.Load(item);
+                    clientContext.ExecuteQuery();
+                    StoreFromListItem(entity, item);
+                }
+                return entity;
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot select item by id for '{entityType.Name}' with id '{id}'", ex);
+                throw;
+            }
         }
+
+        private List<T> SelectItems<T>(CamlQuery query) where T : new()
+        {
+            Type entityType = typeof(T);
+            var entities = new List<T>();
+
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItemCollection items = list.GetItems(query);
+                    clientContext.Load(items);
+                    clientContext.ExecuteQuery();
+                    foreach (var item in items)
+                    {
+                        var entity = new T();
+                        StoreFromListItem(entity, item);
+                        entities.Add(entity);
+                    }
+                }
+                return entities;
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot select items from table of entity with type '{entityType.Name}", ex);
+                throw;
+            }
+        }
+
+
+        public List<T> SelectItemsByQuery<T>(string query) where T : new()
+        {
+            return SelectItems<T>(new CamlQuery() { ViewXml = query });
+        }
+
+        #endregion Select
+
+        #region Update
 
         public void UpdateItem<T>(T entity)
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            try
+            {
+                PropertyInfo idProperty = entityType.GetProperty(AweCsomeField.SuffixId);
+                if (idProperty == null) throw new FieldMissingException("Field 'Id' is required for Update-Operations on Lists", AweCsomeField.SuffixId);
+                int? idValue = idProperty.GetValue(entity) as int?;
+                if (!idValue.HasValue) throw new FieldMissingException("Field 'Id' is has no value. Update failed", AweCsomeField.SuffixId);
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItem existingItem = list.GetItemById(idValue.Value);
+                    foreach (var property in entityType.GetProperties())
+                    {
+                        if (!property.CanRead) continue;
+                        if (property.GetCustomAttribute<IgnoreOnUpdateAttribute>() != null) continue;
+                        existingItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetPropertyValueForItem(property, entity);
+                    }
+                    existingItem.Update();
+                    clientContext.ExecuteQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot update data from entity of type '{entityType.Name}'", ex);
+                throw;
+            }
         }
+
+        #endregion Update
+
+        #region Delete
+
+        public void DeleteItemById<T>(int id)
+        {
+            Type entityType = typeof(T);
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItem item = list.GetItemById(id);
+                    item.DeleteObject();
+                    clientContext.ExecuteQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot delete item from table of entity of type '{entityType.Name}' with id '{id}'", ex);
+                throw;
+            }
+        }
+
+        #endregion Delete
     }
 }

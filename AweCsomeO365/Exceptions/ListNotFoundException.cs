@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AweCsomeO365.Exceptions
 {
-    public class TableNotFoundException : Exception
+    public class ListNotFoundException : Exception
     {
     }
 }

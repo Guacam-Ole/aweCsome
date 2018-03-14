@@ -155,6 +155,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Attributes\FieldAttributes\AddToDefaultViewAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\ChoiceAttribute.cs" />
     <Compile Include="Attributes\DescriptionAttribute.cs" />
@@ -186,9 +189,10 @@
     <Compile Include="AweCsomeField.cs" />
     <Compile Include="AweCsomeTable.cs" />
     <Compile Include="EntityHelper.cs" />
+    <Compile Include="Exceptions\FieldMissingException.cs" />
     <Compile Include="Exceptions\ItemAlreadyExistsException.cs" />
     <Compile Include="Exceptions\ItemNotFoundException.cs" />
-    <Compile Include="Exceptions\TableNotFoundException.cs" />
+    <Compile Include="Exceptions\ListNotFoundException.cs" />
     <Compile Include="IAweCsomeField.cs" />
     <Compile Include="IAweCsomeTable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

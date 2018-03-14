@@ -9,21 +9,19 @@ namespace AweCsomeO365
 {
     public interface IAweCsomeTable
     {
-        void CreateTable(Type entityType);
-        void DeleteTable(Type entityType);
-        void DeleteTableIfExisting(Type entityType);
+        void CreateTable<T>();
+        void DeleteTable<T>();
+        void DeleteTableIfExisting<T>();
 
         int InsertItem<T>(T entity);
-        
-        T SelectItemById<T>(int id);
-        List<T> SelectAllItems<T>();
-        List<T> SelectItemsByLookupId<T>(string fieldName, int lookupId);
-        List<T> SelectItemsByString<T>(string fieldName, string queryValue);
-        List<T> SelectItemsByNumber<T>(string fieldName, int number);
-        List<T> SelectItemsByQuery<T>(string query);
+
+        T SelectItemById<T>(int id) where T : new();
+        List<T> SelectAllItems<T>() where T : new();
+        List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new();
+        List<T> SelectItemsByQuery<T>(string query) where T : new();
 
         void UpdateItem<T>(T entity);
 
-        void DeleteItemById(Type entityType, int id);
+        void DeleteItemById<T>(int id);
     }
 }
