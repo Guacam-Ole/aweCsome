@@ -46,7 +46,7 @@ namespace AweCsomeO365
             var internalNameAttribute = propertyType.GetCustomAttribute<InternalNameAttribute>();
             string internalName = internalNameAttribute == null ? propertyInfo.Name : internalNameAttribute.InternalName;
             string displayName = null;
-            if (AweCsomeField.PropertyIsLookup(propertyInfo)) RemoveLookupIdFromFieldName(propertyType.IsArray, ref internalName, ref displayName);
+            if (PropertyIsLookup(propertyInfo)) RemoveLookupIdFromFieldName(propertyType.IsArray, ref internalName, ref displayName);
             return internalName;
         }
 
@@ -95,10 +95,79 @@ namespace AweCsomeO365
             return ids.Select(id => new FieldLookupValue { LookupId = id }).ToArray();
         }
 
+        public static bool PropertyIsLookup(PropertyInfo property)
+        {
+            if (property.GetCustomAttribute<LookupBaseAttribute>(true) != null) return true;
+            Type propertyType = property.PropertyType;
+            if (propertyType == typeof(KeyValuePair<int, string>)) return true; // Single-Lookup
+            if (propertyType == typeof(Dictionary<int, string>)) return true; // Multi-Lookup
+            if (propertyType.GetProperty(AweCsomeField.SuffixId) != null) return true; // Single Lookup with complex type
+            if (propertyType.IsArray && propertyType.GetElementType().GetProperty(AweCsomeField.SuffixId) != null) return true; // Multi Lookup with complex type
+            return false;
+        }
+
+        public static FieldType GetFieldType(PropertyInfo property)
+        {
+            if (PropertyIsLookup(property)) return FieldType.Lookup;
+            Type propertyType = property.PropertyType;
+
+            if (propertyType.IsArray) propertyType = propertyType.GetElementType();
+            FieldType? detectedFieldType = GetFieldTypeFromAttribute(property);
+            if (detectedFieldType != null) return detectedFieldType.Value;
+
+            if (propertyType.IsEnum) return FieldType.Choice;
+            switch (Type.GetTypeCode(propertyType))
+            {
+                case TypeCode.Byte:
+                case TypeCode.SByte:
+                case TypeCode.UInt16:
+                case TypeCode.UInt32:
+                case TypeCode.UInt64:
+                case TypeCode.Int16:
+                case TypeCode.Int32:
+                case TypeCode.Int64:
+                case TypeCode.Decimal:
+                case TypeCode.Double:
+                case TypeCode.Single:
+                    return FieldType.Number;
+                case TypeCode.Boolean:
+                    return FieldType.Boolean;
+                case TypeCode.String:
+                    return FieldType.Text;
+                case TypeCode.DateTime:
+                    return FieldType.DateTime;
+                default:
+                    return FieldType.Invalid;
+            }
+        }
+
+        private static FieldType? GetFieldTypeFromAttribute(PropertyInfo property)
+        {
+            FieldType? detectedFieldType = null;
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<BooleanAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<ChoiceAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<CurrencyAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<DateTimeAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<LookupBaseAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<ManagedMetadataAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<NoteAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<NumberAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<TextAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<Attributes.FieldAttributes.UrlAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<UserAttribute>(property);
+            return detectedFieldType;
+        }
+
+        private static FieldType? GetFieldTypeByAttribute<T>(PropertyInfo property) where T : Attribute
+        {
+            if (property.GetCustomAttribute(typeof(T), true) == null) return null;
+            return (FieldType)typeof(T).GetField(nameof(BooleanAttribute.AssociatedFieldType)).GetRawConstantValue();
+        }
+
         public static object GetItemValueForProperty(PropertyInfo property, object itemValue)
         {
             Type propertyType = property.PropertyType;
-            if (AweCsomeField.PropertyIsLookup(property))
+            if (PropertyIsLookup(property))
             {
                 if (itemValue.GetType().IsArray)
                 {
@@ -165,7 +234,7 @@ namespace AweCsomeO365
         public static object GetPropertyValueForItem<T>(PropertyInfo property, T entity)
         {
             Type propertyType = property.PropertyType;
-            if (AweCsomeField.PropertyIsLookup(property))
+            if (PropertyIsLookup(property))
             {
                 if (propertyType == typeof(KeyValuePair<int, string>)) return CreateLookupFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key);
                 if (propertyType == typeof(Dictionary<int, string>)) return CreateLookupsFromIds(((Dictionary<int, string>)property.GetValue(entity)).Select(q => q.Key).ToArray());

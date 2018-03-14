@@ -21,6 +21,8 @@ namespace AweCsomeO365
 
         public ClientContext ClientContext { set { _clientContext = value; } }
 
+        #region Helpers
+
         private ClientContext GetClientContext()
         {
             if (_clientContext == null) throw new MissingFieldException("Please provide a valid ClientContext");
@@ -84,6 +86,9 @@ namespace AweCsomeO365
             }
         }
 
+        #endregion Helpers
+
+        #region Structure
         private ListCreationInformation BuildListCreationInformation(ClientContext context, Type entityType)
         {
             ListCreationInformation listCreationInfo = new ListCreationInformation
@@ -151,34 +156,6 @@ namespace AweCsomeO365
             // TODO: Very Loooong tables: Split executeQuery
         }
 
-
-
-        public void DeleteItemById<T>(int id)
-        {
-            Type entityType = typeof(T);
-            try
-            {
-                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
-                using (var clientContext = GetClientContext())
-                {
-                    Web web = clientContext.Web;
-                    ListCollection listCollection = web.Lists;
-                    clientContext.Load(listCollection);
-                    clientContext.ExecuteQuery();
-                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
-                    if (list == null) throw new ListNotFoundException();
-                    ListItem item = list.GetItemById(id);
-                    item.DeleteObject();
-                    clientContext.ExecuteQuery();
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.Error($"Cannot delete item from table of entity of type '{entityType.Name}' with id '{id}'", ex);
-                throw;
-            }
-        }
-
         public void DeleteTable<T>()
         {
             DeleteTable(typeof(T), true);
@@ -216,6 +193,11 @@ namespace AweCsomeO365
         {
             DeleteTable(typeof(T), false);
         }
+
+        #endregion Structure
+
+
+        #region Insert
         public int InsertItem<T>(T entity)
         {
             Type entityType = typeof(T);
@@ -248,10 +230,34 @@ namespace AweCsomeO365
                 throw;
             }
         }
+        #endregion Insert
 
-        public List<T> SelectAllItems<T>()
+        #region Select
+
+        private string WrapCamlQuery(string innerConditions)
         {
-            throw new NotImplementedException();
+            return $"<View><Query>{innerConditions}</Query></View>";
+        }
+
+        private string CreateLookupCaml(string fieldname, int fieldvalue)
+        {
+            return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' LookupId='TRUE' /><Value Type='Lookup'>{fieldvalue}</Value></Eq>");
+        }
+
+        private string CreateFieldEqCaml(PropertyInfo property, object fieldvalue)
+        {
+            string fieldname = EntityHelper.GetInternalNameFromProperty(property);
+            FieldType fieldType = EntityHelper.GetFieldType(property);
+            return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' /><Value Type='{fieldType.ToString()}'>{fieldvalue}</Value></Eq>");
+        }
+
+        public List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new()
+        {
+            Type entityType = typeof(T);
+            PropertyInfo fieldProperty = entityType.GetProperty(fieldname);
+
+            if (EntityHelper.PropertyIsLookup(fieldProperty)) return SelectItems<T>(new CamlQuery { ViewXml = CreateLookupCaml(fieldname, (int)value) });
+            return SelectItems<T>(new CamlQuery { ViewXml = CreateFieldEqCaml(fieldProperty, value) });
         }
 
         private void StoreFromListItem<T>(T entity, ListItem item)
@@ -259,7 +265,7 @@ namespace AweCsomeO365
             Type entityType = typeof(T);
             foreach (var property in entityType.GetProperties())
             {
-                string fieldname=null;
+                string fieldname = null;
                 object sourceValue = null;
                 Type sourceType = null;
                 Type targetType = null;
@@ -277,7 +283,8 @@ namespace AweCsomeO365
                         object propertyValue = EntityHelper.GetItemValueForProperty(property, item.FieldValues[fieldname]);
                         property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
                     }
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     string errorMessage = $"Could not store data from field '{fieldname}' ";
                     _log.Error(errorMessage, ex);
@@ -290,7 +297,12 @@ namespace AweCsomeO365
             }
         }
 
-        public T SelectItemById<T>(int id) where T:new()
+        public List<T> SelectAllItems<T>() where T : new()
+        {
+            return SelectItems<T>(CamlQuery.CreateAllItemsQuery());
+        }
+
+        public T SelectItemById<T>(int id) where T : new()
         {
             Type entityType = typeof(T);
             var entity = new T();
@@ -315,31 +327,55 @@ namespace AweCsomeO365
             }
             catch (Exception ex)
             {
-                _log.Error($"Cannot delete item from table of entity of type '{entityType.Name}' with id '{id}'", ex);
+                _log.Error($"Cannot select item by id for '{entityType.Name}' with id '{id}'", ex);
                 throw;
             }
-
         }
 
-        public List<T> SelectItemsByLookupId<T>(string fieldName, int lookupId)
+        private List<T> SelectItems<T>(CamlQuery query) where T : new()
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            var entities = new List<T>();
+
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItemCollection items = list.GetItems(query);
+                    clientContext.Load(items);
+                    clientContext.ExecuteQuery();
+                    foreach (var item in items)
+                    {
+                        var entity = new T();
+                        StoreFromListItem(entity, item);
+                        entities.Add(entity);
+                    }
+                }
+                return entities;
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot select items from table of entity with type '{entityType.Name}", ex);
+                throw;
+            }
         }
 
-        public List<T> SelectItemsByNumber<T>(string fieldName, int number)
+
+        public List<T> SelectItemsByQuery<T>(string query) where T : new()
         {
-            throw new NotImplementedException();
+            return SelectItems<T>(new CamlQuery() { ViewXml = query });
         }
 
-        public List<T> SelectItemsByQuery<T>(string query)
-        {
-            throw new NotImplementedException();
-        }
+        #endregion Select
 
-        public List<T> SelectItemsByString<T>(string fieldName, string queryValue)
-        {
-            throw new NotImplementedException();
-        }
+        #region Update
 
         public void UpdateItem<T>(T entity)
         {
@@ -377,6 +413,36 @@ namespace AweCsomeO365
             }
         }
 
-       
+        #endregion Update
+
+        #region Delete
+
+        public void DeleteItemById<T>(int id)
+        {
+            Type entityType = typeof(T);
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItem item = list.GetItemById(id);
+                    item.DeleteObject();
+                    clientContext.ExecuteQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot delete item from table of entity of type '{entityType.Name}' with id '{id}'", ex);
+                throw;
+            }
+        }
+
+        #endregion Delete
     }
 }

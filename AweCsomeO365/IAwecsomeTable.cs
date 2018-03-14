@@ -16,11 +16,9 @@ namespace AweCsomeO365
         int InsertItem<T>(T entity);
 
         T SelectItemById<T>(int id) where T : new();
-        List<T> SelectAllItems<T>();
-        List<T> SelectItemsByLookupId<T>(string fieldName, int lookupId);
-        List<T> SelectItemsByString<T>(string fieldName, string queryValue);
-        List<T> SelectItemsByNumber<T>(string fieldName, int number);
-        List<T> SelectItemsByQuery<T>(string query);
+        List<T> SelectAllItems<T>() where T : new();
+        List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new();
+        List<T> SelectItemsByQuery<T>(string query) where T : new();
 
         void UpdateItem<T>(T entity);
 

@@ -28,8 +28,6 @@ namespace AweCsomeO365
             Field field = sharePointList.Fields.AddFieldAsXml(fieldXml, addToDefaultViewAttribute != null, AddFieldOptions.AddFieldInternalNameHint);
         }
 
-   
-
         private string GetFieldCreationXml(PropertyInfo property, Dictionary<string, Guid> lookupTableIds)
         {
             Type propertyType = property.PropertyType;
@@ -40,7 +38,7 @@ namespace AweCsomeO365
 
             bool isRequired = PropertyIsRequired(property);
             bool isUnique = IsTrue(propertyType.GetCustomAttribute<UniqueAttribute>()?.IsUnique);
-            FieldType fieldType = GetFieldType(property);
+            FieldType fieldType = EntityHelper.GetFieldType(property);
             bool isMulti = IsMulti(propertyType);
             if (fieldType == FieldType.Lookup) EntityHelper.RemoveLookupIdFromFieldName(isMulti, ref internalName, ref displayName);
 
@@ -276,74 +274,9 @@ namespace AweCsomeO365
             return propertyType.IsArray || propertyType.IsGenericList() || propertyType.IsDictionary();
         }
 
-        private FieldType GetFieldType(PropertyInfo property)
-        {
-            if (PropertyIsLookup(property)) return FieldType.Lookup;
-            Type propertyType = property.PropertyType;
+   
 
-            if (propertyType.IsArray) propertyType = propertyType.GetElementType();
-            FieldType? detectedFieldType = GetFieldTypeFromAttribute(property);
-            if (detectedFieldType != null) return detectedFieldType.Value;
-
-            if (propertyType.IsEnum) return FieldType.Choice;
-            switch (Type.GetTypeCode(propertyType))
-            {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.UInt16:
-                case TypeCode.UInt32:
-                case TypeCode.UInt64:
-                case TypeCode.Int16:
-                case TypeCode.Int32:
-                case TypeCode.Int64:
-                case TypeCode.Decimal:
-                case TypeCode.Double:
-                case TypeCode.Single:
-                    return FieldType.Number;
-                case TypeCode.Boolean:
-                    return FieldType.Boolean;
-                case TypeCode.String:
-                    return FieldType.Text;
-                case TypeCode.DateTime:
-                    return FieldType.DateTime;
-                default:
-                    return FieldType.Invalid;
-            }
-        }
-
-        private FieldType? GetFieldTypeFromAttribute(PropertyInfo property)
-        {
-            FieldType? detectedFieldType = null;
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<BooleanAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<ChoiceAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<CurrencyAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<DateTimeAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<LookupBaseAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<ManagedMetadataAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<NoteAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<NumberAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<TextAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<UrlAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<UserAttribute>(property);
-            return detectedFieldType;
-        }
-
-        private FieldType? GetFieldTypeByAttribute<T>(PropertyInfo property) where T : Attribute
-        {
-            if (property.GetCustomAttribute(typeof(T), true) == null) return null;
-            return (FieldType)typeof(T).GetField(nameof(BooleanAttribute.AssociatedFieldType)).GetRawConstantValue();
-        }
-
-        public static bool PropertyIsLookup(PropertyInfo property)
-        {
-            if (property.GetCustomAttribute<LookupBaseAttribute>(true) != null) return true;
-            Type propertyType = property.PropertyType;
-            if (propertyType == typeof(KeyValuePair<int, string>)) return true; // Single-Lookup
-            if (propertyType == typeof(Dictionary<int, string>)) return true; // Multi-Lookup
-            if (propertyType.GetProperty(SuffixId) != null) return true; // Single Lookup with complex type
-            if (propertyType.IsArray && propertyType.GetElementType().GetProperty(SuffixId) != null) return true; // Multi Lookup with complex type
-            return false;
-        }
+  
 
         private bool IsTrue(bool? value)
         {
