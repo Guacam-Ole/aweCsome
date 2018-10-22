@@ -108,8 +108,11 @@ namespace AweCsomeO365
 
         public static FieldType GetFieldType(PropertyInfo property)
         {
+
+
             if (PropertyIsLookup(property)) return FieldType.Lookup;
             Type propertyType = property.PropertyType;
+            if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>)) propertyType = propertyType.GetGenericArguments()[0];
 
             if (propertyType.IsArray) propertyType = propertyType.GetElementType();
             FieldType? detectedFieldType = GetFieldTypeFromAttribute(property);
@@ -133,9 +136,11 @@ namespace AweCsomeO365
                 case TypeCode.Boolean:
                     return FieldType.Boolean;
                 case TypeCode.String:
+                case TypeCode.Char:
                     return FieldType.Text;
                 case TypeCode.DateTime:
                     return FieldType.DateTime;
+
                 default:
                     return FieldType.Invalid;
             }
