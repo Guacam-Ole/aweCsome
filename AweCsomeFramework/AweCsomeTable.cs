@@ -125,6 +125,10 @@ namespace AweCsomeO365
 
                     var newList = clientContext.Web.Lists.Add(listCreationInfo);
                     AddFieldsToTable(clientContext, newList, entityType.GetProperties(), lookupTableIds);
+                    foreach (var property in entityType.GetProperties().Where(q=>q.GetCustomAttribute<IgnoreOnCreationAttribute>()!=null && q.GetCustomAttribute<DisplayNameAttribute>()!=null) ){
+                        // internal fields with custom displayname
+                        _awecsomeField.ChangeDisplaynameFromField(newList, property);
+                    }
                     clientContext.ExecuteQuery();
                 }
                 catch (Exception ex)

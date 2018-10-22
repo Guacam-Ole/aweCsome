@@ -8,5 +8,7 @@ namespace AweCsomeO365
     public interface IAweCsomeField
     {
         void AddFieldToList( List sharePointList, PropertyInfo property, Dictionary<string,Guid> lookupTableIds);
+
+        void ChangeDisplaynameFromField(List sharePointList, PropertyInfo property);
     }
 }

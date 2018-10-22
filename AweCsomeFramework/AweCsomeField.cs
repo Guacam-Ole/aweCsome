@@ -33,7 +33,7 @@ namespace AweCsomeO365
             Type propertyType = property.PropertyType;
 
             string internalName = EntityHelper.GetInternalNameFromProperty(property);
-            string displayName = EntityHelper.GetDisplayNameFromEntity(property);
+            string displayName = EntityHelper.GetDisplayNameFromProperty(property);
             string description = EntityHelper.GetDescriptionFromEntityType(propertyType);
 
             bool isRequired = PropertyIsRequired(property);
@@ -308,5 +308,14 @@ namespace AweCsomeO365
             return enumCaml;
         }
 
+        public void ChangeDisplaynameFromField(List sharePointList, PropertyInfo property)
+        {
+            var internalName = EntityHelper.GetInternalNameFromProperty(property);
+            var displayName = EntityHelper.GetDisplayNameFromProperty(property);
+
+            var fieldToChange=sharePointList.Fields.GetByInternalNameOrTitle(internalName);
+            fieldToChange.Title = displayName;
+            fieldToChange.Update();
+        }
     }
 }

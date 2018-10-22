@@ -47,7 +47,7 @@ namespace AweCsomeO365
             return internalNameAttribute == null ? entityType.Name : internalNameAttribute.InternalName;
         }
 
-        public static string GetDisplayNameFromEntity(PropertyInfo propertyInfo)
+        public static string GetDisplayNameFromProperty(PropertyInfo propertyInfo)
         {
             Type propertyType = propertyInfo.PropertyType;
             var displayNameAttribute = propertyInfo.GetCustomAttribute<DisplayNameAttribute>();
