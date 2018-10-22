@@ -34,7 +34,7 @@ namespace AweCsomeO365
         public static string GetInternalNameFromProperty(PropertyInfo propertyInfo)
         {
             Type propertyType = propertyInfo.PropertyType;
-            var internalNameAttribute = propertyType.GetCustomAttribute<InternalNameAttribute>();
+            var internalNameAttribute = propertyInfo.GetCustomAttribute<InternalNameAttribute>();
             string internalName = internalNameAttribute == null ? propertyInfo.Name : internalNameAttribute.InternalName;
             string displayName = null;
             if (PropertyIsLookup(propertyInfo)) RemoveLookupIdFromFieldName(propertyType.IsArray, ref internalName, ref displayName);
@@ -47,10 +47,10 @@ namespace AweCsomeO365
             return internalNameAttribute == null ? entityType.Name : internalNameAttribute.InternalName;
         }
 
-        public static string GetDisplayNameFromEntityType(PropertyInfo propertyInfo)
+        public static string GetDisplayNameFromEntity(PropertyInfo propertyInfo)
         {
             Type propertyType = propertyInfo.PropertyType;
-            var displayNameAttribute = propertyType.GetCustomAttribute<DisplayNameAttribute>();
+            var displayNameAttribute = propertyInfo.GetCustomAttribute<DisplayNameAttribute>();
             return displayNameAttribute == null ? propertyInfo.Name : displayNameAttribute.DisplayName;
         }
 

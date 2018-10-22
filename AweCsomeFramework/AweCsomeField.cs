@@ -33,7 +33,7 @@ namespace AweCsomeO365
             Type propertyType = property.PropertyType;
 
             string internalName = EntityHelper.GetInternalNameFromProperty(property);
-            string displayName = EntityHelper.GetDisplayNameFromEntityType(property);
+            string displayName = EntityHelper.GetDisplayNameFromEntity(property);
             string description = EntityHelper.GetDescriptionFromEntityType(propertyType);
 
             bool isRequired = PropertyIsRequired(property);
