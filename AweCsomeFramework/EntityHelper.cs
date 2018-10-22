@@ -1,6 +1,7 @@
 ﻿using AweCsomeO365.Attributes;
 using AweCsomeO365.Attributes.FieldAttributes;
 using AweCsomeO365.Attributes.TableAttributes;
+using log4net;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections;
@@ -14,17 +15,7 @@ namespace AweCsomeO365
 {
     public static class EntityHelper
     {
-        //public static T[] ConvertToArray<T>(IList list)
-        //{
-        //    return list.Cast<T>().ToArray();
-        //}
-
-        //public static object[] ConvertToArrayRuntime(IList list, Type elementType)
-        //{
-        //    var convertMethod = typeof(EntityHelper).GetMethod("ConvertToArray", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(IList) }, null);
-        //    var genericMethod = convertMethod.MakeGenericMethod(elementType);
-        //    return (object[])genericMethod.Invoke(null, new object[] { list });
-        //}
+        private static ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
 
         private static void RemoveSuffixFromName(ref string name, string suffix)
@@ -108,8 +99,6 @@ namespace AweCsomeO365
 
         public static FieldType GetFieldType(PropertyInfo property)
         {
-
-
             if (PropertyIsLookup(property)) return FieldType.Lookup;
             Type propertyType = property.PropertyType;
             if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>)) propertyType = propertyType.GetGenericArguments()[0];
@@ -142,6 +131,7 @@ namespace AweCsomeO365
                     return FieldType.DateTime;
 
                 default:
+                    _log.Warn($"Cannot create fieldtype from {propertyType.Name}. Type is not supported.");
                     return FieldType.Invalid;
             }
         }
@@ -187,8 +177,8 @@ namespace AweCsomeO365
                         //var genericArgs = propertyType.GetGenericArguments();
                         //var concreteType = listType.MakeGenericType(genericArgs);
                         //var newList = Activator.CreateInstance(concreteType) as IList;
-                        
-               //         var objectType = propertyType.GetGenericArguments().First();
+
+                        //         var objectType = propertyType.GetGenericArguments().First();
                         var newList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType)) as IList;
 
 
