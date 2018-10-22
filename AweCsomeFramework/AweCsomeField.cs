@@ -124,19 +124,7 @@ namespace AweCsomeO365
             if (booleanAttribute != null) fieldAdditional = $"<Default>{(booleanAttribute.DefaultValue ? "1" : "0")}</Default>";
         }
 
-        private Dictionary<string, string> GetEnumDisplaynames(Type enumType)
-        {
-            var displayNames = new Dictionary<string, string>();
-            
-            foreach (var fieldname in Enum.GetNames(enumType))
-            {
-                var field = enumType.GetField(fieldname);
-                var displayNameAttribute = field.GetCustomAttribute<DisplayNameAttribute>();
-
-                displayNames.Add(field.Name, displayNameAttribute == null ? field.Name : displayNameAttribute.DisplayName);
-            }
-            return displayNames;
-        }
+   
 
         private void GetFieldCreationDetailsChoice(PropertyInfo property, out string fieldAttributes, out string fieldAdditional)
         {
@@ -152,7 +140,7 @@ namespace AweCsomeO365
                 if (choiceAttribute.AllowFillIn) fieldAttributes += " FillInChoice='TRUE'";
             }
             Type propertyType = property.PropertyType;
-            if (choices == null) choices = GetEnumDisplaynames(propertyType).Values.ToArray();
+            if (choices == null) choices = propertyType.GetEnumDisplaynames().Values.ToArray();
             if (choices == null && propertyType.IsEnum) choices = Enum.GetNames(propertyType);
             string choiceXml = string.Empty;
             if (choices != null)

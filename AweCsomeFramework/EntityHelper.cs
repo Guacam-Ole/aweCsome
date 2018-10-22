@@ -173,15 +173,8 @@ namespace AweCsomeO365
                     Type elementType = propertyType.GetElementType();
 
                     if (elementType.GetProperty(AweCsomeField.SuffixId) != null)
-                    {
-                        //var listType = typeof(List<>);
-                        //var genericArgs = propertyType.GetGenericArguments();
-                        //var concreteType = listType.MakeGenericType(genericArgs);
-                        //var newList = Activator.CreateInstance(concreteType) as IList;
-
-                        //         var objectType = propertyType.GetGenericArguments().First();
-                        var newList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType)) as IList;
-
+                    {        
+                        var genericList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType)) as IList;
 
                         var targetEntityObject = Activator.CreateInstance(elementType);
                         PropertyInfo idProperty = elementType.GetProperty(AweCsomeField.SuffixId);
@@ -191,11 +184,11 @@ namespace AweCsomeO365
                         {
                             idProperty.SetValue(targetEntityObject, fieldLookupValue.LookupId);
                             if (titleProperty != null) titleProperty.SetValue(targetEntityObject, fieldLookupValue.LookupValue);
-                            newList.Add(targetEntityObject);
+                            genericList.Add(targetEntityObject);
                         }
 
-                        var array = Array.CreateInstance(elementType, newList.Count);
-                        newList.CopyTo(array, 0);
+                        var array = Array.CreateInstance(elementType, genericList.Count);
+                        genericList.CopyTo(array, 0);
                         return array;
                     }
                 }
@@ -222,9 +215,36 @@ namespace AweCsomeO365
             }
             if (propertyType.IsEnum)
             {
-                return Enum.Parse(property.PropertyType, itemValue as string);
+
+                return Enum.Parse(property.PropertyType, property.PropertyType.GetEnumDisplayname(itemValue as string));
             }
             return itemValue;
+        }
+
+        public static Dictionary<string, string> GetEnumDisplaynames(this Type enumType)
+        {
+            var displayNames = new Dictionary<string, string>();
+
+            foreach (var fieldname in Enum.GetNames(enumType))
+            {
+                var field = enumType.GetField(fieldname);
+                var displayNameAttribute = field.GetCustomAttribute<DisplayNameAttribute>();
+
+                displayNames.Add(field.Name, displayNameAttribute == null ? field.Name : displayNameAttribute.DisplayName);
+            }
+            return displayNames;
+        }
+
+        public static string GetEnumDisplayname(this Type enumType, string enumValue)
+        {
+            Dictionary<string, string> allDisplaynames = GetEnumDisplaynames(enumType);
+
+            return allDisplaynames[enumValue];
+        }
+
+        public static object ParseFromDisplayName(this Type enumType, string displayValue)
+        {
+            return Enum.Parse(enumType, GetEnumDisplaynames(enumType).First(q=>q.Value==displayValue).Key);
         }
 
         public static object GetPropertyValueForItem<T>(PropertyInfo property, T entity)
