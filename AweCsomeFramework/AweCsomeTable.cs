@@ -125,6 +125,10 @@ namespace AweCsomeO365
 
                     var newList = clientContext.Web.Lists.Add(listCreationInfo);
                     AddFieldsToTable(clientContext, newList, entityType.GetProperties(), lookupTableIds);
+                    foreach (var property in entityType.GetProperties().Where(q=>q.GetCustomAttribute<IgnoreOnCreationAttribute>()!=null && q.GetCustomAttribute<DisplayNameAttribute>()!=null) ){
+                        // internal fields with custom displayname
+                        _awecsomeField.ChangeDisplaynameFromField(newList, property);
+                    }
                     clientContext.ExecuteQuery();
                 }
                 catch (Exception ex)
@@ -217,7 +221,7 @@ namespace AweCsomeO365
                     {
                         if (!property.CanRead) continue;
                         if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
-                        newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetPropertyValueForItem(property, entity);
+                        newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
                     }
                     newItem.Update();
                     clientContext.ExecuteQuery();
@@ -280,7 +284,7 @@ namespace AweCsomeO365
                         targetType = property.PropertyType;
                         sourceType = sourceValue.GetType();
 
-                        object propertyValue = EntityHelper.GetItemValueForProperty(property, item.FieldValues[fieldname]);
+                        object propertyValue = EntityHelper.GetPropertyFromItemValue(property, item.FieldValues[fieldname]);
                         property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
                     }
                 }
@@ -400,7 +404,7 @@ namespace AweCsomeO365
                     {
                         if (!property.CanRead) continue;
                         if (property.GetCustomAttribute<IgnoreOnUpdateAttribute>() != null) continue;
-                        existingItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetPropertyValueForItem(property, entity);
+                        existingItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
                     }
                     existingItem.Update();
                     clientContext.ExecuteQuery();

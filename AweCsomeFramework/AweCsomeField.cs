@@ -1,13 +1,13 @@
-﻿using System;
+﻿using AweCsomeO365.Attributes.FieldAttributes;
+using AweCsomeO365.Attributes.IgnoreAttributes;
+using log4net;
+using Microsoft.SharePoint.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.SharePoint.Client;
-using AweCsomeO365.Attributes.FieldAttributes;
-using AweCsomeO365.Attributes.IgnoreAttributes;
-using log4net;
 
 namespace AweCsomeO365
 {
@@ -33,7 +33,7 @@ namespace AweCsomeO365
             Type propertyType = property.PropertyType;
 
             string internalName = EntityHelper.GetInternalNameFromProperty(property);
-            string displayName = EntityHelper.GetDisplayNameFromEntityType(property);
+            string displayName = EntityHelper.GetDisplayNameFromProperty(property);
             string description = EntityHelper.GetDescriptionFromEntityType(propertyType);
 
             bool isRequired = PropertyIsRequired(property);
@@ -124,6 +124,8 @@ namespace AweCsomeO365
             if (booleanAttribute != null) fieldAdditional = $"<Default>{(booleanAttribute.DefaultValue ? "1" : "0")}</Default>";
         }
 
+   
+
         private void GetFieldCreationDetailsChoice(PropertyInfo property, out string fieldAttributes, out string fieldAdditional)
         {
             fieldAttributes = null;
@@ -138,6 +140,7 @@ namespace AweCsomeO365
                 if (choiceAttribute.AllowFillIn) fieldAttributes += " FillInChoice='TRUE'";
             }
             Type propertyType = property.PropertyType;
+            if (choices == null) choices = propertyType.GetEnumDisplaynames().Values.ToArray();
             if (choices == null && propertyType.IsEnum) choices = Enum.GetNames(propertyType);
             string choiceXml = string.Empty;
             if (choices != null)
@@ -274,9 +277,9 @@ namespace AweCsomeO365
             return propertyType.IsArray || propertyType.IsGenericList() || propertyType.IsDictionary();
         }
 
-   
 
-  
+
+
 
         private bool IsTrue(bool? value)
         {
@@ -308,5 +311,14 @@ namespace AweCsomeO365
             return enumCaml;
         }
 
+        public void ChangeDisplaynameFromField(List sharePointList, PropertyInfo property)
+        {
+            var internalName = EntityHelper.GetInternalNameFromProperty(property);
+            var displayName = EntityHelper.GetDisplayNameFromProperty(property);
+
+            var fieldToChange = sharePointList.Fields.GetByInternalNameOrTitle(internalName);
+            fieldToChange.Title = displayName;
+            fieldToChange.Update();
+        }
     }
 }

@@ -15,10 +15,7 @@ namespace AweCsomeO365.Attributes.TableAttributes
         {
             DocumentTemplateTypeId = documentTemplateTypeId;
         }
-        public DocumentTemplateTypeAttribute(DocumentTemplateType documentTemplateType)
-        {
-            DocumentTemplateTypeId = (int)documentTemplateType;
-        }
+     
 
     }
 }
