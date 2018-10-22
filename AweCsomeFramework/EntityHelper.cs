@@ -160,7 +160,7 @@ namespace AweCsomeO365
             return (FieldType)typeof(T).GetField(nameof(BooleanAttribute.AssociatedFieldType)).GetRawConstantValue();
         }
 
-        public static object GetItemValueForProperty(PropertyInfo property, object itemValue)
+        public static object GetPropertyFromItemValue(PropertyInfo property, object itemValue)
         {
             Type propertyType = property.PropertyType;
             if (PropertyIsLookup(property))
@@ -173,7 +173,7 @@ namespace AweCsomeO365
                     Type elementType = propertyType.GetElementType();
 
                     if (elementType.GetProperty(AweCsomeField.SuffixId) != null)
-                    {        
+                    {
                         var genericList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType)) as IList;
 
                         var targetEntityObject = Activator.CreateInstance(elementType);
@@ -215,8 +215,7 @@ namespace AweCsomeO365
             }
             if (propertyType.IsEnum)
             {
-
-                return Enum.Parse(property.PropertyType, property.PropertyType.GetEnumDisplayname(itemValue as string));
+                return Enum.Parse(property.PropertyType, property.PropertyType.GetEnumInternalNameFromDisplayname(itemValue as string));
             }
             return itemValue;
         }
@@ -235,19 +234,24 @@ namespace AweCsomeO365
             return displayNames;
         }
 
-        public static string GetEnumDisplayname(this Type enumType, string enumValue)
+        public static string GetEnumInternalNameFromDisplayname(this Type enumType, string displayname)
         {
             Dictionary<string, string> allDisplaynames = GetEnumDisplaynames(enumType);
+            return allDisplaynames.First(q => q.Value == displayname).Key;
+        }
 
-            return allDisplaynames[enumValue];
+        public static string GetEnumDisplayNameFromInternalname(this Type enumType, string internalName)
+        {
+            Dictionary<string, string> allDisplaynames = GetEnumDisplaynames(enumType);
+            return allDisplaynames[internalName];
         }
 
         public static object ParseFromDisplayName(this Type enumType, string displayValue)
         {
-            return Enum.Parse(enumType, GetEnumDisplaynames(enumType).First(q=>q.Value==displayValue).Key);
+            return Enum.Parse(enumType, GetEnumDisplaynames(enumType).First(q => q.Value == displayValue).Key);
         }
 
-        public static object GetPropertyValueForItem<T>(PropertyInfo property, T entity)
+        public static object GetItemValueFromProperty<T>(PropertyInfo property, T entity)
         {
             Type propertyType = property.PropertyType;
             if (PropertyIsLookup(property))
@@ -271,7 +275,7 @@ namespace AweCsomeO365
             }
             if (propertyType.IsEnum)
             {
-                return Enum.GetName(property.PropertyType, property.GetValue(entity));
+                return property.PropertyType.GetEnumDisplayNameFromInternalname(property.GetValue(entity) as string);
             }
             return property.GetValue(entity);
         }

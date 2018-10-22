@@ -221,7 +221,7 @@ namespace AweCsomeO365
                     {
                         if (!property.CanRead) continue;
                         if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
-                        newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetPropertyValueForItem(property, entity);
+                        newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
                     }
                     newItem.Update();
                     clientContext.ExecuteQuery();
@@ -284,7 +284,7 @@ namespace AweCsomeO365
                         targetType = property.PropertyType;
                         sourceType = sourceValue.GetType();
 
-                        object propertyValue = EntityHelper.GetItemValueForProperty(property, item.FieldValues[fieldname]);
+                        object propertyValue = EntityHelper.GetPropertyFromItemValue(property, item.FieldValues[fieldname]);
                         property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
                     }
                 }
@@ -404,7 +404,7 @@ namespace AweCsomeO365
                     {
                         if (!property.CanRead) continue;
                         if (property.GetCustomAttribute<IgnoreOnUpdateAttribute>() != null) continue;
-                        existingItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetPropertyValueForItem(property, entity);
+                        existingItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
                     }
                     existingItem.Update();
                     clientContext.ExecuteQuery();
