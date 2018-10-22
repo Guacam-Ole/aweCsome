@@ -1,13 +1,13 @@
-﻿using System;
+﻿using AweCsomeO365.Attributes.FieldAttributes;
+using AweCsomeO365.Attributes.IgnoreAttributes;
+using log4net;
+using Microsoft.SharePoint.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.SharePoint.Client;
-using AweCsomeO365.Attributes.FieldAttributes;
-using AweCsomeO365.Attributes.IgnoreAttributes;
-using log4net;
 
 namespace AweCsomeO365
 {
@@ -124,6 +124,20 @@ namespace AweCsomeO365
             if (booleanAttribute != null) fieldAdditional = $"<Default>{(booleanAttribute.DefaultValue ? "1" : "0")}</Default>";
         }
 
+        private Dictionary<string, string> GetEnumDisplaynames(Type enumType)
+        {
+            var displayNames = new Dictionary<string, string>();
+            
+            foreach (var fieldname in Enum.GetNames(enumType))
+            {
+                var field = enumType.GetField(fieldname);
+                var displayNameAttribute = field.GetCustomAttribute<DisplayNameAttribute>();
+
+                displayNames.Add(field.Name, displayNameAttribute == null ? field.Name : displayNameAttribute.DisplayName);
+            }
+            return displayNames;
+        }
+
         private void GetFieldCreationDetailsChoice(PropertyInfo property, out string fieldAttributes, out string fieldAdditional)
         {
             fieldAttributes = null;
@@ -138,6 +152,7 @@ namespace AweCsomeO365
                 if (choiceAttribute.AllowFillIn) fieldAttributes += " FillInChoice='TRUE'";
             }
             Type propertyType = property.PropertyType;
+            if (choices == null) choices = GetEnumDisplaynames(propertyType).Values.ToArray();
             if (choices == null && propertyType.IsEnum) choices = Enum.GetNames(propertyType);
             string choiceXml = string.Empty;
             if (choices != null)
@@ -274,9 +289,9 @@ namespace AweCsomeO365
             return propertyType.IsArray || propertyType.IsGenericList() || propertyType.IsDictionary();
         }
 
-   
 
-  
+
+
 
         private bool IsTrue(bool? value)
         {
@@ -313,7 +328,7 @@ namespace AweCsomeO365
             var internalName = EntityHelper.GetInternalNameFromProperty(property);
             var displayName = EntityHelper.GetDisplayNameFromProperty(property);
 
-            var fieldToChange=sharePointList.Fields.GetByInternalNameOrTitle(internalName);
+            var fieldToChange = sharePointList.Fields.GetByInternalNameOrTitle(internalName);
             fieldToChange.Title = displayName;
             fieldToChange.Update();
         }

@@ -107,7 +107,8 @@ namespace AweCsomeO365
             FieldType? detectedFieldType = GetFieldTypeFromAttribute(property);
             if (detectedFieldType != null) return detectedFieldType.Value;
 
-            if (propertyType.IsEnum) return FieldType.Choice;
+            if (propertyType.IsEnum)
+                return FieldType.Choice;
             switch (Type.GetTypeCode(propertyType))
             {
                 case TypeCode.Byte:
