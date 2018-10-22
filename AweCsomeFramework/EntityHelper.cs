@@ -65,7 +65,7 @@ namespace AweCsomeO365
 
         public static int GetListTemplateType(Type entityType)
         {
-            var listTemplateTypeAttribute = entityType.GetCustomAttribute<ListTemplateTypeAttribute>();
+            var listTemplateTypeAttribute = entityType.GetCustomAttribute<ListTemplateAttribute>();
             return listTemplateTypeAttribute == null ? (int)ListTemplateType.GenericList : listTemplateTypeAttribute.TemplateTypeId;
         }
 
