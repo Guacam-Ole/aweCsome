@@ -160,6 +160,23 @@ namespace AweCsomeO365
             // TODO: Very Loooong tables: Split executeQuery
         }
 
+    
+        public string[] GetAvailableChoicesFromField<T>( string propertyName)
+        {
+            string listTitle= EntityHelper.GetDisplayNameFromEntitiyType(typeof(T));
+            List sharePointList = _clientContext.Web.Lists.GetByTitle(listTitle);
+            _clientContext.Load(sharePointList);
+            _clientContext.ExecuteQuery();
+
+            var property = typeof(T).GetProperty(propertyName);
+
+            FieldChoice choiceField =_clientContext.CastTo<FieldChoice>(sharePointList.Fields.GetByInternalNameOrTitle(EntityHelper.GetInternalNameFromProperty(property)));
+            _clientContext.Load(choiceField, q=>q.Choices);
+            _clientContext.ExecuteQuery();
+
+            return choiceField.Choices;
+        }
+
         public void DeleteTable<T>()
         {
             DeleteTable(typeof(T), true);
