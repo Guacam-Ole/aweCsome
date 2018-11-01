@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365.Attributes
+namespace AweCsomeO365.Exceptions
 {
-    public class LookupAttribute : Attribute
+    public class ListNotFoundException : Exception
     {
     }
 }

@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace AweCsomeO365.Exceptions
 {
-    public class TableNotFoundException : Exception
+    public class ItemAlreadyExistsException:Exception
     {
+        public ItemAlreadyExistsException(string message):base(message) { }
     }
 }
