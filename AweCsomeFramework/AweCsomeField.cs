@@ -1,5 +1,5 @@
-﻿using AweCsomeO365.Attributes.FieldAttributes;
-using AweCsomeO365.Attributes.IgnoreAttributes;
+﻿using AweCsome.Attributes.FieldAttributes;
+using AweCsome.Attributes.IgnoreAttributes;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365
+namespace AweCsome
 {
     public class AweCsomeField : IAweCsomeField
     {
@@ -277,10 +277,6 @@ namespace AweCsomeO365
             return propertyType.IsArray || propertyType.IsGenericList() || propertyType.IsDictionary();
         }
 
-
-
-
-
         private bool IsTrue(bool? value)
         {
             return value.HasValue && value.Value;
@@ -319,6 +315,11 @@ namespace AweCsomeO365
             var fieldToChange = sharePointList.Fields.GetByInternalNameOrTitle(internalName);
             fieldToChange.Title = displayName;
             fieldToChange.Update();
+        }
+
+        public Field GetFieldDefinition(List sharePointList, PropertyInfo property)
+        {
+            return sharePointList.Fields.GetByInternalNameOrTitle(EntityHelper.GetInternalNameFromProperty(property));
         }
     }
 }

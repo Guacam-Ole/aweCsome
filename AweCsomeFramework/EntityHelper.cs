@@ -1,6 +1,6 @@
-﻿using AweCsomeO365.Attributes;
-using AweCsomeO365.Attributes.FieldAttributes;
-using AweCsomeO365.Attributes.TableAttributes;
+﻿using AweCsome.Attributes;
+using AweCsome.Attributes.FieldAttributes;
+using AweCsome.Attributes.TableAttributes;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
@@ -11,12 +11,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365
+namespace AweCsome
 {
     public static class EntityHelper
     {
         private static ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
 
         private static void RemoveSuffixFromName(ref string name, string suffix)
         {
@@ -29,7 +28,6 @@ namespace AweCsomeO365
             RemoveSuffixFromName(ref internalName, isArray ? AweCsomeField.SuffixIds : AweCsomeField.SuffixId);
             RemoveSuffixFromName(ref displayName, isArray ? AweCsomeField.SuffixIds : AweCsomeField.SuffixId);
         }
-
 
         public static string GetInternalNameFromProperty(PropertyInfo propertyInfo)
         {
@@ -281,7 +279,7 @@ namespace AweCsomeO365
             }
             if (propertyType.IsEnum)
             {
-                return property.PropertyType.GetEnumDisplayNameFromInternalname(property.GetValue(entity) as string);
+                return property.PropertyType.GetEnumDisplayNameFromInternalname(property.GetValue(entity).ToString());
             }
             return property.GetValue(entity);
         }

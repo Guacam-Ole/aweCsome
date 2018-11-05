@@ -1,7 +1,7 @@
-﻿using AweCsomeO365.Attributes.FieldAttributes;
-using AweCsomeO365.Attributes.IgnoreAttributes;
-using AweCsomeO365.Attributes.TableAttributes;
-using AweCsomeO365.Exceptions;
+﻿using AweCsome.Attributes.FieldAttributes;
+using AweCsome.Attributes.IgnoreAttributes;
+using AweCsome.Attributes.TableAttributes;
+using AweCsome.Exceptions;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365
+namespace AweCsome
 {
     public class AweCsomeTable : IAweCsomeTable
     {
@@ -125,7 +125,8 @@ namespace AweCsomeO365
 
                     var newList = clientContext.Web.Lists.Add(listCreationInfo);
                     AddFieldsToTable(clientContext, newList, entityType.GetProperties(), lookupTableIds);
-                    foreach (var property in entityType.GetProperties().Where(q=>q.GetCustomAttribute<IgnoreOnCreationAttribute>()!=null && q.GetCustomAttribute<DisplayNameAttribute>()!=null) ){
+                    foreach (var property in entityType.GetProperties().Where(q => q.GetCustomAttribute<IgnoreOnCreationAttribute>() != null && q.GetCustomAttribute<DisplayNameAttribute>() != null))
+                    {
                         // internal fields with custom displayname
                         _awecsomeField.ChangeDisplaynameFromField(newList, property);
                     }
@@ -160,18 +161,18 @@ namespace AweCsomeO365
             // TODO: Very Loooong tables: Split executeQuery
         }
 
-    
-        public string[] GetAvailableChoicesFromField<T>( string propertyName)
+
+        public string[] GetAvailableChoicesFromField<T>(string propertyName)
         {
-            string listTitle= EntityHelper.GetDisplayNameFromEntitiyType(typeof(T));
+            string listTitle = EntityHelper.GetDisplayNameFromEntitiyType(typeof(T));
             List sharePointList = _clientContext.Web.Lists.GetByTitle(listTitle);
             _clientContext.Load(sharePointList);
             _clientContext.ExecuteQuery();
 
             var property = typeof(T).GetProperty(propertyName);
 
-            FieldChoice choiceField =_clientContext.CastTo<FieldChoice>(sharePointList.Fields.GetByInternalNameOrTitle(EntityHelper.GetInternalNameFromProperty(property)));
-            _clientContext.Load(choiceField, q=>q.Choices);
+            FieldChoice choiceField = _clientContext.CastTo<FieldChoice>(_awecsomeField.GetFieldDefinition(sharePointList, property));
+            _clientContext.Load(choiceField, q => q.Choices);
             _clientContext.ExecuteQuery();
 
             return choiceField.Choices;
@@ -233,12 +234,21 @@ namespace AweCsomeO365
                     clientContext.ExecuteQuery();
                     List list = listCollection.FirstOrDefault(q => q.Title == listName);
                     if (list == null) throw new ListNotFoundException();
+                    
                     ListItem newItem = list.AddItem(new ListItemCreationInformation());
                     foreach (var property in entityType.GetProperties())
                     {
-                        if (!property.CanRead) continue;
-                        if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
-                        newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
+                        try
+                        {
+                            if (!property.CanRead) continue;
+                            if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
+                            newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
+                        } catch (Exception ex)
+                        {
+                            ex.Data.Add("Propertyname", property.Name);
+                            ex.Data.Add("Listname", listName);
+                            throw (ex);
+                        }
                     }
                     newItem.Update();
                     clientContext.ExecuteQuery();
@@ -257,11 +267,12 @@ namespace AweCsomeO365
 
         private string WrapCamlQuery(string innerConditions)
         {
-            return $"<View><Query>{innerConditions}</Query></View>";
+            return $"<View><Query><Where>{innerConditions}</Where></Query></View>";
         }
 
         private string CreateLookupCaml(string fieldname, int fieldvalue)
         {
+            // TODO: Internal name
             return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' LookupId='TRUE' /><Value Type='Lookup'>{fieldvalue}</Value></Eq>");
         }
 
