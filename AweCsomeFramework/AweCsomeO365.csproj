@@ -7,7 +7,7 @@
     <ProjectGuid>{EFEF55F5-D4A0-4488-87CE-D76E1F5C63D4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AweCsomeO365</RootNamespace>
+    <RootNamespace>AweCsome</RootNamespace>
     <AssemblyName>AweCsomeO365</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -170,6 +170,7 @@
     <Compile Include="Attributes\FieldAttributes\DisplayNameAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\CurrencyAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\DateTimeAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\IndexAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\UrlAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\LookupBaseAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\ManagedMetadataAttribute.cs" />

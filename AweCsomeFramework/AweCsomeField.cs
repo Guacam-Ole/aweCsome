@@ -24,6 +24,8 @@ namespace AweCsome
             var ignoreOnCreationAttribute = property.GetCustomAttribute<IgnoreOnCreationAttribute>();
             if (ignoreOnCreationAttribute != null && ignoreOnCreationAttribute.IgnoreOnCreation) return;
             var addToDefaultViewAttribute = property.GetCustomAttribute<AddToDefaultViewAttribute>();
+
+
             string fieldXml = GetFieldCreationXml(property, lookupTableIds);
             Field field = sharePointList.Fields.AddFieldAsXml(fieldXml, addToDefaultViewAttribute != null, AddFieldOptions.AddFieldInternalNameHint);
         }
@@ -35,6 +37,7 @@ namespace AweCsome
             string internalName = EntityHelper.GetInternalNameFromProperty(property);
             string displayName = EntityHelper.GetDisplayNameFromProperty(property);
             string description = EntityHelper.GetDescriptionFromEntityType(propertyType);
+
 
             bool isRequired = PropertyIsRequired(property);
             bool isUnique = IsTrue(propertyType.GetCustomAttribute<UniqueAttribute>()?.IsUnique);
@@ -51,6 +54,8 @@ namespace AweCsome
                 if (fieldType != FieldType.Choice) fieldAttributes += " Mult='TRUE'";
                 fieldTypeString += "Multi";
             }
+            var indexAttribute = property.GetCustomAttribute<IndexAttribute>();
+            if (indexAttribute != null) fieldAttributes += " Indexed='TRUE'";
 
             string csomCreateCaml = $"<Field Type='{fieldTypeString}' Name='{internalName}' DisplayName='{displayName}' StaticName='{internalName}'";
             if (isRequired) csomCreateCaml += " Required='TRUE'";
@@ -124,7 +129,7 @@ namespace AweCsome
             if (booleanAttribute != null) fieldAdditional = $"<Default>{(booleanAttribute.DefaultValue ? "1" : "0")}</Default>";
         }
 
-   
+
 
         private void GetFieldCreationDetailsChoice(PropertyInfo property, out string fieldAttributes, out string fieldAdditional)
         {

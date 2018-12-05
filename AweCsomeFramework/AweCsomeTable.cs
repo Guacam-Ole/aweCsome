@@ -2,7 +2,6 @@
 using AweCsome.Attributes.IgnoreAttributes;
 using AweCsome.Attributes.TableAttributes;
 using AweCsome.Exceptions;
-using AweCsomeO365.Attributes.TableAttributes;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;

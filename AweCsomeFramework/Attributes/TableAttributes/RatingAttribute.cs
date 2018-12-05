@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365.Attributes.TableAttributes
+namespace AweCsome.Attributes.TableAttributes
 {
     public class RatingAttribute : Attribute
     {
