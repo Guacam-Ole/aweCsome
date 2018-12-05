@@ -2,6 +2,7 @@
 using AweCsome.Attributes.IgnoreAttributes;
 using AweCsome.Attributes.TableAttributes;
 using AweCsome.Exceptions;
+using AweCsomeO365.Attributes.TableAttributes;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
@@ -109,6 +110,15 @@ namespace AweCsome
             return listCreationInfo;
         }
 
+        private void SetRating<T>(List list)
+        {
+            var ratingAttribute = typeof(T).GetCustomAttribute<RatingAttribute>();
+            if (ratingAttribute!=null)
+            {
+                list.SetRating((OfficeDevPnP.Core.VotingExperience)ratingAttribute.VotingExperience);
+            }
+        }
+
         public void CreateTable<T>()
         {
             Type entityType = typeof(T);
@@ -124,6 +134,7 @@ namespace AweCsome
                     ListCreationInformation listCreationInfo = BuildListCreationInformation(clientContext, entityType);
 
                     var newList = clientContext.Web.Lists.Add(listCreationInfo);
+                    SetRating<T>(newList);
                     AddFieldsToTable(clientContext, newList, entityType.GetProperties(), lookupTableIds);
                     foreach (var property in entityType.GetProperties().Where(q => q.GetCustomAttribute<IgnoreOnCreationAttribute>() != null && q.GetCustomAttribute<DisplayNameAttribute>() != null))
                     {
