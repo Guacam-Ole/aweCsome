@@ -6,12 +6,9 @@ using System.Threading.Tasks;
 
 namespace AweCsome.Attributes.TableAttributes
 {
-    public class UrlAttribute : Attribute
+    public class VersioningAttribute:Attribute
     {
-        public string Url { get; set; }
-        public UrlAttribute(string url)
-        {
-            Url = url;
-        }
+        public bool EnableVersioning { get; set; } = true;
+        public bool EnableMinorVersioning { get; set; } = false;
     }
 }

@@ -193,7 +193,8 @@
     <Compile Include="Attributes\TableAttributes\RatingAttribute.cs" />
     <Compile Include="Attributes\TableAttributes\TemplateFeatureIdAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\TextAttribute.cs" />
-    <Compile Include="Attributes\TableAttributes\UrlAttribute.cs" />
+    <Compile Include="Attributes\TableAttributes\TableUrlAttribute.cs" />
+    <Compile Include="Attributes\TableAttributes\VersioningAttribute.cs" />
     <Compile Include="AweCsomeField.cs" />
     <Compile Include="AweCsomeTable.cs" />
     <Compile Include="EntityHelper.cs" />

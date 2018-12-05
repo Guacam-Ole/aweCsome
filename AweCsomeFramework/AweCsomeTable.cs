@@ -37,7 +37,7 @@ namespace AweCsome
 
         private string GetTableUrl(Type entityType)
         {
-            var descriptionAttribute = entityType.GetCustomAttribute<Attributes.TableAttributes.UrlAttribute>();
+            var descriptionAttribute = entityType.GetCustomAttribute<Attributes.TableAttributes.TableUrlAttribute>();
             return descriptionAttribute?.Url;
         }
 
@@ -118,6 +118,15 @@ namespace AweCsome
             }
         }
 
+        private void SetVersioning<T>(List list)
+        {
+            var versioningAttribute = typeof(T).GetCustomAttribute<VersioningAttribute>();
+            if (versioningAttribute != null)
+            {
+                list.UpdateListVersioning(versioningAttribute.EnableVersioning, versioningAttribute.EnableMinorVersioning);
+            }
+        }
+
         public void CreateTable<T>()
         {
             Type entityType = typeof(T);
@@ -134,6 +143,7 @@ namespace AweCsome
 
                     var newList = clientContext.Web.Lists.Add(listCreationInfo);
                     SetRating<T>(newList);
+                    SetVersioning<T>(newList);
                     AddFieldsToTable(clientContext, newList, entityType.GetProperties(), lookupTableIds);
                     foreach (var property in entityType.GetProperties().Where(q => q.GetCustomAttribute<IgnoreOnCreationAttribute>() != null && q.GetCustomAttribute<DisplayNameAttribute>() != null))
                     {
