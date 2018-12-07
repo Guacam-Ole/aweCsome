@@ -13,6 +13,6 @@ namespace AweCsome.Attributes.FieldAttributes
         public double? Max { get; set; }
         public int? NumberOfDecimalPlaces { get; set; }
         public int? CurrencyLocaleId { get; set; }
-        public  const FieldType AssociatedFieldType = FieldType.Currency;
+        public  const string AssociatedFieldType = nameof(FieldType.Currency);
     }
 }

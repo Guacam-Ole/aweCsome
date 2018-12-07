@@ -24,6 +24,6 @@ namespace AweCsome.Attributes.FieldAttributes
         public int NumberOfDecimalPlaces { get { return _numberOfDecimalPlaces ?? 0; } set { _numberOfDecimalPlaces = value; } }
         public double DefaultValue { get { return _min ?? 0; } set { _defaultValue = value; } }
         public bool ShowAsPercentage { get; set; }
-        public const FieldType AssociatedFieldType = FieldType.Number;
+        public const string AssociatedFieldType = nameof(FieldType.Number);
     }
 }

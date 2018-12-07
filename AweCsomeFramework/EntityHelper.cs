@@ -101,18 +101,20 @@ namespace AweCsome
             return false;
         }
 
-        public static FieldType GetFieldType(PropertyInfo property)
+        public static string GetFieldType(PropertyInfo property)
         {
-            if (PropertyIsLookup(property)) return FieldType.Lookup;
+            string detectedFieldTypename = GetFieldTypeNameFromAttribute(property);
+            if (detectedFieldTypename != null) return detectedFieldTypename;
+
+            if (PropertyIsLookup(property)) return nameof(FieldType.Lookup);
             Type propertyType = property.PropertyType;
             if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>)) propertyType = propertyType.GetGenericArguments()[0];
 
             if (propertyType.IsArray) propertyType = propertyType.GetElementType();
-            FieldType? detectedFieldType = GetFieldTypeFromAttribute(property);
-            if (detectedFieldType != null) return detectedFieldType.Value;
+
 
             if (propertyType.IsEnum)
-                return FieldType.Choice;
+                return nameof(FieldType.Choice);
             switch (Type.GetTypeCode(propertyType))
             {
                 case TypeCode.Byte:
@@ -126,24 +128,25 @@ namespace AweCsome
                 case TypeCode.Decimal:
                 case TypeCode.Double:
                 case TypeCode.Single:
-                    return FieldType.Number;
+                    return nameof(FieldType.Number);
                 case TypeCode.Boolean:
-                    return FieldType.Boolean;
+                    return nameof(FieldType.Boolean);
                 case TypeCode.String:
                 case TypeCode.Char:
-                    return FieldType.Text;
+                    return nameof(FieldType.Text);
                 case TypeCode.DateTime:
-                    return FieldType.DateTime;
+                    return nameof(FieldType.DateTime);
 
                 default:
                     _log.Warn($"Cannot create fieldtype from {propertyType.Name}. Type is not supported.");
-                    return FieldType.Invalid;
+                    return nameof(FieldType.Invalid);
             }
         }
 
-        private static FieldType? GetFieldTypeFromAttribute(PropertyInfo property)
+        private static string GetFieldTypeNameFromAttribute(PropertyInfo property)
         {
-            FieldType? detectedFieldType = null;
+            string propertyName = property.Name;
+            string detectedFieldType = null;
             detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<BooleanAttribute>(property);
             detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<ChoiceAttribute>(property);
             detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<CurrencyAttribute>(property);
@@ -158,10 +161,10 @@ namespace AweCsome
             return detectedFieldType;
         }
 
-        private static FieldType? GetFieldTypeByAttribute<T>(PropertyInfo property) where T : Attribute
+        private static string GetFieldTypeByAttribute<T>(PropertyInfo property) where T : Attribute
         {
             if (property.GetCustomAttribute(typeof(T), true) == null) return null;
-            return (FieldType)typeof(T).GetField(nameof(BooleanAttribute.AssociatedFieldType)).GetRawConstantValue();
+            return (string)typeof(T).GetField(nameof(BooleanAttribute.AssociatedFieldType)).GetRawConstantValue();
         }
 
         public static object GetPropertyFromItemValue(PropertyInfo property, object itemValue)

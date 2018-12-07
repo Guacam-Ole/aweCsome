@@ -12,6 +12,6 @@ namespace AweCsome.Attributes.FieldAttributes
         public string List { get; set; }
         public string Field { get; set; } = "Title";
         RelationshipDeleteBehaviorType RelationshipDeleteBehaviorType { get; set; } = RelationshipDeleteBehaviorType.None;
-        public  const FieldType AssociatedFieldType = FieldType.Lookup;
+        public  const string AssociatedFieldType = nameof(FieldType.Lookup);
     }
 }

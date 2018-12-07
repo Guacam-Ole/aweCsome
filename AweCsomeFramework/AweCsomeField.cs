@@ -25,7 +25,7 @@ namespace AweCsome
             if (ignoreOnCreationAttribute != null && ignoreOnCreationAttribute.IgnoreOnCreation) return;
             var addToDefaultViewAttribute = property.GetCustomAttribute<AddToDefaultViewAttribute>();
 
-
+            string fieldName = property.Name;
             string fieldXml = GetFieldCreationXml(property, lookupTableIds);
             Field field = sharePointList.Fields.AddFieldAsXml(fieldXml, addToDefaultViewAttribute != null, AddFieldOptions.AddFieldInternalNameHint);
         }
@@ -41,17 +41,17 @@ namespace AweCsome
 
             bool isRequired = PropertyIsRequired(property);
             bool isUnique = IsTrue(propertyType.GetCustomAttribute<UniqueAttribute>()?.IsUnique);
-            FieldType fieldType = EntityHelper.GetFieldType(property);
+            string fieldTypeName = EntityHelper.GetFieldType(property);
             bool isMulti = IsMulti(propertyType);
-            if (fieldType == FieldType.Lookup) EntityHelper.RemoveLookupIdFromFieldName(isMulti, ref internalName, ref displayName);
+            if (fieldTypeName == nameof(FieldType.Lookup)) EntityHelper.RemoveLookupIdFromFieldName(isMulti, ref internalName, ref displayName);
 
-            GetFieldCreationAdditionalXmlForFieldType(fieldType, property, lookupTableIds, out string fieldAttributes, out string fieldAdditional);
-            string fieldTypeString = fieldType.ToString();
+            GetFieldCreationAdditionalXmlForFieldType(fieldTypeName, property, lookupTableIds, out string fieldAttributes, out string fieldAdditional);
+            string fieldTypeString = fieldTypeName.ToString();
             if (fieldAttributes == null) fieldAttributes = string.Empty;
             if (fieldAttributes == null) fieldAdditional = string.Empty;
             if (isMulti)
             {
-                if (fieldType != FieldType.Choice) fieldAttributes += " Mult='TRUE'";
+                if (fieldTypeName != nameof(FieldType.Choice)) fieldAttributes += " Mult='TRUE'";
                 fieldTypeString += "Multi";
             }
             var indexAttribute = property.GetCustomAttribute<IndexAttribute>();
@@ -74,46 +74,45 @@ namespace AweCsome
             return csomCreateCaml;
         }
 
-        private void GetFieldCreationAdditionalXmlForFieldType(FieldType fieldType, PropertyInfo property, Dictionary<string, Guid> lookupTableIds, out string fieldAttributes, out string fieldAdditional)
+        private void GetFieldCreationAdditionalXmlForFieldType(string fieldTypename, PropertyInfo property, Dictionary<string, Guid> lookupTableIds, out string fieldAttributes, out string fieldAdditional)
         {
             fieldAttributes = string.Empty;
             fieldAdditional = string.Empty;
-            switch (fieldType)
+            switch (fieldTypename)
             {
 
-                case FieldType.Boolean:
+                case nameof(FieldType.Boolean):
                     GetFieldCreationDetailsBoolean(property, out fieldAdditional);
                     break;
-                case FieldType.Choice:
+                case nameof(FieldType.Choice):
                     GetFieldCreationDetailsChoice(property, out fieldAttributes, out fieldAdditional);
                     break;
-                case FieldType.Currency:
+                case nameof(FieldType.Currency):
                     GetFieldCreationDetailsCurrency(property, out fieldAttributes);
                     break;
-                case FieldType.DateTime:
+                case nameof(FieldType.DateTime):
                     GetFieldCreationDetailsDateTime(property, out fieldAttributes, out fieldAdditional);
                     break;
-                case FieldType.Lookup:
-                    GetFieldCreationDetailsLookup(property, lookupTableIds, out fieldAttributes);
-                    break;
-                case FieldType.Note:
+                case nameof(FieldType.Note):
                     GetFieldCreationDetailsNote(property, out fieldAttributes);
                     break;
-
-                case FieldType.Number:
+                case nameof(FieldType.Number):
                     GetFieldCreationDetailsNumber(property, out fieldAttributes);
                     break;
-                case FieldType.Text:
+                case nameof(FieldType.Text):
                     GetFieldCreationDetailsText(property, out fieldAttributes, out fieldAdditional);
                     break;
-                case FieldType.URL:
+                case nameof(FieldType.URL):
                     GetFieldCreationDetailsUrl(property, out fieldAttributes);
                     break;
-                case FieldType.User:
+                case nameof(FieldType.User):
                     GetFieldCreationDetailsUser(property, out fieldAttributes);
                     break;
+                case nameof(FieldType.Lookup):
+                    GetFieldCreationDetailsLookup(property, lookupTableIds, out fieldAttributes);
+                    break;
                 default:
-                    throw new NotImplementedException($"FieldType {fieldType} is unexpected and cannot be created");
+                    throw new NotImplementedException($"FieldType {fieldTypename} is unexpected and cannot be created");
 
 
             }
@@ -213,7 +212,13 @@ namespace AweCsome
         private void GetFieldCreationDetailsLookup(PropertyInfo property, Dictionary<string, Guid> lookupTableIds, out string fieldAttributes)
         {
             string list = GetLookupListName(property, out string field);
-            if (list == null) throw new Exception("Missing list-information for Lookup-Field");
+            if (list == null)
+            {
+                var ex = new Exception("Missing list-information for Lookup-Field");
+                ex.Data.Add("List", list);
+                ex.Data.Add("Property", property.Name);
+                throw ex;
+            }
             fieldAttributes = $"List='{lookupTableIds[list]}' ShowField='{field}'";
         }
 

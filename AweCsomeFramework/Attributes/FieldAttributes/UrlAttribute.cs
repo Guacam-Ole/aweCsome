@@ -10,6 +10,6 @@ namespace AweCsome.Attributes.FieldAttributes
     public class UrlAttribute:Attribute
     {
         public UrlFieldFormatType UrlFieldFormatType { get; set; } = UrlFieldFormatType.Hyperlink;
-        public  const FieldType AssociatedFieldType = FieldType.URL;
+        public  const string AssociatedFieldType = nameof(FieldType.URL);
     }
 }

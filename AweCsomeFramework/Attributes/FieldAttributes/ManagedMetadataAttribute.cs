@@ -12,6 +12,6 @@ namespace AweCsome.Attributes.FieldAttributes
         public Guid TermSetId { get; set; }
         public string TermSetName { get; set; }
         public bool AllowFillIn { get; set; }
-        public  const FieldType AssociatedFieldType = FieldType.Lookup;
+        public const string AssociatedFieldType = "TaxonomyFieldType"; 
     }
 }

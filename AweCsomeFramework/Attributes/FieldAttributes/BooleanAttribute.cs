@@ -10,6 +10,6 @@ namespace AweCsome.Attributes.FieldAttributes
     public class BooleanAttribute : Attribute
     {
         public bool DefaultValue { get; set; }
-        public  const FieldType AssociatedFieldType = FieldType.Boolean;
+        public  const string AssociatedFieldType = nameof(FieldType.Boolean);
     }
 }

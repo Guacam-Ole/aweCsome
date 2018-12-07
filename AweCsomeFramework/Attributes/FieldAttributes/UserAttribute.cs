@@ -12,7 +12,7 @@ namespace AweCsome.Attributes.FieldAttributes
       //  bool AllowMultipleValues { get; set; }
         public FieldUserSelectionMode FieldUserSelectionMode { get; set; } = FieldUserSelectionMode.PeopleOnly;
         public int? UserSelectionScope { get; set; }
-        public const FieldType AssociatedFieldType = FieldType.User;
+        public const string AssociatedFieldType = nameof(FieldType.User);
 
     }
 }

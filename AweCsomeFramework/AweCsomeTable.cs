@@ -299,8 +299,8 @@ namespace AweCsome
         private string CreateFieldEqCaml(PropertyInfo property, object fieldvalue)
         {
             string fieldname = EntityHelper.GetInternalNameFromProperty(property);
-            FieldType fieldType = EntityHelper.GetFieldType(property);
-            return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' /><Value Type='{fieldType.ToString()}'>{fieldvalue}</Value></Eq>");
+            string fieldTypeName = EntityHelper.GetFieldType(property);
+            return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' /><Value Type='{fieldTypeName}'>{fieldvalue}</Value></Eq>");
         }
 
         public List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new()
