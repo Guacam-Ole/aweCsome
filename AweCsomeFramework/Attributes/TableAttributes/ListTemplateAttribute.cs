@@ -15,10 +15,5 @@ namespace AweCsome.Attributes.TableAttributes
         {
             TemplateTypeId = templateTypeId;
         }
-
-        //public ListTemplateAttribute(ListTemplateType listTemplateType)
-        //{
-        //    TemplateTypeId = (int)listTemplateType;
-        //}
     }
 }

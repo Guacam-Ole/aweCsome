@@ -197,6 +197,7 @@
     <Compile Include="Attributes\TableAttributes\VersioningAttribute.cs" />
     <Compile Include="AweCsomeField.cs" />
     <Compile Include="AweCsomeTable.cs" />
+    <Compile Include="Entities\AweCsomeListItem.cs" />
     <Compile Include="EntityHelper.cs" />
     <Compile Include="Exceptions\FieldMissingException.cs" />
     <Compile Include="Exceptions\ItemAlreadyExistsException.cs" />

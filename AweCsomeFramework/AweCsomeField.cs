@@ -232,8 +232,8 @@ namespace AweCsome
             if (numberAttribute != null)
             {
                 fieldAttributes = $"Commas='{(numberAttribute.NumberOfDecimalPlaces == null || numberAttribute.NumberOfDecimalPlaces == 0 ? "FALSE" : "TRUE")}'";
-                if (numberAttribute.Min.HasValue) fieldAttributes += $" Min={numberAttribute.Min}";
-                if (numberAttribute.Max.HasValue) fieldAttributes += $" Max={numberAttribute.Max}";
+                if (numberAttribute.MinHasValue) fieldAttributes += $" Min={numberAttribute.Min}";
+                if (numberAttribute.MaxHasValue) fieldAttributes += $" Max={numberAttribute.Max}";
                 if (numberAttribute.ShowAsPercentage) fieldAttributes += $" Percentage='TRUE'";
             }
         }
