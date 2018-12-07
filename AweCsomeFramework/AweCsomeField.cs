@@ -19,15 +19,17 @@ namespace AweCsome
         public const string Title = "Title";
 
 
-        public void AddFieldToList(List sharePointList, PropertyInfo property, Dictionary<string, Guid> lookupTableIds)
+        public Field AddFieldToList(List sharePointList, PropertyInfo property, Dictionary<string, Guid> lookupTableIds)
         {
             var ignoreOnCreationAttribute = property.GetCustomAttribute<IgnoreOnCreationAttribute>();
-            if (ignoreOnCreationAttribute != null && ignoreOnCreationAttribute.IgnoreOnCreation) return;
+            if (ignoreOnCreationAttribute != null && ignoreOnCreationAttribute.IgnoreOnCreation) return null;
             var addToDefaultViewAttribute = property.GetCustomAttribute<AddToDefaultViewAttribute>();
+
 
             string fieldName = property.Name;
             string fieldXml = GetFieldCreationXml(property, lookupTableIds);
             Field field = sharePointList.Fields.AddFieldAsXml(fieldXml, addToDefaultViewAttribute != null, AddFieldOptions.AddFieldInternalNameHint);
+            return field;
         }
 
         private string GetFieldCreationXml(PropertyInfo property, Dictionary<string, Guid> lookupTableIds)
@@ -111,10 +113,10 @@ namespace AweCsome
                 case nameof(FieldType.Lookup):
                     GetFieldCreationDetailsLookup(property, lookupTableIds, out fieldAttributes);
                     break;
+                case "TaxonomyFieldType":
+                    break;
                 default:
                     throw new NotImplementedException($"FieldType {fieldTypename} is unexpected and cannot be created");
-
-
             }
         }
 
@@ -243,6 +245,8 @@ namespace AweCsome
             }
         }
 
+    
+
         private void GetFieldCreationDetailsText(PropertyInfo property, out string fieldAttributes, out string fieldAdditional)
         {
             fieldAttributes = null;
@@ -282,7 +286,7 @@ namespace AweCsome
 
         #endregion FieldCreationProperties
 
-        private bool IsMulti(Type propertyType)
+        public bool IsMulti(Type propertyType)
         {
             return propertyType.IsArray || propertyType.IsGenericList() || propertyType.IsDictionary();
         }

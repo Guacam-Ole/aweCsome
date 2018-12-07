@@ -17,6 +17,7 @@ namespace AweCsome
     {
         private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IAweCsomeField _awecsomeField = new AweCsomeField();
+        private IAweCsomeTaxonomy _awecsomeTaxonomy = null;
         private ClientContext _clientContext;
 
         public ClientContext ClientContext { set { _clientContext = value; } }
@@ -163,12 +164,36 @@ namespace AweCsome
 
         private void AddFieldsToTable(ClientContext context, List sharePointList, PropertyInfo[] properties, Dictionary<string, Guid> lookupTableIds)
         {
+
+          
+
+
             foreach (var property in properties)
             {
                 try
                 {
-                    _awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
-                    context.ExecuteQuery();
+                    var managedMetadataAttribute = property.GetCustomAttribute<ManagedMetadataAttribute>();
+
+                    Field newField=_awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
+                    if (newField!=null && managedMetadataAttribute!=null)
+                    {
+                        if (_awecsomeTaxonomy == null) _awecsomeTaxonomy = new AweCsomeTaxonomy { ClientContext = _clientContext };
+
+                        _awecsomeTaxonomy.GetTaxonomyFieldInfo(managedMetadataAttribute.TermSetName, managedMetadataAttribute.CreateIfMissing, out Guid termStoreId, out Guid termSetId);
+
+                        context.ExecuteQuery();
+                        Microsoft.SharePoint.Client.Taxonomy.TaxonomyField taxonomyField = context.CastTo<Microsoft.SharePoint.Client.Taxonomy.TaxonomyField>(newField);
+                        taxonomyField.SspId = termStoreId;
+                        taxonomyField.AllowMultipleValues = _awecsomeField.IsMulti(property.PropertyType);
+                        taxonomyField.TermSetId = termSetId;
+                        taxonomyField.TargetTemplate = string.Empty;
+                        taxonomyField.AnchorId = Guid.Empty;
+                        taxonomyField.Update();
+                        //context.ExecuteQuery();
+                    } else
+                    {
+                        context.ExecuteQuery();
+                    }
                 }
                 catch (Exception ex)
                 {
