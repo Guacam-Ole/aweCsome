@@ -155,8 +155,11 @@ namespace AweCsome
                 }
                 catch (Exception ex)
                 {
+                    var outerException = new Exception("error creating list", ex);
+                    outerException.Data.Add("List", listName);
+
                     _log.Error($"Failed creating list {listName}", ex);
-                    throw;
+                    throw outerException;
                 }
             }
             _log.Debug($"List '{listName}' created.");
@@ -164,10 +167,6 @@ namespace AweCsome
 
         private void AddFieldsToTable(ClientContext context, List sharePointList, PropertyInfo[] properties, Dictionary<string, Guid> lookupTableIds)
         {
-
-          
-
-
             foreach (var property in properties)
             {
                 try

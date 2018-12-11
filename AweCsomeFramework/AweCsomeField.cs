@@ -188,10 +188,16 @@ namespace AweCsome
 
         public static string GetLookupListName(PropertyInfo property, out string fieldname)
         {
+            string lookupListName = null;
             fieldname = "Title";
             var lookupAttribute = property.GetCustomAttribute<LookupBaseAttribute>(true);
-            if (lookupAttribute == null)
+            if (lookupAttribute != null)
             {
+                fieldname = lookupAttribute.Field;
+                lookupListName= lookupAttribute.List;
+            }
+
+            if (lookupListName==null) { 
                 Type propertyType = property.PropertyType;
 
                 if (propertyType.IsArray)
@@ -200,15 +206,11 @@ namespace AweCsome
                 }
                 if (propertyType.GetProperty(SuffixId) != null)
                 {
-                    return propertyType.Name;
+                    lookupListName= propertyType.Name;
                 }
             }
-            else
-            {
-                fieldname = lookupAttribute.Field;
-                return lookupAttribute.List;
-            }
-            return null;
+           
+            return lookupListName;
         }
 
         private void GetFieldCreationDetailsLookup(PropertyInfo property, Dictionary<string, Guid> lookupTableIds, out string fieldAttributes)
@@ -217,7 +219,6 @@ namespace AweCsome
             if (list == null)
             {
                 var ex = new Exception("Missing list-information for Lookup-Field");
-                ex.Data.Add("List", list);
                 ex.Data.Add("Property", property.Name);
                 throw ex;
             }

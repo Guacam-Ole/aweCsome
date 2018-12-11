@@ -125,10 +125,11 @@ namespace AweCsome
                 case TypeCode.Int16:
                 case TypeCode.Int32:
                 case TypeCode.Int64:
-                case TypeCode.Decimal:
                 case TypeCode.Double:
                 case TypeCode.Single:
                     return nameof(FieldType.Number);
+                case TypeCode.Decimal:
+                    return nameof(FieldType.Currency);
                 case TypeCode.Boolean:
                     return nameof(FieldType.Boolean);
                 case TypeCode.String:
