@@ -12,22 +12,22 @@ namespace AweCsome.Entities
     public abstract class AweCsomeListItem
     {
         [IgnoreOnCreation, IgnoreOnInsert, IgnoreOnUpdate]
-        public int Id { get; set; }
+        public virtual int Id { get; set; }
         [IgnoreOnCreation]
-        public string Title { get; set; }
+        public virtual string Title { get; set; }
 
         [User]
         [IgnoreOnCreation, IgnoreOnInsert, IgnoreOnUpdate]
-        public KeyValuePair<int, string> Author { get; set; }
+        public virtual KeyValuePair<int, string> Author { get; set; }
 
         [User]
         [IgnoreOnCreation, IgnoreOnInsert, IgnoreOnUpdate]
-        public KeyValuePair<int, string> Editor { get; set; }
+        public virtual KeyValuePair<int, string> Editor { get; set; }
 
         [IgnoreOnCreation, IgnoreOnInsert, IgnoreOnUpdate]
-        public DateTime Created { get; set; }
+        public virtual DateTime Created { get; set; }
 
         [IgnoreOnCreation, IgnoreOnInsert, IgnoreOnUpdate]
-        public DateTime? Modified { get; set; }
+        public virtual DateTime? Modified { get; set; }
     }
 }
