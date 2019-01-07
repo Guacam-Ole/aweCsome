@@ -378,6 +378,23 @@ namespace AweCsome
             return SelectItems<T>(CamlQuery.CreateAllItemsQuery());
         }
 
+        ListItem GetListItemById(string listname, int id)
+        {
+            using (var clientContext = GetClientContext())
+            {
+                Web web = clientContext.Web;
+                ListCollection listCollection = web.Lists;
+                clientContext.Load(listCollection);
+                clientContext.ExecuteQuery();
+                List list = listCollection.FirstOrDefault(q => q.Title == listname);
+                if (list == null) throw new ListNotFoundException();
+                ListItem item = list.GetItemById(id);
+                clientContext.Load(item);
+                clientContext.ExecuteQuery();
+                return item;
+            }
+        }
+
         public T SelectItemById<T>(int id) where T : new()
         {
             Type entityType = typeof(T);
@@ -385,20 +402,9 @@ namespace AweCsome
 
             try
             {
-                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
-                using (var clientContext = GetClientContext())
-                {
-                    Web web = clientContext.Web;
-                    ListCollection listCollection = web.Lists;
-                    clientContext.Load(listCollection);
-                    clientContext.ExecuteQuery();
-                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
-                    if (list == null) throw new ListNotFoundException();
-                    ListItem item = list.GetItemById(id);
-                    clientContext.Load(item);
-                    clientContext.ExecuteQuery();
-                    StoreFromListItem(entity, item);
-                }
+                string listname = EntityHelper.GetInternalNameFromEntityType(entityType);
+                var item = GetListItemById(listname, id);
+                StoreFromListItem(entity, item);
                 return entity;
             }
             catch (Exception ex)
@@ -489,6 +495,47 @@ namespace AweCsome
             }
         }
 
+        private void UpdateLikes(ListItem item, List<FieldUserValue> likeArray)
+        {
+            using (var clientContext = GetClientContext())
+            {
+                item["LikedBy"] = likeArray.ToArray();
+                item["LikesCount"] = likeArray.Count;
+                item.Update();
+            }
+        }
+
+
+        public void Like<T>(int id, int userId)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+
+            ListItem item = GetListItemById(listname, id);
+            var likeArray = ((FieldUserValue[])item.FieldValues.First(fn => fn.Key == "LikedBy").Value).ToList();
+            var userLike = likeArray.FirstOrDefault(q => q.LookupId == userId);
+
+            if (userLike==null)
+            {
+                likeArray.Add(new FieldUserValue { LookupId = userId });
+                UpdateLikes(item, likeArray);
+            }
+        }
+
+        public void Unlike<T>(int id, int userId)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+
+            ListItem item = GetListItemById(listname, id);
+            var likeArray = ((FieldUserValue[])item.FieldValues.First(fn => fn.Key == "LikedBy").Value).ToList();
+            var userLike = likeArray.FirstOrDefault(q => q.LookupId == userId);
+
+            if (userLike != null)
+            {
+                likeArray.Remove(userLike);
+                UpdateLikes(item, likeArray);
+            }
+        }
+
         #endregion Update
 
         #region Delete
@@ -518,6 +565,8 @@ namespace AweCsome
                 throw;
             }
         }
+
+       
 
         #endregion Delete
     }

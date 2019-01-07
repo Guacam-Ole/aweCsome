@@ -20,5 +20,7 @@ namespace AweCsome
         void UpdateItem<T>(T entity);
         void DeleteItemById<T>(int id);
         string[] GetAvailableChoicesFromField<T>(string propertyname);
+        void Like<T>(int id, int userId);
+        void Unlike<T>(int id, int userId);
     }
 }
