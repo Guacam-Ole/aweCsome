@@ -26,5 +26,6 @@ namespace AweCsome
         List<string> SelectFileNamesFromItem<T>(int id);
         Dictionary<string, Stream> SelectFilesFromItem<T>(int id);
         void AttachFileToItem<T>(int id, string filename, Stream filestream);
+        void DeleteFileFromItem<T>(int id, string filename);
     }
 }

@@ -652,6 +652,26 @@ namespace AweCsome
                 return attachments;
             }
         }
+
+        public void DeleteFileFromItem<T>(int id, string filename)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                List currentList = web.GetListByTitle(listname);
+                ListItem item = currentList.GetItemById(id);
+                var allFiles = item.AttachmentFiles;
+                context.Load(allFiles);
+                context.ExecuteQuery();
+                var oldFile = allFiles.FirstOrDefault(af => af.FileName == filename);
+                if (oldFile == null) throw new FileNotFoundException($"File '{filename}' not found on {listname}/{id}");
+                oldFile.DeleteObject();
+                context.ExecuteQuery();
+                _log.DebugFormat($"File '{filename}' deleted from {listname}/{id}");
+            }
+        }
         #endregion Files
     }
 }
