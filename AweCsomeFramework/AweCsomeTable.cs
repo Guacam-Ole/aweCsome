@@ -317,6 +317,34 @@ namespace AweCsome
             return $"<View><Query><Where>{innerConditions}</Where></Query></View>";
         }
 
+        private string CreateMultiCaml<T>(Dictionary<string, object> conditions)
+        {
+            Type entityType = typeof(T);
+            int conditionCount = 0;
+            string conditionCaml = string.Empty;
+            foreach (var condition in conditions)
+            {
+                conditionCount++;
+
+                if (conditions.Count > 1 && conditionCount != conditions.Count)
+                {
+                    conditionCaml = "<And>" + conditionCaml;
+                }
+                string singleConditionCaml;
+                PropertyInfo fieldProperty = entityType.GetProperty(condition.Key);
+                singleConditionCaml = EntityHelper.PropertyIsLookup(fieldProperty) ? CreateLookupCaml(condition.Key, (int)condition.Value) : CreateFieldEqCaml(fieldProperty, condition.Value);
+                if (conditions.Count > 1 && conditionCount == conditions.Count)
+                {
+                    for (int i = 1; i < conditionCount - 1; i++)
+                    {
+                        conditionCaml = conditionCaml + "</And>";
+                    }
+                }
+            }
+
+            return conditionCaml;
+        }
+
         private string CreateLookupCaml(string fieldname, int fieldvalue)
         {
             // TODO: Internal name
@@ -671,6 +699,11 @@ namespace AweCsome
                 context.ExecuteQuery();
                 _log.DebugFormat($"File '{filename}' deleted from {listname}/{id}");
             }
+        }
+
+        public List<T> SelectItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions) where T : new()
+        {
+            return SelectItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
         }
         #endregion Files
     }

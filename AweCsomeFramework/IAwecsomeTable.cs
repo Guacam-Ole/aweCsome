@@ -17,6 +17,7 @@ namespace AweCsome
         T SelectItemById<T>(int id) where T : new();
         List<T> SelectAllItems<T>() where T : new();
         List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new();
+        List<T> SelectItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions) where T : new();
         List<T> SelectItemsByQuery<T>(string query) where T : new();
         void UpdateItem<T>(T entity);
         void DeleteItemById<T>(int id);
