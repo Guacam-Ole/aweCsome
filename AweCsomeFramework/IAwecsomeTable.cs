@@ -1,6 +1,7 @@
 ﻿using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,5 +23,8 @@ namespace AweCsome
         string[] GetAvailableChoicesFromField<T>(string propertyname);
         void Like<T>(int id, int userId);
         void Unlike<T>(int id, int userId);
+        List<string> SelectFileNamesFromItem<T>(int id);
+        Dictionary<string, Stream> SelectFilesFromItem<T>(int id);
+        void AttachFileToItem<T>(int id, string filename, Stream filestream);
     }
 }

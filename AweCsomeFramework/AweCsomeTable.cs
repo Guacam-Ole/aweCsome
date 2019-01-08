@@ -6,6 +6,7 @@ using log4net;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -113,7 +114,7 @@ namespace AweCsome
         private void SetRating<T>(List list)
         {
             var ratingAttribute = typeof(T).GetCustomAttribute<RatingAttribute>();
-            if (ratingAttribute!=null)
+            if (ratingAttribute != null)
             {
                 list.SetRating((OfficeDevPnP.Core.VotingExperience)ratingAttribute.VotingExperience);
             }
@@ -173,8 +174,8 @@ namespace AweCsome
                 {
                     var managedMetadataAttribute = property.GetCustomAttribute<ManagedMetadataAttribute>();
 
-                    Field newField=_awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
-                    if (newField!=null && managedMetadataAttribute!=null)
+                    Field newField = _awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
+                    if (newField != null && managedMetadataAttribute != null)
                     {
                         if (_awecsomeTaxonomy == null) _awecsomeTaxonomy = new AweCsomeTaxonomy { ClientContext = _clientContext };
 
@@ -189,7 +190,8 @@ namespace AweCsome
                         taxonomyField.AnchorId = Guid.Empty;
                         taxonomyField.Update();
                         //context.ExecuteQuery();
-                    } else
+                    }
+                    else
                     {
                         context.ExecuteQuery();
                     }
@@ -278,7 +280,7 @@ namespace AweCsome
                     clientContext.ExecuteQuery();
                     List list = listCollection.FirstOrDefault(q => q.Title == listName);
                     if (list == null) throw new ListNotFoundException();
-                    
+
                     ListItem newItem = list.AddItem(new ListItemCreationInformation());
                     foreach (var property in entityType.GetProperties())
                     {
@@ -287,7 +289,8 @@ namespace AweCsome
                             if (!property.CanRead) continue;
                             if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
                             newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
-                        } catch (Exception ex)
+                        }
+                        catch (Exception ex)
                         {
                             ex.Data.Add("Propertyname", property.Name);
                             ex.Data.Add("Listname", listName);
@@ -514,7 +517,7 @@ namespace AweCsome
             var likeArray = ((FieldUserValue[])item.FieldValues.First(fn => fn.Key == "LikedBy").Value).ToList();
             var userLike = likeArray.FirstOrDefault(q => q.LookupId == userId);
 
-            if (userLike==null)
+            if (userLike == null)
             {
                 likeArray.Add(new FieldUserValue { LookupId = userId });
                 UpdateLikes(item, likeArray);
@@ -566,8 +569,89 @@ namespace AweCsome
             }
         }
 
-       
-
         #endregion Delete
+
+        #region Files
+        public List<string> SelectFileNamesFromItem<T>(int id)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            FileCollection attachments = GetAttachments(listname, id);
+            return attachments.Select(q => q.Name).ToList();
+        }
+
+        public Dictionary<string, Stream> SelectFilesFromItem<T>(int id)
+        {
+            long totalSize = 0;
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            FileCollection attachments = GetAttachments(listname, id);
+
+            var attachmentStreams = new Dictionary<string, Stream>();
+            using (var clientContext = GetClientContext())
+            {
+                foreach (var attachment in attachments)
+                {
+                    MemoryStream targetStream = new MemoryStream();
+                    var stream = attachment.OpenBinaryStream();
+                    clientContext.ExecuteQuery();
+                    stream.Value.CopyTo(targetStream);
+                    attachmentStreams.Add(attachment.Name, targetStream);
+                    totalSize += targetStream.Length;
+                }
+            }
+
+            _log.DebugFormat($"Retrieved '{attachments.Count}' attachments from {listname}({id}). Size:{totalSize} Bytes");
+            return attachmentStreams;
+        }
+
+        public void AttachFileToItem<T>(int id, string filename, Stream filestream)
+        {
+            long fileSize = filestream.Length;
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                List currentList = web.GetListByTitle(listname);
+                ListItem item = currentList.GetItemById(id);
+                var attachmentInfo = new AttachmentCreationInformation
+                {
+                    FileName = filename,
+                    ContentStream = filestream
+                };
+                Attachment attachment = item.AttachmentFiles.Add(attachmentInfo);
+
+                context.Load(attachment);
+                context.ExecuteQuery();
+                _log.DebugFormat($"Uploaded '{filename}' to {listname}({id}). Size:{fileSize} Bytes");
+            }
+        }
+
+        private FileCollection GetAttachments(string listname, int id)
+        {
+            using (var clientContext = GetClientContext())
+            {
+                Web web = clientContext.Web;
+                var targetUrl = string.Format("{0}/Lists/{1}/Attachments/{2}", web.Url, listname, id);
+
+                Folder attachmentsFolder = web.GetFolderByServerRelativeUrl(targetUrl);
+                clientContext.Load(attachmentsFolder);
+
+                try
+                {
+                    clientContext.ExecuteQuery();
+                }
+                catch (Exception)
+                {
+                    // Sadly there is no better way to detect if attachments exist in SharePoint. Exception=No Attachments
+
+                    return null;
+                }
+
+                FileCollection attachments = attachmentsFolder.Files;
+                clientContext.Load(attachments);
+                clientContext.ExecuteQuery();
+                return attachments;
+            }
+        }
+        #endregion Files
     }
 }
