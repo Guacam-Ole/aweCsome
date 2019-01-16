@@ -705,6 +705,30 @@ namespace AweCsome
         {
             return SelectItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
         }
+
+
         #endregion Files
+
+        #region Counts
+        public int CountItems<T>()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int CountItemsByFieldValue<T>(string fieldname, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int CountItemsByQuery<T>(string query)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion Counts
     }
 }
