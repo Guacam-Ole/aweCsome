@@ -264,7 +264,6 @@ namespace AweCsome
 
         #endregion Structure
 
-
         #region Insert
         public int InsertItem<T>(T entity)
         {
@@ -486,6 +485,11 @@ namespace AweCsome
             return SelectItems<T>(new CamlQuery() { ViewXml = query });
         }
 
+        public List<T> SelectItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions) where T : new()
+        {
+            return SelectItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
+        }
+
         #endregion Select
 
         #region Update
@@ -701,33 +705,61 @@ namespace AweCsome
             }
         }
 
-        public List<T> SelectItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions) where T : new()
-        {
-            return SelectItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
-        }
+ 
 
 
         #endregion Files
 
         #region Counts
+        private int CountItems<T>(CamlQuery query)
+        {
+            Type entityType = typeof(T);
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItemCollection items = list.GetItems(query);
+                    clientContext.Load(items, q => q.Include(l => l.Id));
+                    clientContext.ExecuteQuery();
+                    return items.Count;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot select items from table of entity with type '{entityType.Name}", ex);
+                throw;
+            }
+        }
+
         public int CountItems<T>()
         {
-            throw new NotImplementedException();
+            return CountItems<T>(CamlQuery.CreateAllItemsQuery());
         }
 
         public int CountItemsByFieldValue<T>(string fieldname, object value)
         {
-            throw new NotImplementedException();
+            Type entityType = typeof(T);
+            PropertyInfo fieldProperty = entityType.GetProperty(fieldname);
+
+            if (EntityHelper.PropertyIsLookup(fieldProperty)) return CountItems<T>(new CamlQuery { ViewXml = CreateLookupCaml(fieldname, (int)value) });
+            return CountItems<T>(new CamlQuery { ViewXml = CreateFieldEqCaml(fieldProperty, value) });
         }
 
         public int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions)
         {
-            throw new NotImplementedException();
+            return CountItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
         }
 
         public int CountItemsByQuery<T>(string query)
         {
-            throw new NotImplementedException();
+            return CountItems<T>(new CamlQuery { ViewXml = query });
         }
         #endregion Counts
     }
