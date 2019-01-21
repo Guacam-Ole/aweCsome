@@ -189,7 +189,7 @@ namespace AweCsome
                         taxonomyField.TargetTemplate = string.Empty;
                         taxonomyField.AnchorId = Guid.Empty;
                         taxonomyField.Update();
-                        //context.ExecuteQuery();
+                        context.ExecuteQuery();
                     }
                     else
                     {
@@ -287,7 +287,8 @@ namespace AweCsome
                         {
                             if (!property.CanRead) continue;
                             if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
-                            newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
+                            var value = EntityHelper.GetItemValueFromProperty(property, entity);
+                            if (value != null) newItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
                         }
                         catch (Exception ex)
                         {

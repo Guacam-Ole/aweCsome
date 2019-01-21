@@ -87,6 +87,7 @@ namespace AweCsome
 
         public static FieldLookupValue[] CreateLookupsFromIds(int[] ids)
         {
+            if (ids == null) return null;
             return ids.Select(id => new FieldLookupValue { LookupId = id }).ToArray();
         }
 
@@ -265,7 +266,7 @@ namespace AweCsome
             if (PropertyIsLookup(property))
             {
                 if (propertyType == typeof(KeyValuePair<int, string>)) return CreateLookupFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key);
-                if (propertyType == typeof(Dictionary<int, string>)) return CreateLookupsFromIds(((Dictionary<int, string>)property.GetValue(entity)).Select(q => q.Key).ToArray());
+                if (propertyType == typeof(Dictionary<int, string>)) return CreateLookupsFromIds(((Dictionary<int, string>)property.GetValue(entity))?.Select(q => q.Key).ToArray());
                 if (propertyType.IsArray && propertyType.GetElementType().GetProperty(AweCsomeField.SuffixId) != null)
                 {
                     List<int> ids = new List<int>();

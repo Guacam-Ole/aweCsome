@@ -255,7 +255,7 @@ namespace AweCsome
             var textAttribute = property.GetCustomAttribute<TextAttribute>();
             if (textAttribute != null)
             {
-                fieldAttributes = $"MaxLength={textAttribute.MaxCharacters}";
+                fieldAttributes = $"MaxLength='{textAttribute.MaxCharacters}'";
                 if (textAttribute.DefaultValue != null) fieldAdditional = $"<Default>{textAttribute.DefaultValue}</Default>";
             }
         }
