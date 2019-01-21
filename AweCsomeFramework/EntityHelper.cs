@@ -91,6 +91,22 @@ namespace AweCsome
             return ids.Select(id => new FieldLookupValue { LookupId = id }).ToArray();
         }
 
+        public static FieldUserValue CreateUserFromId(int id)
+        {
+            return new FieldUserValue { LookupId = id };
+        }
+
+        public static FieldUserValue[] CreateUsersFromIds(int[] ids)
+        {
+            if (ids == null) return null;
+            return ids.Select(id => new FieldUserValue { LookupId = id }).ToArray();
+        }
+
+        public static bool PropertyIsUser(PropertyInfo property)
+        {
+            return (property.GetCustomAttribute<UserAttribute>(true) != null);
+        }
+
         public static bool PropertyIsLookup(PropertyInfo property)
         {
             if (property.GetCustomAttribute<LookupBaseAttribute>(true) != null) return true;
@@ -265,8 +281,12 @@ namespace AweCsome
             Type propertyType = property.PropertyType;
             if (PropertyIsLookup(property))
             {
-                if (propertyType == typeof(KeyValuePair<int, string>)) return CreateLookupFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key);
-                if (propertyType == typeof(Dictionary<int, string>)) return CreateLookupsFromIds(((Dictionary<int, string>)property.GetValue(entity))?.Select(q => q.Key).ToArray());
+                if (propertyType == typeof(KeyValuePair<int, string>)) return PropertyIsUser(property)
+                        ? CreateUserFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key)
+                        : CreateLookupFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key);
+                if (propertyType == typeof(Dictionary<int, string>)) return PropertyIsUser(property)
+                        ? CreateLookupsFromIds(((Dictionary<int, string>)property.GetValue(entity))?.Select(q => q.Key).ToArray())
+                        : CreateUsersFromIds(((Dictionary<int, string>)property.GetValue(entity))?.Select(q => q.Key).ToArray());
                 if (propertyType.IsArray && propertyType.GetElementType().GetProperty(AweCsomeField.SuffixId) != null)
                 {
                     List<int> ids = new List<int>();
@@ -274,7 +294,7 @@ namespace AweCsome
                     {
                         ids.Add((int)item.GetType().GetProperty(AweCsomeField.SuffixId).GetValue(item));
                     }
-                    return CreateLookupsFromIds(ids.ToArray());
+                    return PropertyIsUser(property)? CreateUsersFromIds(ids.ToArray()) : CreateLookupsFromIds(ids.ToArray());
                 }
                 if (propertyType.GetProperty(AweCsomeField.SuffixId) != null)
                 {
