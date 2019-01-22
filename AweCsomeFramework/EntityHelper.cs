@@ -3,6 +3,7 @@ using AweCsome.Attributes.FieldAttributes;
 using AweCsome.Attributes.TableAttributes;
 using log4net;
 using Microsoft.SharePoint.Client;
+using Microsoft.SharePoint.Client.Taxonomy;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -118,6 +119,11 @@ namespace AweCsome
             return false;
         }
 
+        public static bool PropertyIsTaxonomy(PropertyInfo property)
+        {
+            return (property.GetCustomAttribute<ManagedMetadataAttribute>(true) != null);
+        }
+
         public static string GetFieldType(PropertyInfo property)
         {
             string detectedFieldTypename = GetFieldTypeNameFromAttribute(property);
@@ -188,7 +194,19 @@ namespace AweCsome
         public static object GetPropertyFromItemValue(PropertyInfo property, object itemValue)
         {
             Type propertyType = property.PropertyType;
-            if (PropertyIsLookup(property))
+            if (PropertyIsTaxonomy(property))
+            {
+                if (itemValue.GetType()==typeof(TaxonomyFieldValueCollection))
+                {
+                    var collection = (TaxonomyFieldValueCollection)itemValue;
+                    return collection.ToDictionary(q => new Guid(q.TermGuid), q => q.Label);
+                } else
+                {
+                    var item = (TaxonomyFieldValue)itemValue;
+                    return new KeyValuePair<Guid, string>(new Guid(item.TermGuid), item.Label);
+                }                
+            }
+            else if (PropertyIsLookup(property))
             {
                 if (itemValue.GetType().IsArray)
                 {
@@ -242,6 +260,7 @@ namespace AweCsome
             {
                 return Enum.Parse(property.PropertyType, property.PropertyType.GetEnumInternalNameFromDisplayname(itemValue as string));
             }
+           
             return itemValue;
         }
 
@@ -285,8 +304,8 @@ namespace AweCsome
                         ? CreateUserFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key)
                         : CreateLookupFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key);
                 if (propertyType == typeof(Dictionary<int, string>)) return PropertyIsUser(property)
-                        ? CreateLookupsFromIds(((Dictionary<int, string>)property.GetValue(entity))?.Select(q => q.Key).ToArray())
-                        : CreateUsersFromIds(((Dictionary<int, string>)property.GetValue(entity))?.Select(q => q.Key).ToArray());
+                        ? CreateUsersFromIds(((Dictionary<int, string>)property.GetValue(entity))?.Select(q => q.Key).ToArray())
+                        : CreateLookupsFromIds(((Dictionary<int, string>)property.GetValue(entity))?.Select(q => q.Key).ToArray());
                 if (propertyType.IsArray && propertyType.GetElementType().GetProperty(AweCsomeField.SuffixId) != null)
                 {
                     List<int> ids = new List<int>();

@@ -388,7 +388,17 @@ namespace AweCsome
                         sourceType = sourceValue.GetType();
 
                         object propertyValue = EntityHelper.GetPropertyFromItemValue(property, item.FieldValues[fieldname]);
-                        property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
+                        if (property.PropertyType.IsAssignableFrom(propertyValue.GetType()))
+                        {
+                            property.SetValue(entity, propertyValue);
+                        }
+                        else
+                        {
+                            property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
+                        }
+                    } else if (fieldname=="Id")
+                    {
+                        property.SetValue(entity, item.Id);
                     }
                 }
                 catch (Exception ex)
