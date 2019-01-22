@@ -9,9 +9,7 @@ namespace AweCsome.Attributes.FieldAttributes
 {
     public class ChoiceAttribute : Attribute
     {
-
-
-        public enum DisplayChoicesTypes { DropDown, RadioButtons, CheckBoxes }
+        public enum DisplayChoicesTypes { Dropdown, RadioButtons, CheckBoxes }
         public string[] Choices { get; set; }
         public DisplayChoicesTypes DisplayChoices { get; set; }
         public bool AllowFillIn { get; set; }
@@ -19,8 +17,9 @@ namespace AweCsome.Attributes.FieldAttributes
         public const string AssociatedFieldType = nameof(FieldType.Choice);
 
         public ChoiceAttribute() { }
-        public ChoiceAttribute(Type enumType) {
-            Choices=Enum.GetNames(enumType);
+        public ChoiceAttribute(Type enumType)
+        {
+            Choices = Enum.GetNames(enumType);
         }
     }
 }

@@ -318,7 +318,8 @@ namespace AweCsome
                 if (propertyType.GetProperty(AweCsomeField.SuffixId) != null)
                 {
                     var item = property.GetValue(entity);
-                    return CreateLookupFromId(((int)item.GetType().GetProperty(AweCsomeField.SuffixId).GetValue(item)));
+                    if (item == null) return null;
+                    return CreateLookupFromId(((int)property.PropertyType.GetProperty(AweCsomeField.SuffixId).GetValue(item)));
                 }
             }
             if (propertyType.IsEnum)

@@ -53,8 +53,15 @@ namespace AweCsome
             if (fieldAttributes == null) fieldAdditional = string.Empty;
             if (isMulti)
             {
-                if (fieldTypeName != nameof(FieldType.Choice)) fieldAttributes += " Mult='TRUE'";
-                fieldTypeString += "Multi";
+                if (fieldTypeName == nameof(FieldType.Choice))
+                {
+                    fieldTypeString = "Multi" + fieldTypeString;
+                }
+                else
+                {
+                    fieldAttributes += " Mult='TRUE'";
+                    fieldTypeString += "Multi";
+                }
             }
             var indexAttribute = property.GetCustomAttribute<IndexAttribute>();
             if (indexAttribute != null) fieldAttributes += " Indexed='TRUE'";
@@ -140,7 +147,10 @@ namespace AweCsome
             var choiceAttribute = property.GetCustomAttribute<ChoiceAttribute>();
             if (choiceAttribute != null)
             {
-                fieldAttributes = $"Format='{choiceAttribute.DisplayChoices}'";
+                if (choiceAttribute.DisplayChoices != ChoiceAttribute.DisplayChoicesTypes.CheckBoxes)
+                {
+                    fieldAttributes = $"Format='{choiceAttribute.DisplayChoices}'";
+                }
                 if (choiceAttribute.Choices != null) choices = choiceAttribute.Choices;
                 if (choiceAttribute.DefaultValue != null) fieldAdditional = $"<Default>{choiceAttribute.DefaultValue}</Default>";
                 if (choiceAttribute.AllowFillIn) fieldAttributes += " FillInChoice='TRUE'";
@@ -153,10 +163,10 @@ namespace AweCsome
             {
                 foreach (string choice in choices)
                 {
-                    choiceXml += $"<CHOICE>{choice}</CHOICE>";
+                    choiceXml += $"<CHOICE>{choice}</CHOICE>\n";
                 }
             }
-            fieldAdditional += $"<CHOICES>{choiceXml}</CHOICES>";
+            fieldAdditional += $"\n<CHOICES>\n{choiceXml}</CHOICES>";
         }
 
         private void GetFieldCreationDetailsCurrency(PropertyInfo property, out string fieldAttributes)
@@ -194,10 +204,11 @@ namespace AweCsome
             if (lookupAttribute != null)
             {
                 fieldname = lookupAttribute.Field;
-                lookupListName= lookupAttribute.List;
+                lookupListName = lookupAttribute.List;
             }
 
-            if (lookupListName==null) { 
+            if (lookupListName == null)
+            {
                 Type propertyType = property.PropertyType;
 
                 if (propertyType.IsArray)
@@ -206,10 +217,10 @@ namespace AweCsome
                 }
                 if (propertyType.GetProperty(SuffixId) != null)
                 {
-                    lookupListName= propertyType.Name;
+                    lookupListName = propertyType.Name;
                 }
             }
-           
+
             return lookupListName;
         }
 
@@ -246,7 +257,7 @@ namespace AweCsome
             }
         }
 
-    
+
 
         private void GetFieldCreationDetailsText(PropertyInfo property, out string fieldAttributes, out string fieldAdditional)
         {
