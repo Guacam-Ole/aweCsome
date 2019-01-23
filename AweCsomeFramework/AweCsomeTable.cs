@@ -553,16 +553,16 @@ namespace AweCsome
                 item["LikedBy"] = likeArray.ToArray();
                 item["LikesCount"] = likeArray.Count;
                 item.Update();
+                clientContext.ExecuteQuery();
             }
         }
-
 
         public void Like<T>(int id, int userId)
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
 
             ListItem item = GetListItemById(listname, id);
-            var likeArray = ((FieldUserValue[])item.FieldValues.First(fn => fn.Key == "LikedBy").Value).ToList();
+            var likeArray = ((FieldUserValue[])item.FieldValues.First(fn => fn.Key == "LikedBy").Value)?.ToList() ?? new List<FieldUserValue>();
             var userLike = likeArray.FirstOrDefault(q => q.LookupId == userId);
 
             if (userLike == null)
