@@ -196,6 +196,7 @@
     <Compile Include="Attributes\TableAttributes\TableUrlAttribute.cs" />
     <Compile Include="Attributes\TableAttributes\VersioningAttribute.cs" />
     <Compile Include="AweCsomeField.cs" />
+    <Compile Include="AweCsomePeople.cs" />
     <Compile Include="AweCsomeTable.cs" />
     <Compile Include="AweCsomeTaxonomy.cs" />
     <Compile Include="Entities\AweCsomeListItem.cs" />
@@ -205,6 +206,7 @@
     <Compile Include="Exceptions\ItemNotFoundException.cs" />
     <Compile Include="Exceptions\ListNotFoundException.cs" />
     <Compile Include="IAweCsomeField.cs" />
+    <Compile Include="IAweCsomePeople.cs" />
     <Compile Include="IAweCsomeTable.cs" />
     <Compile Include="IAweCsomeTaxonomy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
