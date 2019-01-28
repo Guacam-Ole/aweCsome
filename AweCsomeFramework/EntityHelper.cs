@@ -108,6 +108,20 @@ namespace AweCsome
             return (property.GetCustomAttribute<UserAttribute>(true) != null);
         }
 
+        //public static bool PropertyIsUrl(PropertyInfo property)
+        //{
+        //    var attribute = property.GetCustomAttribute<UrlAttribute>();
+        //    if (attribute == null) return false;
+        //    return attribute.UrlFieldFormatType == UrlFieldFormatType.Hyperlink;
+        //}
+
+        //public static bool PropertyIsImage(PropertyInfo property)
+        //{
+        //    var attribute = property.GetCustomAttribute<UrlAttribute>();
+        //    if (attribute == null) return false;
+        //    return attribute.UrlFieldFormatType == UrlFieldFormatType.Image;
+        //}
+
         public static bool PropertyIsLookup(PropertyInfo property)
         {
             if (property.GetCustomAttribute<LookupBaseAttribute>(true) != null) return true;
@@ -196,15 +210,16 @@ namespace AweCsome
             Type propertyType = property.PropertyType;
             if (PropertyIsTaxonomy(property))
             {
-                if (itemValue.GetType()==typeof(TaxonomyFieldValueCollection))
+                if (itemValue.GetType() == typeof(TaxonomyFieldValueCollection))
                 {
                     var collection = (TaxonomyFieldValueCollection)itemValue;
                     return collection.ToDictionary(q => new Guid(q.TermGuid), q => q.Label);
-                } else
+                }
+                else
                 {
                     var item = (TaxonomyFieldValue)itemValue;
                     return new KeyValuePair<Guid, string>(new Guid(item.TermGuid), item.Label);
-                }                
+                }
             }
             else if (PropertyIsLookup(property))
             {
@@ -260,7 +275,7 @@ namespace AweCsome
             {
                 return Enum.Parse(property.PropertyType, property.PropertyType.GetEnumInternalNameFromDisplayname(itemValue as string));
             }
-           
+
             return itemValue;
         }
 
@@ -313,7 +328,7 @@ namespace AweCsome
                     {
                         ids.Add((int)item.GetType().GetProperty(AweCsomeField.SuffixId).GetValue(item));
                     }
-                    return PropertyIsUser(property)? CreateUsersFromIds(ids.ToArray()) : CreateLookupsFromIds(ids.ToArray());
+                    return PropertyIsUser(property) ? CreateUsersFromIds(ids.ToArray()) : CreateLookupsFromIds(ids.ToArray());
                 }
                 if (propertyType.GetProperty(AweCsomeField.SuffixId) != null)
                 {
@@ -322,10 +337,20 @@ namespace AweCsome
                     return CreateLookupFromId(((int)property.PropertyType.GetProperty(AweCsomeField.SuffixId).GetValue(item)));
                 }
             }
+            //else if (PropertyIsImage(property))
+            //{
+
+            //    throw new NotImplementedException();
+            //}
+            //else if (PropertyIsUrl(property))
+            //{
+            //    throw new NotImplementedException();
+            //}
             if (propertyType.IsEnum)
             {
                 return property.PropertyType.GetEnumDisplayNameFromInternalname(property.GetValue(entity).ToString());
             }
+
             return property.GetValue(entity);
         }
     }

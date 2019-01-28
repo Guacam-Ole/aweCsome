@@ -29,6 +29,10 @@ namespace AweCsome
         void AttachFileToItem<T>(int id, string filename, Stream filestream);
         void DeleteFileFromItem<T>(int id, string filename);
 
+        string AttachFileToLibrary<T>(string folder, string filename, Stream filestream, T entity );
+        Dictionary<string, Stream> SelectFilesFromLibrary<T>(string folder);
+        string AddFolderToLibrary<T>(string folder);
+
         int CountItems<T>();
         int CountItemsByFieldValue<T>(string fieldname, object value);
         int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions);

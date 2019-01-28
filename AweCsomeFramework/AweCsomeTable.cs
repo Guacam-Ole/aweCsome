@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using File = Microsoft.SharePoint.Client.File;
 
 namespace AweCsome
 {
@@ -264,6 +265,32 @@ namespace AweCsome
 
         #endregion Structure
 
+        private void AssignPropertiesToListItem<T>(T entity, ListItem listItem)
+        {
+            Type entityType = typeof(T);
+            foreach (var property in entityType.GetProperties())
+            {
+                try
+                {
+                    if (!property.CanRead) continue;
+                    if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
+                    var value = EntityHelper.GetItemValueFromProperty(property, entity);
+                    if (property.PropertyType == typeof(DateTime))
+                    {
+                        var year = ((DateTime)value).Year;
+                        if (year < 1900 || year > 8900) throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
+                    }
+                    if (value != null) listItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
+                }
+                catch (Exception ex)
+                {
+                    ex.Data.Add("Propertyname", property.Name);
+                    ex.Data.Add("Listname", listItem);
+                    throw (ex);
+                }
+            }
+        }
+
         #region Insert
         public int InsertItem<T>(T entity)
         {
@@ -281,27 +308,8 @@ namespace AweCsome
                     if (list == null) throw new ListNotFoundException();
 
                     ListItem newItem = list.AddItem(new ListItemCreationInformation());
-                    foreach (var property in entityType.GetProperties())
-                    {
-                        try
-                        {
-                            if (!property.CanRead) continue;
-                            if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
-                            var value = EntityHelper.GetItemValueFromProperty(property, entity);
-                            if (property.PropertyType == typeof(DateTime))
-                            {
-                                var year= ((DateTime)value).Year;
-                                if (year < 1900 || year > 8900) throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
-                            }
-                            if (value != null) newItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
-                        }
-                        catch (Exception ex)
-                        {
-                            ex.Data.Add("Propertyname", property.Name);
-                            ex.Data.Add("Listname", listName);
-                            throw (ex);
-                        }
-                    }
+                    AssignPropertiesToListItem(entity, newItem);
+
                     newItem.Update();
                     clientContext.ExecuteQuery();
                     return newItem.Id;
@@ -401,7 +409,8 @@ namespace AweCsome
                         {
                             property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
                         }
-                    } else if (fieldname=="Id")
+                    }
+                    else if (fieldname == "Id")
                     {
                         property.SetValue(entity, item.Id);
                     }
@@ -721,9 +730,6 @@ namespace AweCsome
             }
         }
 
- 
-
-
         #endregion Files
 
         #region Counts
@@ -776,6 +782,67 @@ namespace AweCsome
         public int CountItemsByQuery<T>(string query)
         {
             return CountItems<T>(new CamlQuery { ViewXml = query });
+        }
+
+        public string AttachFileToLibrary<T>(string foldername, string filename, Stream fileStream, T entity)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            var newFile = new FileCreationInformation
+            {
+                ContentStream = fileStream,
+                Url = filename
+            };
+
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                List documentLibrary = web.GetListByTitle(listname);
+                var targetFolder = documentLibrary.RootFolder;
+                if (foldername != null)
+                {
+                    targetFolder = web.GetFolderByServerRelativeUrl($"{listname}\\{foldername}");
+                }
+                context.Load(targetFolder);
+                context.ExecuteQuery();
+
+                File uploadFile = targetFolder.Files.Add(newFile);
+
+                uploadFile.ListItemAllFields.Update();
+                context.ExecuteQuery();
+                AssignPropertiesToListItem(entity, uploadFile.ListItemAllFields);
+                uploadFile.ListItemAllFields.Update();
+                context.ExecuteQuery();
+
+                string targetFilename = $"{targetFolder.ServerRelativeUrl}/{filename}";
+                _log.DebugFormat($"File '{filename}' uploaded to {targetFilename}");
+                return targetFilename;
+            }
+        }
+
+        public Dictionary<string, Stream> SelectFilesFromLibrary<T>(string folder)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string AddFolderToLibrary<T>(string folder)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                List documentLibrary = web.GetListByTitle(listname);
+                var targetFolder = documentLibrary.RootFolder;
+                context.Load(targetFolder);
+                context.ExecuteQuery();
+                string[] folderParts = folder.Split('/');
+                foreach (string part in folderParts)
+                {
+                    targetFolder = targetFolder.EnsureFolder(part);
+                }
+                context.ExecuteQuery();
+                return targetFolder.ServerRelativeUrl;
+            }
         }
         #endregion Counts
     }
