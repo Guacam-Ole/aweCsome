@@ -1,6 +1,7 @@
 ﻿using AweCsome.Attributes.FieldAttributes;
 using AweCsome.Attributes.IgnoreAttributes;
 using AweCsome.Attributes.TableAttributes;
+using AweCsome.Entities;
 using AweCsome.Exceptions;
 using log4net;
 using Microsoft.SharePoint.Client;
@@ -819,9 +820,96 @@ namespace AweCsome
             }
         }
 
-        public Dictionary<string, Stream> SelectFilesFromLibrary<T>(string folder)
+        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new()
         {
-            throw new NotImplementedException();
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            var allFiles = new List<AweCsomeLibraryFile>();
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                string folderUrl = $"{listname}\\{foldername}";
+                var folder = web.GetFolderByServerRelativeUrl(folderUrl);
+
+                if (folder == null) return null;
+                try
+                {
+                    context.Load(folder, f => f.Exists);
+                    context.ExecuteQuery();
+                    if (!folder.Exists) return null;
+                }
+                catch
+                {
+                    return null; // There is no cleaner way to do this on CSOM
+                }
+                context.Load(folder.Files);
+                context.Load(folder.Files, f => f.Include(q => q.ListItemAllFields));
+                context.ExecuteQuery();
+                if (folder.Files == null) return null;
+                foreach (var file in folder.Files)
+                {
+                    var fileStream = file.OpenBinaryStream();
+                    context.ExecuteQuery();
+                    MemoryStream stream = new MemoryStream();
+                    fileStream.Value.CopyTo(stream);
+                    stream.Position = 0;
+                    var entity = new T();
+
+                    StoreFromListItem(entity, file.ListItemAllFields);
+                    allFiles.Add(new AweCsomeLibraryFile
+                    {
+                        Filename = file.Name,
+
+                        Stream = stream,
+                        entity = entity
+                    });
+                }
+                return allFiles;
+            }
+        }
+
+        public AweCsomeLibraryFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new()
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            var allFiles = new List<AweCsomeLibraryFile>();
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                string folderUrl = $"{listname}\\{foldername}";
+                var folder = web.GetFolderByServerRelativeUrl(folderUrl);
+
+                if (folder == null) return null;
+                try
+                {
+                    context.Load(folder, f => f.Exists);
+                    context.ExecuteQuery();
+                    if (!folder.Exists) return null;
+                }
+                catch
+                {
+                    return null; // There is no cleaner way to do this on CSOM
+                }
+                context.Load(folder.Files);
+                context.Load(folder.Files, f => f.Include(q => q.ListItemAllFields));
+                context.ExecuteQuery();
+                var file = folder.Files?.FirstOrDefault(q => q.Name == filename);
+                if (file == null) return null;
+
+                var fileStream = file.OpenBinaryStream();
+                context.ExecuteQuery();
+                MemoryStream stream = new MemoryStream();
+                fileStream.Value.CopyTo(stream);
+                stream.Position = 0;
+                var entity = new T();
+
+                StoreFromListItem(entity, file.ListItemAllFields);
+                return new AweCsomeLibraryFile
+                {
+                    Filename = file.Name,
+
+                    Stream = stream,
+                    entity = entity
+                };
+            }
         }
 
         public string AddFolderToLibrary<T>(string folder)
@@ -842,6 +930,34 @@ namespace AweCsome
                 }
                 context.ExecuteQuery();
                 return targetFolder.ServerRelativeUrl;
+            }
+        }
+
+        public List<string> SelectFileNamesFromLibrary<T>(string foldername)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            var allFiles = new List<AweCsomeLibraryFile>();
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                string folderUrl = $"{listname}\\{foldername}";
+                var folder = web.GetFolderByServerRelativeUrl(folderUrl);
+
+                if (folder == null) return null;
+                try
+                {
+                    context.Load(folder, f => f.Exists);
+                    context.ExecuteQuery();
+                    if (!folder.Exists) return null;
+                }
+                catch
+                {
+                    return null; // There is no cleaner way to do this on CSOM
+                }
+                context.Load(folder.Files);
+                context.ExecuteQuery();
+                if (folder.Files == null) return null;
+                return folder.Files.Select(q => q.Name).ToList();
             }
         }
         #endregion Counts

@@ -1,4 +1,5 @@
-﻿using Microsoft.SharePoint.Client;
+﻿using AweCsome.Entities;
+using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,7 +31,9 @@ namespace AweCsome
         void DeleteFileFromItem<T>(int id, string filename);
 
         string AttachFileToLibrary<T>(string folder, string filename, Stream filestream, T entity );
-        Dictionary<string, Stream> SelectFilesFromLibrary<T>(string folder);
+        List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new();
+        AweCsomeLibraryFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new();
+        List<string> SelectFileNamesFromLibrary<T>(string foldername);
         string AddFolderToLibrary<T>(string folder);
 
         int CountItems<T>();

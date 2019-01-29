@@ -108,19 +108,11 @@ namespace AweCsome
             return (property.GetCustomAttribute<UserAttribute>(true) != null);
         }
 
-        //public static bool PropertyIsUrl(PropertyInfo property)
-        //{
-        //    var attribute = property.GetCustomAttribute<UrlAttribute>();
-        //    if (attribute == null) return false;
-        //    return attribute.UrlFieldFormatType == UrlFieldFormatType.Hyperlink;
-        //}
 
-        //public static bool PropertyIsImage(PropertyInfo property)
-        //{
-        //    var attribute = property.GetCustomAttribute<UrlAttribute>();
-        //    if (attribute == null) return false;
-        //    return attribute.UrlFieldFormatType == UrlFieldFormatType.Image;
-        //}
+        public static bool PropertyIsUrl(PropertyInfo property)
+        {
+            return property.GetCustomAttribute<UrlAttribute>() != null;
+        }
 
         public static bool PropertyIsLookup(PropertyInfo property)
         {
@@ -270,6 +262,9 @@ namespace AweCsome
                         return targetEntityObject;
                     }
                 }
+            } else if (PropertyIsUrl(property))
+            {
+                return ((FieldUrlValue)itemValue).Url;
             }
             if (propertyType.IsEnum)
             {
