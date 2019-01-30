@@ -39,6 +39,32 @@ namespace AweCsome
             return descriptionAttribute?.DocumentTemplateTypeId;
         }
 
+        private void AssignPropertiesToListItem<T>(T entity, ListItem listItem)
+        {
+            Type entityType = typeof(T);
+            foreach (var property in entityType.GetProperties())
+            {
+                try
+                {
+                    if (!property.CanRead) continue;
+                    if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
+                    var value = EntityHelper.GetItemValueFromProperty(property, entity);
+                    if (property.PropertyType == typeof(DateTime))
+                    {
+                        var year = ((DateTime)value).Year;
+                        if (year < 1900 || year > 8900) throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
+                    }
+                    if (value != null) listItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
+                }
+                catch (Exception ex)
+                {
+                    ex.Data.Add("Propertyname", property.Name);
+                    ex.Data.Add("Listname", listItem);
+                    throw (ex);
+                }
+            }
+        }
+
         private string GetTableUrl(Type entityType)
         {
             var descriptionAttribute = entityType.GetCustomAttribute<Attributes.TableAttributes.TableUrlAttribute>();
@@ -265,32 +291,6 @@ namespace AweCsome
         }
 
         #endregion Structure
-
-        private void AssignPropertiesToListItem<T>(T entity, ListItem listItem)
-        {
-            Type entityType = typeof(T);
-            foreach (var property in entityType.GetProperties())
-            {
-                try
-                {
-                    if (!property.CanRead) continue;
-                    if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
-                    var value = EntityHelper.GetItemValueFromProperty(property, entity);
-                    if (property.PropertyType == typeof(DateTime))
-                    {
-                        var year = ((DateTime)value).Year;
-                        if (year < 1900 || year > 8900) throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
-                    }
-                    if (value != null) listItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
-                }
-                catch (Exception ex)
-                {
-                    ex.Data.Add("Propertyname", property.Name);
-                    ex.Data.Add("Listname", listItem);
-                    throw (ex);
-                }
-            }
-        }
 
         #region Insert
         public int InsertItem<T>(T entity)
@@ -700,7 +700,6 @@ namespace AweCsome
                 catch (Exception)
                 {
                     // Sadly there is no better way to detect if attachments exist in SharePoint. Exception=No Attachments
-
                     return null;
                 }
 
