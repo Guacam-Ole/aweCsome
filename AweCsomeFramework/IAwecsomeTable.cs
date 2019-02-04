@@ -29,16 +29,16 @@ namespace AweCsome
         Dictionary<string, Stream> SelectFilesFromItem<T>(int id);
         void AttachFileToItem<T>(int id, string filename, Stream filestream);
         void DeleteFileFromItem<T>(int id, string filename);
-
         string AttachFileToLibrary<T>(string folder, string filename, Stream filestream, T entity );
         List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new();
         AweCsomeLibraryFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new();
         List<string> SelectFileNamesFromLibrary<T>(string foldername);
         string AddFolderToLibrary<T>(string folder);
-
         int CountItems<T>();
         int CountItemsByFieldValue<T>(string fieldname, object value);
         int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions);
         int CountItemsByQuery<T>(string query);
+        void DeleteFilesFromDocumentLibrary<T>(string path, List<string> filenames);
+        void DeleteFolderFromDocumentLibrary<T>(string path, string folder);
     }
 }

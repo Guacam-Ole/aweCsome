@@ -116,6 +116,54 @@ namespace AweCsome
             }
         }
 
+        private Folder GetFolderFromDocumentLibrary<T>(ClientContext context, string foldername)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            Web web = context.Web;
+            string folderUrl = $"{listname}\\{foldername}";
+            var folder = web.GetFolderByServerRelativeUrl(folderUrl);
+
+            if (folder == null) return null;
+            try
+            {
+                context.Load(folder, f => f.Exists);
+                context.ExecuteQuery();
+                if (!folder.Exists) return null;
+            }
+            catch
+            {
+                return null; // There is no cleaner way to do this on CSOM sadly
+            }
+            return folder;
+        }
+
+        private FileCollection GetAttachments(string listname, int id)
+        {
+            using (var clientContext = GetClientContext())
+            {
+                Web web = clientContext.Web;
+                var targetUrl = string.Format("{0}/Lists/{1}/Attachments/{2}", web.Url, listname, id);
+
+                Folder attachmentsFolder = web.GetFolderByServerRelativeUrl(targetUrl);
+                clientContext.Load(attachmentsFolder);
+
+                try
+                {
+                    clientContext.ExecuteQuery();
+                }
+                catch (Exception)
+                {
+                    // Sadly there is no better way to detect if attachments exist in SharePoint. Exception=No Attachments
+                    return null;
+                }
+
+                FileCollection attachments = attachmentsFolder.Files;
+                clientContext.Load(attachments);
+                clientContext.ExecuteQuery();
+                return attachments;
+            }
+        }
+
         #endregion Helpers
 
         #region Structure
@@ -683,33 +731,6 @@ namespace AweCsome
             }
         }
 
-        private FileCollection GetAttachments(string listname, int id)
-        {
-            using (var clientContext = GetClientContext())
-            {
-                Web web = clientContext.Web;
-                var targetUrl = string.Format("{0}/Lists/{1}/Attachments/{2}", web.Url, listname, id);
-
-                Folder attachmentsFolder = web.GetFolderByServerRelativeUrl(targetUrl);
-                clientContext.Load(attachmentsFolder);
-
-                try
-                {
-                    clientContext.ExecuteQuery();
-                }
-                catch (Exception)
-                {
-                    // Sadly there is no better way to detect if attachments exist in SharePoint. Exception=No Attachments
-                    return null;
-                }
-
-                FileCollection attachments = attachmentsFolder.Files;
-                clientContext.Load(attachments);
-                clientContext.ExecuteQuery();
-                return attachments;
-            }
-        }
-
         public void DeleteFileFromItem<T>(int id, string filename)
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
@@ -728,60 +749,6 @@ namespace AweCsome
                 context.ExecuteQuery();
                 _log.DebugFormat($"File '{filename}' deleted from {listname}/{id}");
             }
-        }
-
-        #endregion Files
-
-        #region Counts
-        private int CountItems<T>(CamlQuery query)
-        {
-            Type entityType = typeof(T);
-            try
-            {
-                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
-                using (var clientContext = GetClientContext())
-                {
-                    Web web = clientContext.Web;
-                    ListCollection listCollection = web.Lists;
-                    clientContext.Load(listCollection);
-                    clientContext.ExecuteQuery();
-                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
-                    if (list == null) throw new ListNotFoundException();
-                    ListItemCollection items = list.GetItems(query);
-                    clientContext.Load(items, q => q.Include(l => l.Id));
-                    clientContext.ExecuteQuery();
-                    return items.Count;
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.Error($"Cannot select items from table of entity with type '{entityType.Name}", ex);
-                throw;
-            }
-        }
-
-        public int CountItems<T>()
-        {
-            return CountItems<T>(CamlQuery.CreateAllItemsQuery());
-        }
-
-        public int CountItemsByFieldValue<T>(string fieldname, object value)
-        {
-            Type entityType = typeof(T);
-            PropertyInfo fieldProperty = entityType.GetProperty(fieldname);
-
-            if (EntityHelper.PropertyIsLookup(fieldProperty)) return CountItems<T>(new CamlQuery { ViewXml = CreateLookupCaml(fieldname, (int)value) });
-            return CountItems<T>(new CamlQuery { ViewXml = CreateFieldEqCaml(fieldProperty, value) });
-        }
-
-        public int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions)
-        {
-            return CountItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
-        }
-
-        public int CountItemsByQuery<T>(string query)
-        {
-            return CountItems<T>(new CamlQuery { ViewXml = query });
         }
 
         public string AttachFileToLibrary<T>(string foldername, string filename, Stream fileStream, T entity)
@@ -872,21 +839,7 @@ namespace AweCsome
             var allFiles = new List<AweCsomeLibraryFile>();
             using (ClientContext context = GetClientContext())
             {
-                Web web = context.Web;
-                string folderUrl = $"{listname}\\{foldername}";
-                var folder = web.GetFolderByServerRelativeUrl(folderUrl);
-
-                if (folder == null) return null;
-                try
-                {
-                    context.Load(folder, f => f.Exists);
-                    context.ExecuteQuery();
-                    if (!folder.Exists) return null;
-                }
-                catch
-                {
-                    return null; // There is no cleaner way to do this on CSOM
-                }
+                var folder = GetFolderFromDocumentLibrary<T>(context, foldername);
                 context.Load(folder.Files);
                 context.Load(folder.Files, f => f.Include(q => q.ListItemAllFields));
                 context.ExecuteQuery();
@@ -934,31 +887,99 @@ namespace AweCsome
 
         public List<string> SelectFileNamesFromLibrary<T>(string foldername)
         {
-            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+
             var allFiles = new List<AweCsomeLibraryFile>();
             using (ClientContext context = GetClientContext())
             {
-                Web web = context.Web;
-                string folderUrl = $"{listname}\\{foldername}";
-                var folder = web.GetFolderByServerRelativeUrl(folderUrl);
-
-                if (folder == null) return null;
-                try
-                {
-                    context.Load(folder, f => f.Exists);
-                    context.ExecuteQuery();
-                    if (!folder.Exists) return null;
-                }
-                catch
-                {
-                    return null; // There is no cleaner way to do this on CSOM
-                }
+                var folder = GetFolderFromDocumentLibrary<T>(context, foldername);
                 context.Load(folder.Files);
                 context.ExecuteQuery();
                 if (folder.Files == null) return null;
                 return folder.Files.Select(q => q.Name).ToList();
             }
         }
+
+        public void DeleteFilesFromDocumentLibrary<T>(string path, List<string> filenames)
+        {
+            using (var context = GetClientContext())
+            {
+                var folder = GetFolderFromDocumentLibrary<T>(context, path);
+                var existingFiles = folder.Files;
+                context.Load(existingFiles);
+                context.ExecuteQuery();
+                foreach (string filename in filenames)
+                {
+                    existingFiles.First(q => q.Name == filename).DeleteObject();
+                }
+                context.ExecuteQuery();
+            }
+        }
+
+        public void DeleteFolderFromDocumentLibrary<T>(string path, string foldername)
+        {
+            using (var context = GetClientContext())
+            {
+                var folder = GetFolderFromDocumentLibrary<T>(context, path);
+                folder.DeleteObject();
+                context.ExecuteQuery();
+            }
+        }
+
+        #endregion Files
+
+        #region Counts
+        private int CountItems<T>(CamlQuery query)
+        {
+            Type entityType = typeof(T);
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItemCollection items = list.GetItems(query);
+                    clientContext.Load(items, q => q.Include(l => l.Id));
+                    clientContext.ExecuteQuery();
+                    return items.Count;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot select items from table of entity with type '{entityType.Name}", ex);
+                throw;
+            }
+        }
+
+        public int CountItems<T>()
+        {
+            return CountItems<T>(CamlQuery.CreateAllItemsQuery());
+        }
+
+        public int CountItemsByFieldValue<T>(string fieldname, object value)
+        {
+            Type entityType = typeof(T);
+            PropertyInfo fieldProperty = entityType.GetProperty(fieldname);
+
+            if (EntityHelper.PropertyIsLookup(fieldProperty)) return CountItems<T>(new CamlQuery { ViewXml = CreateLookupCaml(fieldname, (int)value) });
+            return CountItems<T>(new CamlQuery { ViewXml = CreateFieldEqCaml(fieldProperty, value) });
+        }
+
+        public int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions)
+        {
+            return CountItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
+        }
+
+        public int CountItemsByQuery<T>(string query)
+        {
+            return CountItems<T>(new CamlQuery { ViewXml = query });
+        }
+
+
         #endregion Counts
     }
 }
