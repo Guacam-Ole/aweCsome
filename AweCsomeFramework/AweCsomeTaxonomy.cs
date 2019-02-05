@@ -18,39 +18,6 @@ namespace AweCsome
         public ClientContext ClientContext { set { _clientContext = value; } }
         public int Lcid { get; set; } = 1033;
 
-      
-        public void GetTermSetFromSiteCollection(string termsetName, int lcid, bool createIfMissing, out TermStore siteCollectionTermstore, out TermSet termSet)
-        {
-            termSet = null;
-            Site site = _clientContext.Site;
-
-            TaxonomySession session = TaxonomySession.GetTaxonomySession(_clientContext);
-            siteCollectionTermstore = session.GetDefaultSiteCollectionTermStore();
-
-            try
-            {
-                if (siteCollectionTermstore != null)
-                {
-                    _clientContext.Load(siteCollectionTermstore);
-                    _clientContext.ExecuteQuery();
-                    System.Threading.Thread.Sleep(1000);
-                    TermGroup termGroup = siteCollectionTermstore.GetSiteCollectionGroup(site, createIfMissing);
-                    System.Threading.Thread.Sleep(1000);
-                    if (termGroup == null || termGroup.TermSets == null) return;
-
-                    _clientContext.Load(termGroup);
-                    _clientContext.Load(termGroup.TermSets);
-                    _clientContext.ExecuteQuery();
-                    System.Threading.Thread.Sleep(1000);
-                    termSet = termGroup.TermSets.FirstOrDefault(ts => ts.Name == termsetName);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
-
         private AweCsomeTag GetTermChildren(Term term, AweCsomeTag parent)
         {
             var currentTag = new AweCsomeTag
@@ -88,7 +55,7 @@ namespace AweCsome
             return tag.Title != null && tag.Title.IndexOf(query, StringComparison.InvariantCultureIgnoreCase) >= 0;
         }
 
-        public void GetTermsetIds(TaxonomyTypes taxonomyType, string termsetName, string groupname, bool createIfMissing, out Guid termStoreId, out Guid termSetId)
+        public void GetTermSetIds(TaxonomyTypes taxonomyType, string termSetName, string groupName, bool createIfMissing, out Guid termStoreId, out Guid termSetId)
         {
             TermStore termStore;
             TermSet termSet;
@@ -97,7 +64,7 @@ namespace AweCsome
             switch (taxonomyType)
             {
                 case TaxonomyTypes.SiteCollection:
-                    GetTermSet(taxonomyType, termsetName, groupname,  createIfMissing, out termStore, out termSet);
+                    GetTermSet(taxonomyType, termSetName, groupName,  createIfMissing, out termStore, out termSet);
                     break;
                 default:
                     throw new Exception("Unknown Taxomylocation");
@@ -107,16 +74,16 @@ namespace AweCsome
             {
                 if (!createIfMissing) throw new KeyNotFoundException("Taxonomy missing");
 
-                TermGroup termGroup = groupname == null
+                TermGroup termGroup = groupName == null
                     ? termStore.GetSiteCollectionGroup(site, createIfMissing)
-                    : termStore.GetTermGroupByName(groupname);
+                    : termStore.GetTermGroupByName(groupName);
 
                 termSetId = Guid.NewGuid();
-                TermSet termSetColl = termGroup.CreateTermSet(termsetName, termSetId, Lcid);
+                TermSet termSetColl = termGroup.CreateTermSet(termSetName, termSetId, Lcid);
                 termSetColl.IsOpenForTermCreation = true;
                 _clientContext.Load(termGroup.TermSets);
                 _clientContext.ExecuteQuery();
-                termSet = termGroup.TermSets.FirstOrDefault(ts => ts.Name == termsetName);
+                termSet = termGroup.TermSets.FirstOrDefault(ts => ts.Name == termSetName);
             }
 
             _clientContext.Load(termStore, ts => ts.Id);
@@ -126,8 +93,7 @@ namespace AweCsome
             termSetId = termSet == null ? Guid.Empty : termSet.Id;
         }
 
-
-        public void GetTermSet(TaxonomyTypes taxonomyType, string termsetName, string groupname, bool createIfMissing, out TermStore termStore, out TermSet termSet)
+        public void GetTermSet(TaxonomyTypes taxonomyType, string termSetName, string groupName, bool createIfMissing, out TermStore termStore, out TermSet termSet)
         {
             termSet = null;
             Site site = _clientContext.Site;
@@ -151,9 +117,9 @@ namespace AweCsome
                     _clientContext.Load(termStore);
                     _clientContext.ExecuteQuery();
                     System.Threading.Thread.Sleep(1000);
-                    TermGroup termGroup = groupname == null
+                    TermGroup termGroup = groupName == null
                     ? termStore.GetSiteCollectionGroup(site, createIfMissing)
-                    : termStore.GetTermGroupByName(groupname);
+                    : termStore.GetTermGroupByName(groupName);
                     System.Threading.Thread.Sleep(1000);
                     if (termGroup == null || termGroup.TermSets == null) return;
 
@@ -161,7 +127,7 @@ namespace AweCsome
                     _clientContext.Load(termGroup.TermSets);
                     _clientContext.ExecuteQuery();
                     System.Threading.Thread.Sleep(1000);
-                    termSet = termGroup.TermSets.FirstOrDefault(ts => ts.Name == termsetName);
+                    termSet = termGroup.TermSets.FirstOrDefault(ts => ts.Name == termSetName);
                 }
             }
             catch (Exception ex)
