@@ -60,15 +60,7 @@ namespace AweCsome
             TermStore termStore;
             TermSet termSet;
             Site site = _clientContext.Site;
-
-            switch (taxonomyType)
-            {
-                case TaxonomyTypes.SiteCollection:
-                    GetTermSet(taxonomyType, termSetName, groupName,  createIfMissing, out termStore, out termSet);
-                    break;
-                default:
-                    throw new Exception("Unknown Taxomylocation");
-            }
+            GetTermSet(taxonomyType, termSetName, groupName, createIfMissing, out termStore, out termSet);
 
             if (termSet == null)
             {
@@ -105,10 +97,12 @@ namespace AweCsome
                 case TaxonomyTypes.SiteCollection:
                     termStore = session.GetDefaultSiteCollectionTermStore();
                     break;
+                case TaxonomyTypes.Keywords:
+                    termStore = session.GetDefaultKeywordsTermStore();
+                    break;
                 default:
                     throw new Exception("Unexpected Taxonomytype");
             }
-            
 
             try
             {

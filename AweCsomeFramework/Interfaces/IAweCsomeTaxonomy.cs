@@ -10,8 +10,8 @@ namespace AweCsome.Interfaces
 {
     public enum TaxonomyTypes
     {
-        SiteCollection
-        // TODO: Other Locations as well
+        SiteCollection,
+        Keywords
     }
 
     public interface IAweCsomeTaxonomy
