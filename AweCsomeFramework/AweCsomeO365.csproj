@@ -201,6 +201,7 @@
     <Compile Include="AweCsomeTaxonomy.cs" />
     <Compile Include="Entities\AweCsomeLibraryFile.cs" />
     <Compile Include="Entities\AweCsomeListItem.cs" />
+    <Compile Include="Entities\AweCsomeTag.cs" />
     <Compile Include="EntityHelper.cs" />
     <Compile Include="Exceptions\FieldMissingException.cs" />
     <Compile Include="Exceptions\ItemAlreadyExistsException.cs" />

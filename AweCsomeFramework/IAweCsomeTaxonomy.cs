@@ -1,4 +1,5 @@
-﻿using Microsoft.SharePoint.Client.Taxonomy;
+﻿using AweCsome.Entities;
+using Microsoft.SharePoint.Client.Taxonomy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,10 +8,16 @@ using System.Threading.Tasks;
 
 namespace AweCsome
 {
-    interface IAweCsomeTaxonomy
+    public enum TaxonomyTypes
     {
-        void GetTaxonomyFieldInfo(string termsetName, bool createIfNotExisting, out Guid termStoreId, out Guid termSetId);
-        void GetTermSet(string termsetName, int lcid, bool createIfMissing, out TermStore termStore, out TermSet termSet);
+        SiteCollection
+        // TODO: Other Locations as well
+    }
 
+    public interface IAweCsomeTaxonomy
+    {
+        void GetTermsetIds(TaxonomyTypes taxonomyLocatiom, string termsetName, string groupName, bool createIfNotExisting, out Guid termStoreId, out Guid termSetId);
+        void GetTermSet(TaxonomyTypes taxonomyLocatiom, string termsetName, string groupName,  bool createIfMissing, out TermStore termStore, out TermSet termSet);
+        AweCsomeTag Search(TaxonomyTypes taxonomyLocatiom, string termSetName, string groupName, string query);
     }
 }

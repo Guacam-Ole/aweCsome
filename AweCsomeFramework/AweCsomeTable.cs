@@ -255,7 +255,8 @@ namespace AweCsome
                     {
                         if (_awecsomeTaxonomy == null) _awecsomeTaxonomy = new AweCsomeTaxonomy { ClientContext = _clientContext };
 
-                        _awecsomeTaxonomy.GetTaxonomyFieldInfo(managedMetadataAttribute.TermSetName, managedMetadataAttribute.CreateIfMissing, out Guid termStoreId, out Guid termSetId);
+                        // TODO: Type & Group configurable by attribute
+                        _awecsomeTaxonomy.GetTermsetIds(TaxonomyTypes.SiteCollection, managedMetadataAttribute.TermSetName, null, managedMetadataAttribute.CreateIfMissing, out Guid termStoreId, out Guid termSetId);
 
                         context.ExecuteQuery();
                         Microsoft.SharePoint.Client.Taxonomy.TaxonomyField taxonomyField = context.CastTo<Microsoft.SharePoint.Client.Taxonomy.TaxonomyField>(newField);
