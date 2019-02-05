@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365.Attributes.FieldAttributes
+namespace AweCsome.Attributes.FieldAttributes
 {
     public class CurrencyAttribute: Attribute
     {
@@ -13,6 +13,6 @@ namespace AweCsomeO365.Attributes.FieldAttributes
         public double? Max { get; set; }
         public int? NumberOfDecimalPlaces { get; set; }
         public int? CurrencyLocaleId { get; set; }
-        public  const FieldType AssociatedFieldType = FieldType.Currency;
+        public  const string AssociatedFieldType = nameof(FieldType.Currency);
     }
 }

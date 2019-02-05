@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365.Attributes.TableAttributes
+namespace AweCsome.Attributes.TableAttributes
 {
     public class ListTemplateAttribute : Attribute
     {
@@ -15,10 +15,5 @@ namespace AweCsomeO365.Attributes.TableAttributes
         {
             TemplateTypeId = templateTypeId;
         }
-
-        //public ListTemplateAttribute(ListTemplateType listTemplateType)
-        //{
-        //    TemplateTypeId = (int)listTemplateType;
-        //}
     }
 }

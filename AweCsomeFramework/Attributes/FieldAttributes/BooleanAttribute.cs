@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365.Attributes.FieldAttributes
+namespace AweCsome.Attributes.FieldAttributes
 {
     public class BooleanAttribute : Attribute
     {
         public bool DefaultValue { get; set; }
-        public  const FieldType AssociatedFieldType = FieldType.Boolean;
+        public  const string AssociatedFieldType = nameof(FieldType.Boolean);
     }
 }

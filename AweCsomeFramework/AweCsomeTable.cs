@@ -1,22 +1,28 @@
-﻿using AweCsomeO365.Attributes.FieldAttributes;
-using AweCsomeO365.Attributes.IgnoreAttributes;
-using AweCsomeO365.Attributes.TableAttributes;
-using AweCsomeO365.Exceptions;
+﻿using AweCsome.Attributes.FieldAttributes;
+using AweCsome.Attributes.IgnoreAttributes;
+using AweCsome.Attributes.TableAttributes;
+using AweCsome.Entities;
+using AweCsome.Exceptions;
+using AweCsome.Interfaces;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using File = Microsoft.SharePoint.Client.File;
+using AweCsome.Interfaces;
 
-namespace AweCsomeO365
+namespace AweCsome
 {
     public class AweCsomeTable : IAweCsomeTable
     {
         private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IAweCsomeField _awecsomeField = new AweCsomeField();
+        private IAweCsomeTaxonomy _awecsomeTaxonomy = null;
         private ClientContext _clientContext;
 
         public ClientContext ClientContext { set { _clientContext = value; } }
@@ -35,9 +41,35 @@ namespace AweCsomeO365
             return descriptionAttribute?.DocumentTemplateTypeId;
         }
 
+        private void AssignPropertiesToListItem<T>(T entity, ListItem listItem)
+        {
+            Type entityType = typeof(T);
+            foreach (var property in entityType.GetProperties())
+            {
+                try
+                {
+                    if (!property.CanRead) continue;
+                    if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
+                    var value = EntityHelper.GetItemValueFromProperty(property, entity);
+                    if (property.PropertyType == typeof(DateTime))
+                    {
+                        var year = ((DateTime)value).Year;
+                        if (year < 1900 || year > 8900) throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
+                    }
+                    if (value != null) listItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
+                }
+                catch (Exception ex)
+                {
+                    ex.Data.Add("Propertyname", property.Name);
+                    ex.Data.Add("Listname", listItem);
+                    throw (ex);
+                }
+            }
+        }
+
         private string GetTableUrl(Type entityType)
         {
-            var descriptionAttribute = entityType.GetCustomAttribute<Attributes.TableAttributes.UrlAttribute>();
+            var descriptionAttribute = entityType.GetCustomAttribute<Attributes.TableAttributes.TableUrlAttribute>();
             return descriptionAttribute?.Url;
         }
 
@@ -86,6 +118,54 @@ namespace AweCsomeO365
             }
         }
 
+        private Folder GetFolderFromDocumentLibrary<T>(ClientContext context, string foldername)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            Web web = context.Web;
+            string folderUrl = $"{listname}\\{foldername}";
+            var folder = web.GetFolderByServerRelativeUrl(folderUrl);
+
+            if (folder == null) return null;
+            try
+            {
+                context.Load(folder, f => f.Exists);
+                context.ExecuteQuery();
+                if (!folder.Exists) return null;
+            }
+            catch
+            {
+                return null; // There is no cleaner way to do this on CSOM sadly
+            }
+            return folder;
+        }
+
+        private FileCollection GetAttachments(string listname, int id)
+        {
+            using (var clientContext = GetClientContext())
+            {
+                Web web = clientContext.Web;
+                var targetUrl = string.Format("{0}/Lists/{1}/Attachments/{2}", web.Url, listname, id);
+
+                Folder attachmentsFolder = web.GetFolderByServerRelativeUrl(targetUrl);
+                clientContext.Load(attachmentsFolder);
+
+                try
+                {
+                    clientContext.ExecuteQuery();
+                }
+                catch (Exception)
+                {
+                    // Sadly there is no better way to detect if attachments exist in SharePoint. Exception=No Attachments
+                    return null;
+                }
+
+                FileCollection attachments = attachmentsFolder.Files;
+                clientContext.Load(attachments);
+                clientContext.ExecuteQuery();
+                return attachments;
+            }
+        }
+
         #endregion Helpers
 
         #region Structure
@@ -109,6 +189,24 @@ namespace AweCsomeO365
             return listCreationInfo;
         }
 
+        private void SetRating<T>(List list)
+        {
+            var ratingAttribute = typeof(T).GetCustomAttribute<RatingAttribute>();
+            if (ratingAttribute != null)
+            {
+                list.SetRating((OfficeDevPnP.Core.VotingExperience)ratingAttribute.VotingExperience);
+            }
+        }
+
+        private void SetVersioning<T>(List list)
+        {
+            var versioningAttribute = typeof(T).GetCustomAttribute<VersioningAttribute>();
+            if (versioningAttribute != null)
+            {
+                list.UpdateListVersioning(versioningAttribute.EnableVersioning, versioningAttribute.EnableMinorVersioning);
+            }
+        }
+
         public void CreateTable<T>()
         {
             Type entityType = typeof(T);
@@ -124,8 +222,11 @@ namespace AweCsomeO365
                     ListCreationInformation listCreationInfo = BuildListCreationInformation(clientContext, entityType);
 
                     var newList = clientContext.Web.Lists.Add(listCreationInfo);
+                    SetRating<T>(newList);
+                    SetVersioning<T>(newList);
                     AddFieldsToTable(clientContext, newList, entityType.GetProperties(), lookupTableIds);
-                    foreach (var property in entityType.GetProperties().Where(q=>q.GetCustomAttribute<IgnoreOnCreationAttribute>()!=null && q.GetCustomAttribute<DisplayNameAttribute>()!=null) ){
+                    foreach (var property in entityType.GetProperties().Where(q => q.GetCustomAttribute<IgnoreOnCreationAttribute>() != null && q.GetCustomAttribute<DisplayNameAttribute>() != null))
+                    {
                         // internal fields with custom displayname
                         _awecsomeField.ChangeDisplaynameFromField(newList, property);
                     }
@@ -133,8 +234,11 @@ namespace AweCsomeO365
                 }
                 catch (Exception ex)
                 {
+                    var outerException = new Exception("error creating list", ex);
+                    outerException.Data.Add("List", listName);
+
                     _log.Error($"Failed creating list {listName}", ex);
-                    throw;
+                    throw outerException;
                 }
             }
             _log.Debug($"List '{listName}' created.");
@@ -146,8 +250,30 @@ namespace AweCsomeO365
             {
                 try
                 {
-                    _awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
-                    context.ExecuteQuery();
+                    var managedMetadataAttribute = property.GetCustomAttribute<ManagedMetadataAttribute>();
+
+                    Field newField = _awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
+                    if (newField != null && managedMetadataAttribute != null)
+                    {
+                        if (_awecsomeTaxonomy == null) _awecsomeTaxonomy = new AweCsomeTaxonomy { ClientContext = _clientContext };
+
+                        // TODO: Type & Group configurable by attribute
+                        _awecsomeTaxonomy.GetTermSetIds(TaxonomyTypes.SiteCollection, managedMetadataAttribute.TermSetName, null, managedMetadataAttribute.CreateIfMissing, out Guid termStoreId, out Guid termSetId);
+
+                        context.ExecuteQuery();
+                        Microsoft.SharePoint.Client.Taxonomy.TaxonomyField taxonomyField = context.CastTo<Microsoft.SharePoint.Client.Taxonomy.TaxonomyField>(newField);
+                        taxonomyField.SspId = termStoreId;
+                        taxonomyField.AllowMultipleValues = _awecsomeField.IsMulti(property.PropertyType);
+                        taxonomyField.TermSetId = termSetId;
+                        taxonomyField.TargetTemplate = string.Empty;
+                        taxonomyField.AnchorId = Guid.Empty;
+                        taxonomyField.Update();
+                        context.ExecuteQuery();
+                    }
+                    else
+                    {
+                        context.ExecuteQuery();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -160,18 +286,18 @@ namespace AweCsomeO365
             // TODO: Very Loooong tables: Split executeQuery
         }
 
-    
-        public string[] GetAvailableChoicesFromField<T>( string propertyName)
+
+        public string[] GetAvailableChoicesFromField<T>(string propertyName)
         {
-            string listTitle= EntityHelper.GetDisplayNameFromEntitiyType(typeof(T));
+            string listTitle = EntityHelper.GetDisplayNameFromEntitiyType(typeof(T));
             List sharePointList = _clientContext.Web.Lists.GetByTitle(listTitle);
             _clientContext.Load(sharePointList);
             _clientContext.ExecuteQuery();
 
             var property = typeof(T).GetProperty(propertyName);
 
-            FieldChoice choiceField =_clientContext.CastTo<FieldChoice>(sharePointList.Fields.GetByInternalNameOrTitle(EntityHelper.GetInternalNameFromProperty(property)));
-            _clientContext.Load(choiceField, q=>q.Choices);
+            FieldChoice choiceField = _clientContext.CastTo<FieldChoice>(_awecsomeField.GetFieldDefinition(sharePointList, property));
+            _clientContext.Load(choiceField, q => q.Choices);
             _clientContext.ExecuteQuery();
 
             return choiceField.Choices;
@@ -217,7 +343,6 @@ namespace AweCsomeO365
 
         #endregion Structure
 
-
         #region Insert
         public int InsertItem<T>(T entity)
         {
@@ -233,13 +358,10 @@ namespace AweCsomeO365
                     clientContext.ExecuteQuery();
                     List list = listCollection.FirstOrDefault(q => q.Title == listName);
                     if (list == null) throw new ListNotFoundException();
+
                     ListItem newItem = list.AddItem(new ListItemCreationInformation());
-                    foreach (var property in entityType.GetProperties())
-                    {
-                        if (!property.CanRead) continue;
-                        if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
-                        newItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
-                    }
+                    AssignPropertiesToListItem(entity, newItem);
+
                     newItem.Update();
                     clientContext.ExecuteQuery();
                     return newItem.Id;
@@ -257,19 +379,48 @@ namespace AweCsomeO365
 
         private string WrapCamlQuery(string innerConditions)
         {
-            return $"<View><Query>{innerConditions}</Query></View>";
+            return $"<View><Query><Where>{innerConditions}</Where></Query></View>";
+        }
+
+        private string CreateMultiCaml<T>(Dictionary<string, object> conditions)
+        {
+            Type entityType = typeof(T);
+            int conditionCount = 0;
+            string conditionCaml = string.Empty;
+            foreach (var condition in conditions)
+            {
+                conditionCount++;
+
+                if (conditions.Count > 1 && conditionCount != conditions.Count)
+                {
+                    conditionCaml = "<And>" + conditionCaml;
+                }
+                string singleConditionCaml;
+                PropertyInfo fieldProperty = entityType.GetProperty(condition.Key);
+                singleConditionCaml = EntityHelper.PropertyIsLookup(fieldProperty) ? CreateLookupCaml(condition.Key, (int)condition.Value) : CreateFieldEqCaml(fieldProperty, condition.Value);
+                if (conditions.Count > 1 && conditionCount == conditions.Count)
+                {
+                    for (int i = 1; i < conditionCount - 1; i++)
+                    {
+                        conditionCaml = conditionCaml + "</And>";
+                    }
+                }
+            }
+
+            return conditionCaml;
         }
 
         private string CreateLookupCaml(string fieldname, int fieldvalue)
         {
+            // TODO: Internal name
             return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' LookupId='TRUE' /><Value Type='Lookup'>{fieldvalue}</Value></Eq>");
         }
 
         private string CreateFieldEqCaml(PropertyInfo property, object fieldvalue)
         {
             string fieldname = EntityHelper.GetInternalNameFromProperty(property);
-            FieldType fieldType = EntityHelper.GetFieldType(property);
-            return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' /><Value Type='{fieldType.ToString()}'>{fieldvalue}</Value></Eq>");
+            string fieldTypeName = EntityHelper.GetFieldType(property);
+            return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' /><Value Type='{fieldTypeName}'>{fieldvalue}</Value></Eq>");
         }
 
         public List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new()
@@ -302,7 +453,18 @@ namespace AweCsomeO365
                         sourceType = sourceValue.GetType();
 
                         object propertyValue = EntityHelper.GetPropertyFromItemValue(property, item.FieldValues[fieldname]);
-                        property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
+                        if (property.PropertyType.IsAssignableFrom(propertyValue.GetType()))
+                        {
+                            property.SetValue(entity, propertyValue);
+                        }
+                        else
+                        {
+                            property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
+                        }
+                    }
+                    else if (fieldname == "Id")
+                    {
+                        property.SetValue(entity, item.Id);
                     }
                 }
                 catch (Exception ex)
@@ -323,6 +485,23 @@ namespace AweCsomeO365
             return SelectItems<T>(CamlQuery.CreateAllItemsQuery());
         }
 
+        ListItem GetListItemById(string listname, int id)
+        {
+            using (var clientContext = GetClientContext())
+            {
+                Web web = clientContext.Web;
+                ListCollection listCollection = web.Lists;
+                clientContext.Load(listCollection);
+                clientContext.ExecuteQuery();
+                List list = listCollection.FirstOrDefault(q => q.Title == listname);
+                if (list == null) throw new ListNotFoundException();
+                ListItem item = list.GetItemById(id);
+                clientContext.Load(item);
+                clientContext.ExecuteQuery();
+                return item;
+            }
+        }
+
         public T SelectItemById<T>(int id) where T : new()
         {
             Type entityType = typeof(T);
@@ -330,20 +509,9 @@ namespace AweCsomeO365
 
             try
             {
-                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
-                using (var clientContext = GetClientContext())
-                {
-                    Web web = clientContext.Web;
-                    ListCollection listCollection = web.Lists;
-                    clientContext.Load(listCollection);
-                    clientContext.ExecuteQuery();
-                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
-                    if (list == null) throw new ListNotFoundException();
-                    ListItem item = list.GetItemById(id);
-                    clientContext.Load(item);
-                    clientContext.ExecuteQuery();
-                    StoreFromListItem(entity, item);
-                }
+                string listname = EntityHelper.GetInternalNameFromEntityType(entityType);
+                var item = GetListItemById(listname, id);
+                StoreFromListItem(entity, item);
                 return entity;
             }
             catch (Exception ex)
@@ -394,6 +562,11 @@ namespace AweCsomeO365
             return SelectItems<T>(new CamlQuery() { ViewXml = query });
         }
 
+        public List<T> SelectItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions) where T : new()
+        {
+            return SelectItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
+        }
+
         #endregion Select
 
         #region Update
@@ -434,6 +607,47 @@ namespace AweCsomeO365
             }
         }
 
+        private void UpdateLikes(ListItem item, List<FieldUserValue> likeArray)
+        {
+            using (var clientContext = GetClientContext())
+            {
+                item["LikedBy"] = likeArray.ToArray();
+                item["LikesCount"] = likeArray.Count;
+                item.Update();
+                clientContext.ExecuteQuery();
+            }
+        }
+
+        public void Like<T>(int id, int userId)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+
+            ListItem item = GetListItemById(listname, id);
+            var likeArray = ((FieldUserValue[])item.FieldValues.First(fn => fn.Key == "LikedBy").Value)?.ToList() ?? new List<FieldUserValue>();
+            var userLike = likeArray.FirstOrDefault(q => q.LookupId == userId);
+
+            if (userLike == null)
+            {
+                likeArray.Add(new FieldUserValue { LookupId = userId });
+                UpdateLikes(item, likeArray);
+            }
+        }
+
+        public void Unlike<T>(int id, int userId)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+
+            ListItem item = GetListItemById(listname, id);
+            var likeArray = ((FieldUserValue[])item.FieldValues.First(fn => fn.Key == "LikedBy").Value).ToList();
+            var userLike = likeArray.FirstOrDefault(q => q.LookupId == userId);
+
+            if (userLike != null)
+            {
+                likeArray.Remove(userLike);
+                UpdateLikes(item, likeArray);
+            }
+        }
+
         #endregion Update
 
         #region Delete
@@ -465,5 +679,310 @@ namespace AweCsomeO365
         }
 
         #endregion Delete
+
+        #region Files
+        public List<string> SelectFileNamesFromItem<T>(int id)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            FileCollection attachments = GetAttachments(listname, id);
+            return attachments.Select(q => q.Name).ToList();
+        }
+
+        public Dictionary<string, Stream> SelectFilesFromItem<T>(int id)
+        {
+            long totalSize = 0;
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            FileCollection attachments = GetAttachments(listname, id);
+
+            var attachmentStreams = new Dictionary<string, Stream>();
+            using (var clientContext = GetClientContext())
+            {
+                foreach (var attachment in attachments)
+                {
+                    MemoryStream targetStream = new MemoryStream();
+                    var stream = attachment.OpenBinaryStream();
+                    clientContext.ExecuteQuery();
+                    stream.Value.CopyTo(targetStream);
+                    attachmentStreams.Add(attachment.Name, targetStream);
+                    totalSize += targetStream.Length;
+                }
+            }
+
+            _log.DebugFormat($"Retrieved '{attachments.Count}' attachments from {listname}({id}). Size:{totalSize} Bytes");
+            return attachmentStreams;
+        }
+
+        public void AttachFileToItem<T>(int id, string filename, Stream filestream)
+        {
+            long fileSize = filestream.Length;
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                List currentList = web.GetListByTitle(listname);
+                ListItem item = currentList.GetItemById(id);
+                var attachmentInfo = new AttachmentCreationInformation
+                {
+                    FileName = filename,
+                    ContentStream = filestream
+                };
+                Attachment attachment = item.AttachmentFiles.Add(attachmentInfo);
+
+                context.Load(attachment);
+                context.ExecuteQuery();
+                _log.DebugFormat($"Uploaded '{filename}' to {listname}({id}). Size:{fileSize} Bytes");
+            }
+        }
+
+        public void DeleteFileFromItem<T>(int id, string filename)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                List currentList = web.GetListByTitle(listname);
+                ListItem item = currentList.GetItemById(id);
+                var allFiles = item.AttachmentFiles;
+                context.Load(allFiles);
+                context.ExecuteQuery();
+                var oldFile = allFiles.FirstOrDefault(af => af.FileName == filename);
+                if (oldFile == null) throw new FileNotFoundException($"File '{filename}' not found on {listname}/{id}");
+                oldFile.DeleteObject();
+                context.ExecuteQuery();
+                _log.DebugFormat($"File '{filename}' deleted from {listname}/{id}");
+            }
+        }
+
+        public string AttachFileToLibrary<T>(string foldername, string filename, Stream fileStream, T entity)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            var newFile = new FileCreationInformation
+            {
+                ContentStream = fileStream,
+                Url = filename
+            };
+
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                List documentLibrary = web.GetListByTitle(listname);
+                var targetFolder = documentLibrary.RootFolder;
+                if (foldername != null)
+                {
+                    targetFolder = web.GetFolderByServerRelativeUrl($"{listname}\\{foldername}");
+                }
+                context.Load(targetFolder);
+                context.ExecuteQuery();
+
+                File uploadFile = targetFolder.Files.Add(newFile);
+
+                uploadFile.ListItemAllFields.Update();
+                context.ExecuteQuery();
+                AssignPropertiesToListItem(entity, uploadFile.ListItemAllFields);
+                uploadFile.ListItemAllFields.Update();
+                context.ExecuteQuery();
+
+                string targetFilename = $"{targetFolder.ServerRelativeUrl}/{filename}";
+                _log.DebugFormat($"File '{filename}' uploaded to {targetFilename}");
+                return targetFilename;
+            }
+        }
+
+        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new()
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            var allFiles = new List<AweCsomeLibraryFile>();
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                string folderUrl = $"{listname}\\{foldername}";
+                var folder = web.GetFolderByServerRelativeUrl(folderUrl);
+
+                if (folder == null) return null;
+                try
+                {
+                    context.Load(folder, f => f.Exists);
+                    context.ExecuteQuery();
+                    if (!folder.Exists) return null;
+                }
+                catch
+                {
+                    return null; // There is no cleaner way to do this on CSOM
+                }
+                context.Load(folder.Files);
+                context.Load(folder.Files, f => f.Include(q => q.ListItemAllFields));
+                context.ExecuteQuery();
+                if (folder.Files == null) return null;
+                foreach (var file in folder.Files)
+                {
+                    var fileStream = file.OpenBinaryStream();
+                    context.ExecuteQuery();
+                    MemoryStream stream = new MemoryStream();
+                    fileStream.Value.CopyTo(stream);
+                    stream.Position = 0;
+                    var entity = new T();
+
+                    StoreFromListItem(entity, file.ListItemAllFields);
+                    allFiles.Add(new AweCsomeLibraryFile
+                    {
+                        Filename = file.Name,
+
+                        Stream = stream,
+                        entity = entity
+                    });
+                }
+                return allFiles;
+            }
+        }
+
+        public AweCsomeLibraryFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new()
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            var allFiles = new List<AweCsomeLibraryFile>();
+            using (ClientContext context = GetClientContext())
+            {
+                var folder = GetFolderFromDocumentLibrary<T>(context, foldername);
+                context.Load(folder.Files);
+                context.Load(folder.Files, f => f.Include(q => q.ListItemAllFields));
+                context.ExecuteQuery();
+                var file = folder.Files?.FirstOrDefault(q => q.Name == filename);
+                if (file == null) return null;
+
+                var fileStream = file.OpenBinaryStream();
+                context.ExecuteQuery();
+                MemoryStream stream = new MemoryStream();
+                fileStream.Value.CopyTo(stream);
+                stream.Position = 0;
+                var entity = new T();
+
+                StoreFromListItem(entity, file.ListItemAllFields);
+                return new AweCsomeLibraryFile
+                {
+                    Filename = file.Name,
+
+                    Stream = stream,
+                    entity = entity
+                };
+            }
+        }
+
+        public string AddFolderToLibrary<T>(string folder)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+
+            using (ClientContext context = GetClientContext())
+            {
+                Web web = context.Web;
+                List documentLibrary = web.GetListByTitle(listname);
+                var targetFolder = documentLibrary.RootFolder;
+                context.Load(targetFolder);
+                context.ExecuteQuery();
+                string[] folderParts = folder.Split('/');
+                foreach (string part in folderParts)
+                {
+                    targetFolder = targetFolder.EnsureFolder(part);
+                }
+                context.ExecuteQuery();
+                return targetFolder.ServerRelativeUrl;
+            }
+        }
+
+        public List<string> SelectFileNamesFromLibrary<T>(string foldername)
+        {
+
+            var allFiles = new List<AweCsomeLibraryFile>();
+            using (ClientContext context = GetClientContext())
+            {
+                var folder = GetFolderFromDocumentLibrary<T>(context, foldername);
+                context.Load(folder.Files);
+                context.ExecuteQuery();
+                if (folder.Files == null) return null;
+                return folder.Files.Select(q => q.Name).ToList();
+            }
+        }
+
+        public void DeleteFilesFromDocumentLibrary<T>(string path, List<string> filenames)
+        {
+            using (var context = GetClientContext())
+            {
+                var folder = GetFolderFromDocumentLibrary<T>(context, path);
+                var existingFiles = folder.Files;
+                context.Load(existingFiles);
+                context.ExecuteQuery();
+                foreach (string filename in filenames)
+                {
+                    existingFiles.First(q => q.Name == filename).DeleteObject();
+                }
+                context.ExecuteQuery();
+            }
+        }
+
+        public void DeleteFolderFromDocumentLibrary<T>(string path, string foldername)
+        {
+            using (var context = GetClientContext())
+            {
+                var folder = GetFolderFromDocumentLibrary<T>(context, path);
+                folder.DeleteObject();
+                context.ExecuteQuery();
+            }
+        }
+
+        #endregion Files
+
+        #region Counts
+        private int CountItems<T>(CamlQuery query)
+        {
+            Type entityType = typeof(T);
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    ListItemCollection items = list.GetItems(query);
+                    clientContext.Load(items, q => q.Include(l => l.Id));
+                    clientContext.ExecuteQuery();
+                    return items.Count;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot select items from table of entity with type '{entityType.Name}", ex);
+                throw;
+            }
+        }
+
+        public int CountItems<T>()
+        {
+            return CountItems<T>(CamlQuery.CreateAllItemsQuery());
+        }
+
+        public int CountItemsByFieldValue<T>(string fieldname, object value)
+        {
+            Type entityType = typeof(T);
+            PropertyInfo fieldProperty = entityType.GetProperty(fieldname);
+
+            if (EntityHelper.PropertyIsLookup(fieldProperty)) return CountItems<T>(new CamlQuery { ViewXml = CreateLookupCaml(fieldname, (int)value) });
+            return CountItems<T>(new CamlQuery { ViewXml = CreateFieldEqCaml(fieldProperty, value) });
+        }
+
+        public int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions)
+        {
+            return CountItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
+        }
+
+        public int CountItemsByQuery<T>(string query)
+        {
+            return CountItems<T>(new CamlQuery { ViewXml = query });
+        }
+
+
+        #endregion Counts
     }
 }

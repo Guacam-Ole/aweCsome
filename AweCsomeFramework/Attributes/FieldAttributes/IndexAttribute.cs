@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AweCsome.Attributes.FieldAttributes
 {
-    public class AddToDefaultViewAttribute:Attribute
+    public class IndexAttribute:Attribute
     {
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365.Attributes.IgnoreAttributes
+namespace AweCsome.Attributes.IgnoreAttributes
 {
     public class IgnoreOnCreationAttribute:Attribute
     {

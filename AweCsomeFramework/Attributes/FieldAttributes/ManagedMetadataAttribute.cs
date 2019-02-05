@@ -5,13 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365.Attributes.FieldAttributes
+namespace AweCsome.Attributes.FieldAttributes
 {
     public class ManagedMetadataAttribute: Attribute
     {
         public Guid TermSetId { get; set; }
         public string TermSetName { get; set; }
+        public bool CreateIfMissing { get; set; } = true;
         public bool AllowFillIn { get; set; }
-        public  const FieldType AssociatedFieldType = FieldType.Lookup;
+        public const string AssociatedFieldType = "TaxonomyFieldType"; 
     }
 }

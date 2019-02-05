@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365.Attributes.FieldAttributes
+namespace AweCsome.Attributes.FieldAttributes
 {
     public class UrlAttribute:Attribute
     {
         public UrlFieldFormatType UrlFieldFormatType { get; set; } = UrlFieldFormatType.Hyperlink;
-        public  const FieldType AssociatedFieldType = FieldType.URL;
+        public  const string AssociatedFieldType = nameof(FieldType.URL);
     }
 }

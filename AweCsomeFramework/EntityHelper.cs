@@ -1,8 +1,9 @@
-﻿using AweCsomeO365.Attributes;
-using AweCsomeO365.Attributes.FieldAttributes;
-using AweCsomeO365.Attributes.TableAttributes;
+﻿using AweCsome.Attributes;
+using AweCsome.Attributes.FieldAttributes;
+using AweCsome.Attributes.TableAttributes;
 using log4net;
 using Microsoft.SharePoint.Client;
+using Microsoft.SharePoint.Client.Taxonomy;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,12 +12,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsomeO365
+namespace AweCsome
 {
     public static class EntityHelper
     {
         private static ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
 
         private static void RemoveSuffixFromName(ref string name, string suffix)
         {
@@ -29,7 +29,6 @@ namespace AweCsomeO365
             RemoveSuffixFromName(ref internalName, isArray ? AweCsomeField.SuffixIds : AweCsomeField.SuffixId);
             RemoveSuffixFromName(ref displayName, isArray ? AweCsomeField.SuffixIds : AweCsomeField.SuffixId);
         }
-
 
         public static string GetInternalNameFromProperty(PropertyInfo propertyInfo)
         {
@@ -89,7 +88,30 @@ namespace AweCsomeO365
 
         public static FieldLookupValue[] CreateLookupsFromIds(int[] ids)
         {
+            if (ids == null) return null;
             return ids.Select(id => new FieldLookupValue { LookupId = id }).ToArray();
+        }
+
+        public static FieldUserValue CreateUserFromId(int id)
+        {
+            return new FieldUserValue { LookupId = id };
+        }
+
+        public static FieldUserValue[] CreateUsersFromIds(int[] ids)
+        {
+            if (ids == null) return null;
+            return ids.Select(id => new FieldUserValue { LookupId = id }).ToArray();
+        }
+
+        public static bool PropertyIsUser(PropertyInfo property)
+        {
+            return (property.GetCustomAttribute<UserAttribute>(true) != null);
+        }
+
+
+        public static bool PropertyIsUrl(PropertyInfo property)
+        {
+            return property.GetCustomAttribute<UrlAttribute>() != null;
         }
 
         public static bool PropertyIsLookup(PropertyInfo property)
@@ -103,18 +125,25 @@ namespace AweCsomeO365
             return false;
         }
 
-        public static FieldType GetFieldType(PropertyInfo property)
+        public static bool PropertyIsTaxonomy(PropertyInfo property)
         {
-            if (PropertyIsLookup(property)) return FieldType.Lookup;
+            return (property.GetCustomAttribute<ManagedMetadataAttribute>(true) != null);
+        }
+
+        public static string GetFieldType(PropertyInfo property)
+        {
+            string detectedFieldTypename = GetFieldTypeNameFromAttribute(property);
+            if (detectedFieldTypename != null) return detectedFieldTypename;
+
+            if (PropertyIsLookup(property)) return nameof(FieldType.Lookup);
             Type propertyType = property.PropertyType;
             if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>)) propertyType = propertyType.GetGenericArguments()[0];
 
             if (propertyType.IsArray) propertyType = propertyType.GetElementType();
-            FieldType? detectedFieldType = GetFieldTypeFromAttribute(property);
-            if (detectedFieldType != null) return detectedFieldType.Value;
+
 
             if (propertyType.IsEnum)
-                return FieldType.Choice;
+                return nameof(FieldType.Choice);
             switch (Type.GetTypeCode(propertyType))
             {
                 case TypeCode.Byte:
@@ -125,27 +154,29 @@ namespace AweCsomeO365
                 case TypeCode.Int16:
                 case TypeCode.Int32:
                 case TypeCode.Int64:
-                case TypeCode.Decimal:
                 case TypeCode.Double:
                 case TypeCode.Single:
-                    return FieldType.Number;
+                    return nameof(FieldType.Number);
+                case TypeCode.Decimal:
+                    return nameof(FieldType.Currency);
                 case TypeCode.Boolean:
-                    return FieldType.Boolean;
+                    return nameof(FieldType.Boolean);
                 case TypeCode.String:
                 case TypeCode.Char:
-                    return FieldType.Text;
+                    return nameof(FieldType.Text);
                 case TypeCode.DateTime:
-                    return FieldType.DateTime;
+                    return nameof(FieldType.DateTime);
 
                 default:
                     _log.Warn($"Cannot create fieldtype from {propertyType.Name}. Type is not supported.");
-                    return FieldType.Invalid;
+                    return nameof(FieldType.Invalid);
             }
         }
 
-        private static FieldType? GetFieldTypeFromAttribute(PropertyInfo property)
+        private static string GetFieldTypeNameFromAttribute(PropertyInfo property)
         {
-            FieldType? detectedFieldType = null;
+            string propertyName = property.Name;
+            string detectedFieldType = null;
             detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<BooleanAttribute>(property);
             detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<ChoiceAttribute>(property);
             detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<CurrencyAttribute>(property);
@@ -160,16 +191,29 @@ namespace AweCsomeO365
             return detectedFieldType;
         }
 
-        private static FieldType? GetFieldTypeByAttribute<T>(PropertyInfo property) where T : Attribute
+        private static string GetFieldTypeByAttribute<T>(PropertyInfo property) where T : Attribute
         {
             if (property.GetCustomAttribute(typeof(T), true) == null) return null;
-            return (FieldType)typeof(T).GetField(nameof(BooleanAttribute.AssociatedFieldType)).GetRawConstantValue();
+            return (string)typeof(T).GetField(nameof(BooleanAttribute.AssociatedFieldType)).GetRawConstantValue();
         }
 
         public static object GetPropertyFromItemValue(PropertyInfo property, object itemValue)
         {
             Type propertyType = property.PropertyType;
-            if (PropertyIsLookup(property))
+            if (PropertyIsTaxonomy(property))
+            {
+                if (itemValue.GetType() == typeof(TaxonomyFieldValueCollection))
+                {
+                    var collection = (TaxonomyFieldValueCollection)itemValue;
+                    return collection.ToDictionary(q => new Guid(q.TermGuid), q => q.Label);
+                }
+                else
+                {
+                    var item = (TaxonomyFieldValue)itemValue;
+                    return new KeyValuePair<Guid, string>(new Guid(item.TermGuid), item.Label);
+                }
+            }
+            else if (PropertyIsLookup(property))
             {
                 if (itemValue.GetType().IsArray)
                 {
@@ -218,11 +262,15 @@ namespace AweCsomeO365
                         return targetEntityObject;
                     }
                 }
+            } else if (PropertyIsUrl(property))
+            {
+                return ((FieldUrlValue)itemValue).Url;
             }
             if (propertyType.IsEnum)
             {
                 return Enum.Parse(property.PropertyType, property.PropertyType.GetEnumInternalNameFromDisplayname(itemValue as string));
             }
+
             return itemValue;
         }
 
@@ -262,8 +310,12 @@ namespace AweCsomeO365
             Type propertyType = property.PropertyType;
             if (PropertyIsLookup(property))
             {
-                if (propertyType == typeof(KeyValuePair<int, string>)) return CreateLookupFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key);
-                if (propertyType == typeof(Dictionary<int, string>)) return CreateLookupsFromIds(((Dictionary<int, string>)property.GetValue(entity)).Select(q => q.Key).ToArray());
+                if (propertyType == typeof(KeyValuePair<int, string>)) return PropertyIsUser(property)
+                        ? CreateUserFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key)
+                        : CreateLookupFromId(((KeyValuePair<int, string>)property.GetValue(entity)).Key);
+                if (propertyType == typeof(Dictionary<int, string>)) return PropertyIsUser(property)
+                        ? CreateUsersFromIds(((Dictionary<int, string>)property.GetValue(entity))?.Select(q => q.Key).ToArray())
+                        : CreateLookupsFromIds(((Dictionary<int, string>)property.GetValue(entity))?.Select(q => q.Key).ToArray());
                 if (propertyType.IsArray && propertyType.GetElementType().GetProperty(AweCsomeField.SuffixId) != null)
                 {
                     List<int> ids = new List<int>();
@@ -271,18 +323,29 @@ namespace AweCsomeO365
                     {
                         ids.Add((int)item.GetType().GetProperty(AweCsomeField.SuffixId).GetValue(item));
                     }
-                    return CreateLookupsFromIds(ids.ToArray());
+                    return PropertyIsUser(property) ? CreateUsersFromIds(ids.ToArray()) : CreateLookupsFromIds(ids.ToArray());
                 }
                 if (propertyType.GetProperty(AweCsomeField.SuffixId) != null)
                 {
                     var item = property.GetValue(entity);
-                    return CreateLookupFromId(((int)item.GetType().GetProperty(AweCsomeField.SuffixId).GetValue(item)));
+                    if (item == null) return null;
+                    return CreateLookupFromId(((int)property.PropertyType.GetProperty(AweCsomeField.SuffixId).GetValue(item)));
                 }
             }
+            //else if (PropertyIsImage(property))
+            //{
+
+            //    throw new NotImplementedException();
+            //}
+            //else if (PropertyIsUrl(property))
+            //{
+            //    throw new NotImplementedException();
+            //}
             if (propertyType.IsEnum)
             {
-                return property.PropertyType.GetEnumDisplayNameFromInternalname(property.GetValue(entity) as string);
+                return property.PropertyType.GetEnumDisplayNameFromInternalname(property.GetValue(entity).ToString());
             }
+
             return property.GetValue(entity);
         }
     }
