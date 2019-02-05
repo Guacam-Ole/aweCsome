@@ -9,7 +9,7 @@ namespace AweCsome.Entities
     public class AweCsomeTag
     {
         public Guid Id { get; set; }
-        public string Title { get; set; }
+        public string Name { get; set; }
         public Guid? ParentId { get; set; }
         public string TermStoreName { get; set; }
         public List<AweCsomeTag> Children { get; set; }

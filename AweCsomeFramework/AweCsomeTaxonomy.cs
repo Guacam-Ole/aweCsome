@@ -22,7 +22,7 @@ namespace AweCsome
         {
             var currentTag = new AweCsomeTag
             {
-                Title = term.Name,
+                Name = term.Name,
                 Id = term.Id,
                 ParentId = parent.Id,
                 Children = new List<AweCsomeTag>()
@@ -52,7 +52,7 @@ namespace AweCsome
             {
                 return true;
             }
-            return tag.Title != null && tag.Title.IndexOf(query, StringComparison.InvariantCultureIgnoreCase) >= 0;
+            return tag.Name != null && tag.Name.IndexOf(query, StringComparison.InvariantCultureIgnoreCase) >= 0;
         }
 
         public void GetTermSetIds(TaxonomyTypes taxonomyType, string termSetName, string groupName, bool createIfMissing, out Guid termStoreId, out Guid termSetId)
@@ -140,7 +140,7 @@ namespace AweCsome
             var rootTag = new AweCsomeTag
             {
                 Children = new List<AweCsomeTag>(),
-                Title = termSet.Name,
+                Name = termSet.Name,
                 Id = termSet.Id,
                 TermStoreName = termStore.Name
             };
