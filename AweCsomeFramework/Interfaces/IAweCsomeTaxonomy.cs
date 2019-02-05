@@ -16,8 +16,8 @@ namespace AweCsome.Interfaces
 
     public interface IAweCsomeTaxonomy
     {
-        void GetTermsetIds(TaxonomyTypes taxonomyLocatiom, string termsetName, string groupName, bool createIfNotExisting, out Guid termStoreId, out Guid termSetId);
-        void GetTermSet(TaxonomyTypes taxonomyLocatiom, string termsetName, string groupName,  bool createIfMissing, out TermStore termStore, out TermSet termSet);
+        void GetTermsetIds(TaxonomyTypes taxonomyLocatiom, string termSetName, string groupName, bool createIfNotExisting, out Guid termStoreId, out Guid termSetId);
+        void GetTermSet(TaxonomyTypes taxonomyLocatiom, string termSetName, string groupName,  bool createIfMissing, out TermStore termStore, out TermSet termSet);
         AweCsomeTag Search(TaxonomyTypes taxonomyLocatiom, string termSetName, string groupName, string query);
         Guid AddTerm(TaxonomyTypes taxonomyType, string termSetName, string groupName, Guid? parentId, string name);
         void RenameTerm(TaxonomyTypes taxonomyType, string termSetName, string groupName, Guid id, string name);

@@ -18,36 +18,7 @@ namespace AweCsome
         public ClientContext ClientContext { set { _clientContext = value; } }
         public int Lcid { get; set; } = 1033;
 
-        //public void GetTermsetIds(string termsetName, bool createIfNotExisting, out Guid termStoreId, out Guid termSetId)
-        //{
-        //    int lcid = 1033;
-        //    TermStore termStore;
-        //    TermSet termSet;
-        //    Site site = _clientContext.Site;
-
-        //    GetTermSetFromSiteCollection(termsetName, lcid, createIfNotExisting, out termStore, out termSet);
-
-        //    if (termSet == null)
-        //    {
-        //        if (!createIfNotExisting) throw new KeyNotFoundException("Taxonomy missing");
-
-        //        TermGroup termGroup = termStore.GetSiteCollectionGroup(site, true);
-        //        termSetId = Guid.NewGuid();
-        //        TermSet termSetColl = termGroup.CreateTermSet(termsetName, termSetId, lcid);
-        //        termSetColl.IsOpenForTermCreation = true;
-        //        _clientContext.ExecuteQuery();
-        //        _clientContext.Load(termGroup.TermSets);
-        //        _clientContext.ExecuteQuery();
-        //        termSet = termGroup.TermSets.FirstOrDefault(ts => ts.Name == termsetName);
-        //    }
-
-        //    _clientContext.Load(termStore, ts => ts.Id);
-        //    _clientContext.ExecuteQuery();
-
-        //    termStoreId = termStore.Id;
-        //    termSetId = termSet == null ? Guid.Empty : termSet.Id;
-        //}
-
+      
         public void GetTermSetFromSiteCollection(string termsetName, int lcid, bool createIfMissing, out TermStore siteCollectionTermstore, out TermSet termSet)
         {
             termSet = null;
@@ -222,20 +193,43 @@ namespace AweCsome
 
             return rootTag;
         }
+        private  Term GetTermById(TaxonomyTypes taxonomyType, string termSetName, string groupName, Guid id)
+        {
+            GetTermSet(taxonomyType, termSetName, groupName, false, out TermStore termStore, out TermSet termSet);
+            var term=termSet.GetAllTerms().GetById(id);
+            return term;
+        }
 
         public Guid AddTerm(TaxonomyTypes taxonomyType, string termSetName, string groupName, Guid? parentId, string name)
         {
-            throw new NotImplementedException();
+            GetTermSet(taxonomyType, termSetName, groupName, false, out TermStore termStore, out TermSet termSet);
+            Guid id = Guid.NewGuid();
+            if (parentId == null)
+            {
+                termSet.CreateTerm(name, Lcid, id);
+            } else
+            {
+                var parentTerm = termSet.GetAllTerms().GetById(parentId.Value);
+                _clientContext.Load(parentTerm);
+                _clientContext.ExecuteQuery();
+                parentTerm.CreateTerm(name, Lcid, id);
+            }
+            _clientContext.ExecuteQuery();
+            return id;
         }
 
         public void RenameTerm(TaxonomyTypes taxonomyType, string termSetName, string groupName, Guid id, string name)
         {
-            throw new NotImplementedException();
+            var term = GetTermById(taxonomyType, termSetName, groupName, id);
+            term.Name = name;
+            _clientContext.ExecuteQuery();
         }
 
         public void DeleteTerm(TaxonomyTypes taxonomyType, string termSetName, string groupName, Guid id)
         {
-            throw new NotImplementedException();
+            var term = GetTermById(taxonomyType, termSetName, groupName, id);
+            term.DeleteObject();
+            _clientContext.ExecuteQuery();
         }
     }
 }
