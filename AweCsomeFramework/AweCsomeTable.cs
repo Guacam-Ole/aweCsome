@@ -3,6 +3,7 @@ using AweCsome.Attributes.IgnoreAttributes;
 using AweCsome.Attributes.TableAttributes;
 using AweCsome.Entities;
 using AweCsome.Exceptions;
+using AweCsome.Interfaces;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
@@ -13,6 +14,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using File = Microsoft.SharePoint.Client.File;
+using AweCsome.Interfaces;
 
 namespace AweCsome
 {

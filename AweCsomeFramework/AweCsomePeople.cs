@@ -9,6 +9,7 @@ using log4net;
 using Microsoft.SharePoint.ApplicationPages.ClientPickerQuery;
 using Microsoft.SharePoint.Client;
 using Microsoft.SharePoint.Client.Utilities;
+using AweCsome.Interfaces;
 
 namespace AweCsome
 {

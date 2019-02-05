@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AweCsome.Interfaces;
 
 namespace AweCsome
 {
@@ -220,6 +221,21 @@ namespace AweCsome
             if (query != null) SearchInsideTaxonomy(rootTag, query);
 
             return rootTag;
+        }
+
+        public Guid AddTerm(TaxonomyTypes taxonomyType, string termSetName, string groupName, Guid? parentId, string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RenameTerm(TaxonomyTypes taxonomyType, string termSetName, string groupName, Guid id, string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeleteTerm(TaxonomyTypes taxonomyType, string termSetName, string groupName, Guid id)
+        {
+            throw new NotImplementedException();
         }
     }
 }

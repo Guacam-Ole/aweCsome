@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AweCsome
+namespace AweCsome.Interfaces
 {
     public interface IAweCsomeTable
     {

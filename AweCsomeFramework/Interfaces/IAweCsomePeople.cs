@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.SharePoint.Client;
 using Microsoft.SharePoint.Client.Utilities;
 
-namespace AweCsome
+namespace AweCsome.Interfaces
 {
     public interface IAweCsomePeople
     {
