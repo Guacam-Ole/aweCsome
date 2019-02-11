@@ -4,6 +4,7 @@ using AweCsome.Attributes.TableAttributes;
 using AweCsome.Entities;
 using AweCsome.Exceptions;
 using AweCsome.Interfaces;
+using AweCsome.Interfaces;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
@@ -14,7 +15,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using File = Microsoft.SharePoint.Client.File;
-using AweCsome.Interfaces;
 
 namespace AweCsome
 {
@@ -49,7 +49,8 @@ namespace AweCsome
                 try
                 {
                     if (!property.CanRead) continue;
-                    if (property.GetCustomAttribute<IgnoreOnInsertAttribute>() != null) continue;
+                    var ignoreAttribute = property.GetCustomAttribute<IgnoreOnInsertAttribute>();
+                    if (ignoreAttribute != null && ignoreAttribute.IgnoreOnInsert) continue;
                     var value = EntityHelper.GetItemValueFromProperty(property, entity);
                     if (property.PropertyType == typeof(DateTime))
                     {
@@ -444,7 +445,8 @@ namespace AweCsome
                 try
                 {
                     if (!property.CanWrite) continue;
-                    if (property.GetCustomAttribute<IgnoreOnSelectAttribute>() != null) continue;
+                    var ignoreOnSelectAttribute = property.GetCustomAttribute<IgnoreOnSelectAttribute>();
+                    if (ignoreOnSelectAttribute != null && ignoreOnSelectAttribute.IgnoreOnSelect) continue;
                     fieldname = EntityHelper.GetInternalNameFromProperty(property);
                     if (item.FieldValues.ContainsKey(fieldname) && item.FieldValues[fieldname] != null)
                     {
@@ -593,7 +595,8 @@ namespace AweCsome
                     foreach (var property in entityType.GetProperties())
                     {
                         if (!property.CanRead) continue;
-                        if (property.GetCustomAttribute<IgnoreOnUpdateAttribute>() != null) continue;
+                        var ignoreOnUpdateAttribute = property.GetCustomAttribute<IgnoreOnUpdateAttribute>();
+                        if (ignoreOnUpdateAttribute != null && ignoreOnUpdateAttribute.IgnoreOnUpdate) continue;
                         existingItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
                     }
                     existingItem.Update();
