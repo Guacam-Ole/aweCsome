@@ -398,30 +398,33 @@ namespace AweCsome
                 }
                 string singleConditionCaml;
                 PropertyInfo fieldProperty = entityType.GetProperty(condition.Key);
-                singleConditionCaml = EntityHelper.PropertyIsLookup(fieldProperty) ? CreateLookupCaml(condition.Key, (int)condition.Value) : CreateFieldEqCaml(fieldProperty, condition.Value);
-                if (conditions.Count > 1 && conditionCount == conditions.Count)
+                singleConditionCaml = EntityHelper.PropertyIsLookup(fieldProperty) ? CreateLookupCaml(condition.Key, (int)condition.Value, false) : CreateFieldEqCaml(fieldProperty, condition.Value, false);
+                conditionCaml += "\n"+singleConditionCaml+"\n";
+                if (conditionCount >1)
                 {
-                    for (int i = 1; i < conditionCount - 1; i++)
-                    {
+                    //for (int i = 0; i < conditionCount - 1; i++)
+                    //{
                         conditionCaml = conditionCaml + "</And>";
-                    }
+                    //}
                 }
             }
 
-            return conditionCaml;
+            return WrapCamlQuery( conditionCaml);
         }
 
-        private string CreateLookupCaml(string fieldname, int fieldvalue)
+        private string CreateLookupCaml(string fieldname, int fieldvalue, bool wrapCamlQuery=true)
         {
             // TODO: Internal name
-            return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' LookupId='TRUE' /><Value Type='Lookup'>{fieldvalue}</Value></Eq>");
+            string query=$"<Eq><FieldRef Name='{fieldname}' LookupId='TRUE' /><Value Type='Lookup'>{fieldvalue}</Value></Eq>";
+            return wrapCamlQuery ? WrapCamlQuery(query) : query;
         }
 
-        private string CreateFieldEqCaml(PropertyInfo property, object fieldvalue)
+        private string CreateFieldEqCaml(PropertyInfo property, object fieldvalue, bool wrapCamlQuery = true)
         {
             string fieldname = EntityHelper.GetInternalNameFromProperty(property);
             string fieldTypeName = EntityHelper.GetFieldType(property);
-            return WrapCamlQuery($"<Eq><FieldRef Name='{fieldname}' /><Value Type='{fieldTypeName}'>{fieldvalue}</Value></Eq>");
+            string query = $"<Eq><FieldRef Name='{fieldname}' /><Value Type='{fieldTypeName}'>{fieldvalue}</Value></Eq>";
+            return wrapCamlQuery ? WrapCamlQuery(query) : query;
         }
 
         public List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new()
