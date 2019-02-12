@@ -399,23 +399,20 @@ namespace AweCsome
                 string singleConditionCaml;
                 PropertyInfo fieldProperty = entityType.GetProperty(condition.Key);
                 singleConditionCaml = EntityHelper.PropertyIsLookup(fieldProperty) ? CreateLookupCaml(condition.Key, (int)condition.Value, false) : CreateFieldEqCaml(fieldProperty, condition.Value, false);
-                conditionCaml += "\n"+singleConditionCaml+"\n";
-                if (conditionCount >1)
+                conditionCaml += "\n" + singleConditionCaml + "\n";
+                if (conditionCount > 1)
                 {
-                    //for (int i = 0; i < conditionCount - 1; i++)
-                    //{
-                        conditionCaml = conditionCaml + "</And>";
-                    //}
+                    conditionCaml = conditionCaml + "</And>";
                 }
             }
 
-            return WrapCamlQuery( conditionCaml);
+            return WrapCamlQuery(conditionCaml);
         }
 
-        private string CreateLookupCaml(string fieldname, int fieldvalue, bool wrapCamlQuery=true)
+        private string CreateLookupCaml(string fieldname, int fieldvalue, bool wrapCamlQuery = true)
         {
             // TODO: Internal name
-            string query=$"<Eq><FieldRef Name='{fieldname}' LookupId='TRUE' /><Value Type='Lookup'>{fieldvalue}</Value></Eq>";
+            string query = $"<Eq><FieldRef Name='{fieldname}' LookupId='TRUE' /><Value Type='Lookup'>{fieldvalue}</Value></Eq>";
             return wrapCamlQuery ? WrapCamlQuery(query) : query;
         }
 
