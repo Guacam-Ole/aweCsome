@@ -18,7 +18,12 @@ namespace AweCsome
         private ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ClientContext _clientContext;
 
-        public ClientContext ClientContext { set { _clientContext = value; } }
+    //    public ClientContext ClientContext { set { _clientContext = value; } }
+
+            public AweCsomePeople(ClientContext clientContext)
+        {
+            _clientContext = clientContext;
+        }
 
         public List<User> Search(string query, string uniqueField, int maxSuggestions = 100, PrincipalSource principalSource = PrincipalSource.All, PrincipalType principalType = PrincipalType.User, int sharePointGroupId = -1)
         {

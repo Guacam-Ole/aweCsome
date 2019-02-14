@@ -25,7 +25,12 @@ namespace AweCsome
         private IAweCsomeTaxonomy _awecsomeTaxonomy = null;
         private ClientContext _clientContext;
 
-        public ClientContext ClientContext { set { _clientContext = value; } }
+        public AweCsomeTable(ClientContext clientContext)
+        {
+            _clientContext = clientContext;
+        }
+
+   //     public ClientContext ClientContext { set { _clientContext = value; } }
 
         #region Helpers
 
@@ -256,7 +261,7 @@ namespace AweCsome
                     Field newField = _awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
                     if (newField != null && managedMetadataAttribute != null)
                     {
-                        if (_awecsomeTaxonomy == null) _awecsomeTaxonomy = new AweCsomeTaxonomy { ClientContext = _clientContext };
+                        if (_awecsomeTaxonomy == null) _awecsomeTaxonomy = new AweCsomeTaxonomy(_clientContext);
 
                         // TODO: Type & Group configurable by attribute
                         _awecsomeTaxonomy.GetTermSetIds(TaxonomyTypes.SiteCollection, managedMetadataAttribute.TermSetName, null, managedMetadataAttribute.CreateIfMissing, out Guid termStoreId, out Guid termSetId);
