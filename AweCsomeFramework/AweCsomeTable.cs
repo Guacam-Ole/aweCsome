@@ -1,4 +1,11 @@
-﻿using AweCsome.Attributes.FieldAttributes;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using AweCsome.Attributes.FieldAttributes;
 using AweCsome.Attributes.IgnoreAttributes;
 using AweCsome.Attributes.TableAttributes;
 using AweCsome.Entities;
@@ -7,13 +14,6 @@ using AweCsome.Interfaces;
 using AweCsome.Interfaces;
 using log4net;
 using Microsoft.SharePoint.Client;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using File = Microsoft.SharePoint.Client.File;
 
 namespace AweCsome
@@ -30,7 +30,7 @@ namespace AweCsome
             _clientContext = clientContext;
         }
 
-   //     public ClientContext ClientContext { set { _clientContext = value; } }
+        //     public ClientContext ClientContext { set { _clientContext = value; } }
 
         #region Helpers
 
@@ -388,7 +388,7 @@ namespace AweCsome
             return $"<View><Query><Where>{innerConditions}</Where></Query></View>";
         }
 
-        private string CreateMultiCaml<T>(Dictionary<string, object> conditions)
+        private string CreateMultiCaml<T>(Dictionary<string, object> conditions, string conditionTypeName)
         {
             Type entityType = typeof(T);
             int conditionCount = 0;
@@ -399,7 +399,7 @@ namespace AweCsome
 
                 if (conditions.Count > 1 && conditionCount != conditions.Count)
                 {
-                    conditionCaml = "<And>" + conditionCaml;
+                    conditionCaml = $"<{conditionTypeName}>" + conditionCaml;
                 }
                 string singleConditionCaml;
                 PropertyInfo fieldProperty = entityType.GetProperty(condition.Key);
@@ -407,7 +407,7 @@ namespace AweCsome
                 conditionCaml += "\n" + singleConditionCaml + "\n";
                 if (conditionCount > 1)
                 {
-                    conditionCaml = conditionCaml + "</And>";
+                    conditionCaml = conditionCaml + $"</{conditionTypeName}>";
                 }
             }
 
@@ -569,9 +569,9 @@ namespace AweCsome
             return SelectItems<T>(new CamlQuery() { ViewXml = query });
         }
 
-        public List<T> SelectItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions) where T : new()
+        public List<T> SelectItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions, bool isAndCondition = true) where T : new()
         {
-            return SelectItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
+            return SelectItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions, isAndCondition ? "And" : "Or") });
         }
 
         #endregion Select
@@ -980,9 +980,9 @@ namespace AweCsome
             return CountItems<T>(new CamlQuery { ViewXml = CreateFieldEqCaml(fieldProperty, value) });
         }
 
-        public int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions)
+        public int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions, bool isAndCondition=true)
         {
-            return CountItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions) });
+            return CountItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions, isAndCondition ? "And" : "Or") });
         }
 
         public int CountItemsByQuery<T>(string query)
