@@ -11,5 +11,8 @@ namespace AweCsome.Interfaces
     public interface IAweCsomePeople
     {
         List<User> Search(string query, string uniqueField, int maxSuggestions=100, PrincipalSource principalSource= PrincipalSource.All, PrincipalType prinzipalType= PrincipalType.User, int sharePointGroupId=-1);
+        User GetSiteUserById(int id);
+        List<User> GetUsersFromSiteGroup(string groupname);
+        Group GetGroupFromSite(string groupname);
     }
 }
