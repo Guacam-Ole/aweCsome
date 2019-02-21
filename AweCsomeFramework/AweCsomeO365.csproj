@@ -165,6 +165,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Attributes\FieldAttributes\AddToDefaultViewAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\ChangeTypeOnCreationAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\ChoiceAttribute.cs" />
     <Compile Include="Attributes\DescriptionAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\DisplayNameAttribute.cs" />

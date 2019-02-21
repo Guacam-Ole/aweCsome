@@ -348,5 +348,19 @@ namespace AweCsome
         {
             return sharePointList.Fields.GetByInternalNameOrTitle(EntityHelper.GetInternalNameFromProperty(property));
         }
+
+        // TODO: Allow this for Lookups, too
+        public void ChangeTypeFromField(List sharePointList, PropertyInfo property)
+        {
+            var internalName = EntityHelper.GetInternalNameFromProperty(property);
+            var addToDefaultViewAttribute = property.GetCustomAttribute<AddToDefaultViewAttribute>();
+
+            var fieldToChange = sharePointList.Fields.GetByInternalNameOrTitle(internalName);
+
+            string fieldXml = GetFieldCreationXml(property, null);
+
+            fieldToChange.SchemaXml = fieldXml;
+            fieldToChange.Update();
+        }
     }
 }

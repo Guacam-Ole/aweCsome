@@ -236,6 +236,12 @@ namespace AweCsome
                         // internal fields with custom displayname
                         _awecsomeField.ChangeDisplaynameFromField(newList, property);
                     }
+                    foreach (var property in entityType.GetProperties().Where(q => q.GetCustomAttribute<IgnoreOnCreationAttribute>() != null && q.GetCustomAttribute<ChangeTypeOnCreationAttribute>() != null))
+                    {
+                        // internal fields with custom type
+                        _awecsomeField.ChangeTypeFromField(newList, property);
+                    }
+
                     clientContext.ExecuteQuery();
                 }
                 catch (Exception ex)

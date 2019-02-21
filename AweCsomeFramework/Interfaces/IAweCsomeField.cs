@@ -13,6 +13,8 @@ namespace AweCsome.Interfaces
 
         void ChangeDisplaynameFromField(List sharePointList, PropertyInfo property);
 
+        void ChangeTypeFromField(List sharePointList, PropertyInfo property);
+
         Field GetFieldDefinition(List sharePointList, PropertyInfo property);
 
         bool IsMulti(Type propertyType);
