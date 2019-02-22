@@ -608,7 +608,9 @@ namespace AweCsome
                         if (!property.CanRead) continue;
                         var ignoreOnUpdateAttribute = property.GetCustomAttribute<IgnoreOnUpdateAttribute>();
                         if (ignoreOnUpdateAttribute != null && ignoreOnUpdateAttribute.IgnoreOnUpdate) continue;
-                        existingItem[EntityHelper.GetInternalNameFromProperty(property)] = EntityHelper.GetItemValueFromProperty(property, entity);
+                        var value = EntityHelper.GetItemValueFromProperty(property, entity);
+                        if (value is KeyValuePair<int, string> && ((KeyValuePair<int, string>)value).Key == 0) value = null; // Lookup/Person with no value 
+                        existingItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
                     }
                     existingItem.Update();
                     clientContext.ExecuteQuery();
@@ -986,7 +988,7 @@ namespace AweCsome
             return CountItems<T>(new CamlQuery { ViewXml = CreateFieldEqCaml(fieldProperty, value) });
         }
 
-        public int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions, bool isAndCondition=true)
+        public int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions, bool isAndCondition = true)
         {
             return CountItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions, isAndCondition ? "And" : "Or") });
         }
