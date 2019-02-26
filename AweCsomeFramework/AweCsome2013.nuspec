@@ -14,4 +14,37 @@
     <copyright>Copyright 2019</copyright>
     <tags>SharePoint Entity</tags>
   </metadata>
+  <dependencies>
+    <group targetFramework="net452">
+      <dependency id="AngleSharp" version="0.9.11" />
+      <dependency id="log4net" version="2.0.8" />
+      <dependency id="Microsoft.AspNet.WebApi.Client" version="5.2.7" />
+      <dependency id="Microsoft.AspNet.WebApi.Core" version="5.2.7" />
+      <dependency id="Microsoft.Azure.ActiveDirectory.GraphClient" version="2.1.1" />
+      <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.1" />
+      <dependency id="Microsoft.Data.Edm" version="5.8.4" />
+      <dependency id="Microsoft.Data.OData" version="5.8.4" />
+      <dependency id="Microsoft.Data.Services.Client" version="5.8.4" />
+      <dependency id="Microsoft.Graph" version="1.13.0" />
+      <dependency id="Microsoft.Graph.Core" version="1.13.0" />
+      <dependency id="Microsoft.IdentityModel" version="6.1.7600.16394" />
+      <dependency id="Microsoft.IdentityModel.Clients.ActiveDirectory" version="4.4.1" />
+      <dependency id="Microsoft.IdentityModel.JsonWebTokens" version="5.3.0" />
+      <dependency id="Microsoft.IdentityModel.Logging" version="5.3.0" />
+      <dependency id="Microsoft.IdentityModel.Tokens" version="5.3.0" />
+      <dependency id="Microsoft.SharePointOnline.CSOM" version="16.1.8523.1200" />
+      <dependency id="Newtonsoft.Json" version="12.0.1" />
+      <dependency id="SharePointPnP.IdentityModel.Extensions" version="1.2.4" />
+      <dependency id="SharePointPnPCoreOnline" version="3.6.1902" />
+      <dependency id="System.IdentityModel.Tokens.Jwt" version="5.3.0" />
+      <dependency id="System.Net.Http" version="4.3.4" />
+      <dependency id="System.Spatial" version="5.8.4" />
+      <dependency id="WindowsAzure.Storage" version="9.3.3" />
+    </group>
+  </dependencies>
+  <files>
+    <file src="bin\Release\AweCsome2013.dll" target="lib\net452\AweCsome2013.dll" />
+    <file src="bin\Release\AweCsome2013.xml" target="lib\net452\AweCsome2013.xml" />
+    <file src="..\.github\README.md" target="" />
+  </files>
 </package>
