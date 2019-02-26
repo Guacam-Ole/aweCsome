@@ -100,6 +100,7 @@ namespace AweCsome
 
             foreach (var listname in lookupTableIds.Keys.ToList())
             {
+                if (listname == entityType.Name) continue; // Self-Reference
                 List lookupList = clientContext.Web.Lists.GetByTitle(listname);
                 clientContext.Load(lookupList, l => l.Id);
                 clientContext.ExecuteQuery();
@@ -230,6 +231,13 @@ namespace AweCsome
                     var newList = clientContext.Web.Lists.Add(listCreationInfo);
                     SetRating<T>(newList);
                     SetVersioning<T>(newList);
+                    if (lookupTableIds.ContainsKey(listName))
+                    {
+                        _clientContext.Load(newList);
+                        _clientContext.ExecuteQuery();
+
+                        lookupTableIds[listName] = newList.Id;
+                    }
                     AddFieldsToTable(clientContext, newList, entityType.GetProperties(), lookupTableIds);
                     foreach (var property in entityType.GetProperties().Where(q => q.GetCustomAttribute<IgnoreOnCreationAttribute>() != null && q.GetCustomAttribute<DisplayNameAttribute>() != null))
                     {
@@ -286,6 +294,7 @@ namespace AweCsome
                     {
                         context.ExecuteQuery();
                     }
+
                 }
                 catch (Exception ex)
                 {
@@ -340,6 +349,7 @@ namespace AweCsome
                     list.DeleteObject();
                     clientContext.ExecuteQuery();
                 }
+                _log.Debug($"List '{listName}' deleted ");
             }
             catch (Exception ex)
             {
