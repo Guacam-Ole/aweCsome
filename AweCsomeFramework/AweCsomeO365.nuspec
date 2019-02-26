@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>OleAlbers.AweCsome.O365</id>
+    <version>1.0.0</version>
+    <title>AweCsome Framework for O365</title>
+    <authors>Ole Albers</authors>
+    <owners>Ole Albers</owners>
+    <licenseUrl>https://github.com/OleAlbers/aweCsome/blob/develop/.github/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/OleAlbers/aweCsome</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Entity Framework for SharePoint Provider Hosted Add-Ins</description>
+    <releaseNotes>Initial Release.</releaseNotes>
+    <copyright>Copyright 2019</copyright>
+    <tags>SharePoint Entity</tags>
+  </metadata>
+  <files>
+    
+  </files>
+</package>
