@@ -18,4 +18,4 @@ Before packaging a new release, the .nupsec-files needs to be updated. Specifica
 
 Then you can build the solutions (note that the __Release__-configuration needs to be selected in Visual Studio/MSBuild) and afterwards pack the respective libraries by running either `nuget pack nuget pack AweCsomeO365.nuspec` or `nuget pack nuget pack AweCsome2013.nuspec` from the __AweCsomeFramework__-folder.
 
-This will generate the `OleAlbers.AweCsome.O365.<VERSION>.nupkg` and `OleAlbers.AweCsome.OnPremises.<VERSION>.nupkg` files respectively.
+This will generate the `AweCsome.O365.<VERSION>.nupkg` and `AweCsome.OnPremises.<VERSION>.nupkg` files respectively.
