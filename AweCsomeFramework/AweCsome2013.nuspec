@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>OleAlbers.AweCsome.OnPremises</id>
+    <id>AweCsome.OnPremises</id>
     <version>1.0.0</version>
     <title>AweCsome Framework for On Premises</title>
     <authors>Ole Albers</authors>
