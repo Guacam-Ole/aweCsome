@@ -67,7 +67,7 @@ namespace AweCsome
                 catch (Exception ex)
                 {
                     ex.Data.Add("Propertyname", property.Name);
-                    ex.Data.Add("Listname", listItem);
+                //    ex.Data.Add("Listname", listItem);
                     throw (ex);
                 }
             }
@@ -472,8 +472,9 @@ namespace AweCsome
                     if (item.FieldValues.ContainsKey(fieldname) && item.FieldValues[fieldname] != null)
                     {
                         sourceValue = item.FieldValues[fieldname];
-                        targetType = property.PropertyType;
-                        sourceType = sourceValue.GetType();
+                        targetType = Nullable.GetUnderlyingType(property.PropertyType)?? property.PropertyType;
+                        sourceType = Nullable.GetUnderlyingType(sourceValue.GetType())??sourceValue.GetType();
+
 
                         object propertyValue = EntityHelper.GetPropertyFromItemValue(property, item.FieldValues[fieldname]);
                         if (property.PropertyType.IsAssignableFrom(propertyValue.GetType()))
@@ -482,7 +483,7 @@ namespace AweCsome
                         }
                         else
                         {
-                            property.SetValue(entity, Convert.ChangeType(propertyValue, property.PropertyType));
+                            property.SetValue(entity, Convert.ChangeType(propertyValue, targetType));
                         }
                     }
                     else if (fieldname == "Id")
