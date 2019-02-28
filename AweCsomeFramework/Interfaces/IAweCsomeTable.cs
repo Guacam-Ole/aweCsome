@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AweCsome.Entities;
-using Microsoft.SharePoint.Client;
+//using Microsoft.SharePoint.Client;
 
 namespace AweCsome.Interfaces
 {
