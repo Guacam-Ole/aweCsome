@@ -23,7 +23,7 @@ namespace AweCsome.Interfaces
         void UpdateItem<T>(T entity);
         void DeleteItemById<T>(int id);
         string[] GetAvailableChoicesFromField<T>(string propertyname);
-        void Like<T>(int id, int userId);
+        T Like<T>(int id, int userId) where T : new();
         void Unlike<T>(int id, int userId);
         List<string> SelectFileNamesFromItem<T>(int id);
         Dictionary<string, Stream> SelectFilesFromItem<T>(int id);

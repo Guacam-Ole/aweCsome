@@ -645,7 +645,7 @@ namespace AweCsome
             }
         }
 
-        public void Like<T>(int id, int userId)
+        public T Like<T>(int id, int userId) where T: new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
 
@@ -658,6 +658,9 @@ namespace AweCsome
                 likeArray.Add(new FieldUserValue { LookupId = userId });
                 UpdateLikes(item, likeArray);
             }
+            var entity = new T();
+            StoreFromListItem(entity, item);
+            return entity;
         }
 
         public void Unlike<T>(int id, int userId)
