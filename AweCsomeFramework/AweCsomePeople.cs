@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
+using E = AweCsome.Enumerations;
 using AweCsome.Interfaces;
 using log4net;
 using Microsoft.SharePoint.ApplicationPages.ClientPickerQuery;
@@ -50,7 +51,7 @@ namespace AweCsome
             return group;
         }
 
-        public List<User> Search(string query, string uniqueField, int maxSuggestions = 100, int principalSource=99, int  principalType = 1, int sharePointGroupId = -1)
+        public List<object> Search(string query, string uniqueField, int maxSuggestions = 100, Enumerations.PrincipalSource principalSource = Enumerations.PrincipalSource.All, Enumerations.PrincipalType principalType = Enumerations.PrincipalType.User, int sharePointGroupId = -1)
         {
             if (string.IsNullOrWhiteSpace(query)) return null;
 
@@ -66,7 +67,7 @@ namespace AweCsome
             ClientResult<string> clientResult = ClientPeoplePickerWebServiceInterface.ClientPeoplePickerSearchUser(_clientContext, querryParams);
             _clientContext.ExecuteQuery();
             dynamic target = new JavaScriptSerializer().DeserializeObject(clientResult.Value);
-            var matches = new List<User>();
+            var matches = new List<object>();
             foreach (var user in target)
             {
                 User ensuredUser = _clientContext.Web.EnsureUser(user[uniqueField]);
@@ -75,6 +76,26 @@ namespace AweCsome
             }
             _clientContext.ExecuteQuery();
             return matches;
+        }
+
+        List<object> IAweCsomePeople.Search(string query, string uniqueField, int maxSuggestions, E.PrincipalSource principalSource, E.PrincipalType principalType, int sharePointGroupId)
+        {
+            throw new NotImplementedException();
+        }
+
+        object IAweCsomePeople.GetSiteUserById(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        List<object> IAweCsomePeople.GetUsersFromSiteGroup(string groupname)
+        {
+            throw new NotImplementedException();
+        }
+
+        object IAweCsomePeople.GetGroupFromSite(string groupname)
+        {
+            throw new NotImplementedException();
         }
     }
 }

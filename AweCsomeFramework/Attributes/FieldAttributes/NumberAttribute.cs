@@ -1,9 +1,4 @@
-﻿using Microsoft.SharePoint.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace AweCsome.Attributes.FieldAttributes
 {
@@ -24,6 +19,6 @@ namespace AweCsome.Attributes.FieldAttributes
         public int NumberOfDecimalPlaces { get { return _numberOfDecimalPlaces ?? 0; } set { _numberOfDecimalPlaces = value; } }
         public double DefaultValue { get { return _min ?? 0; } set { _defaultValue = value; } }
         public bool ShowAsPercentage { get; set; }
-        public const string AssociatedFieldType = nameof(FieldType.Number);
+        public const string AssociatedFieldType = "Number";
     }
 }

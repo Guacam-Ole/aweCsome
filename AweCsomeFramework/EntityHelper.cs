@@ -1,4 +1,5 @@
-﻿using AweCsome.Attributes;
+﻿
+using AweCsome.Attributes;
 using AweCsome.Attributes.FieldAttributes;
 using AweCsome.Attributes.TableAttributes;
 using log4net;

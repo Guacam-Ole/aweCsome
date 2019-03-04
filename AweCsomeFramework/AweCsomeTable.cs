@@ -15,6 +15,7 @@ using AweCsome.Interfaces;
 using log4net;
 using Microsoft.SharePoint.Client;
 using File = Microsoft.SharePoint.Client.File;
+using E = AweCsome.Enumerations;
 
 namespace AweCsome
 {
@@ -79,9 +80,9 @@ namespace AweCsome
             return descriptionAttribute?.Url;
         }
 
-        private QuickLaunchOptions? GetQuickLaunchOption(Type entityType)
+        private E.QuickLaunchOptions? GetQuickLaunchOption(Type entityType)
         {
-            var descriptionAttribute = entityType.GetCustomAttribute<QuickLaunchOptionAttribute>();
+            var descriptionAttribute =  entityType.GetCustomAttribute<QuickLaunchOptionAttribute>();
             return descriptionAttribute?.QuickLaunchOption;
         }
 
@@ -135,9 +136,15 @@ namespace AweCsome
             if (folder == null) return null;
             try
             {
+#if ONPREM
+                context.Load(folder, f => f.Name);
+                context.ExecuteQuery();
+                if (string.IsNullOrEmpty(folder.Name)) return null;
+#else
                 context.Load(folder, f => f.Exists);
                 context.ExecuteQuery();
                 if (!folder.Exists) return null;
+#endif
             }
             catch
             {
@@ -173,9 +180,9 @@ namespace AweCsome
             }
         }
 
-        #endregion Helpers
+#endregion Helpers
 
-        #region Structure
+#region Structure
         private ListCreationInformation BuildListCreationInformation(ClientContext context, Type entityType)
         {
             ListCreationInformation listCreationInfo = new ListCreationInformation
@@ -187,8 +194,8 @@ namespace AweCsome
             int? documentTemplateType = GetTableDocumentTemplateType(entityType);
             if (documentTemplateType.HasValue) listCreationInfo.DocumentTemplateType = documentTemplateType.Value;
 
-            QuickLaunchOptions? quickLaunchOption = GetQuickLaunchOption(entityType);
-            if (quickLaunchOption.HasValue) listCreationInfo.QuickLaunchOption = quickLaunchOption.Value;
+            E.QuickLaunchOptions? quickLaunchOption = GetQuickLaunchOption(entityType);
+            if (quickLaunchOption.HasValue) listCreationInfo.QuickLaunchOption = (QuickLaunchOptions) quickLaunchOption.Value;
 
             string url = GetTableUrl(entityType);
             if (url != null) listCreationInfo.Url = url;
@@ -278,7 +285,7 @@ namespace AweCsome
                         if (_awecsomeTaxonomy == null) _awecsomeTaxonomy = new AweCsomeTaxonomy(_clientContext);
 
                         // TODO: Type & Group configurable by attribute
-                        _awecsomeTaxonomy.GetTermSetIds(TaxonomyTypes.SiteCollection, managedMetadataAttribute.TermSetName, null, managedMetadataAttribute.CreateIfMissing, out Guid termStoreId, out Guid termSetId);
+                        _awecsomeTaxonomy.GetTermSetIds(E.TaxonomyTypes.SiteCollection, managedMetadataAttribute.TermSetName, null, managedMetadataAttribute.CreateIfMissing, out Guid termStoreId, out Guid termSetId);
 
                         context.ExecuteQuery();
                         Microsoft.SharePoint.Client.Taxonomy.TaxonomyField taxonomyField = context.CastTo<Microsoft.SharePoint.Client.Taxonomy.TaxonomyField>(newField);
@@ -364,9 +371,9 @@ namespace AweCsome
             DeleteTable(typeof(T), false);
         }
 
-        #endregion Structure
+#endregion Structure
 
-        #region Insert
+#region Insert
         public int InsertItem<T>(T entity)
         {
             Type entityType = typeof(T);
@@ -396,9 +403,9 @@ namespace AweCsome
                 throw;
             }
         }
-        #endregion Insert
+#endregion Insert
 
-        #region Select
+#region Select
 
         private string WrapCamlQuery(string innerConditions)
         {
@@ -592,9 +599,9 @@ namespace AweCsome
             return SelectItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions, isAndCondition ? "And" : "Or") });
         }
 
-        #endregion Select
+#endregion Select
 
-        #region Update
+#region Update
 
         public void UpdateItem<T>(T entity)
         {
@@ -679,9 +686,9 @@ namespace AweCsome
             }
         }
 
-        #endregion Update
+#endregion Update
 
-        #region Delete
+#region Delete
 
         public void DeleteItemById<T>(int id)
         {
@@ -709,9 +716,9 @@ namespace AweCsome
             }
         }
 
-        #endregion Delete
+#endregion Delete
 
-        #region Files
+#region Files
         public List<string> SelectFileNamesFromItem<T>(int id)
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
@@ -833,9 +840,15 @@ namespace AweCsome
                 if (folder == null) return null;
                 try
                 {
-                    context.Load(folder, f => f.Exists);
+#if ONPREM
+                    context.Load(folder, f => f.Name);
                     context.ExecuteQuery();
-                    if (!folder.Exists) return null;
+                    if (string.IsNullOrEmpty(folder.Name)) return null;
+#else
+                context.Load(folder, f => f.Exists);
+                context.ExecuteQuery();
+                if (!folder.Exists) return null;
+#endif
                 }
                 catch
                 {
@@ -858,9 +871,8 @@ namespace AweCsome
                     allFiles.Add(new AweCsomeLibraryFile
                     {
                         Filename = file.Name,
-
                         Stream = stream,
-                        entity = entity
+                        Entity = entity
                     });
                 }
                 return allFiles;
@@ -893,7 +905,7 @@ namespace AweCsome
                     Filename = file.Name,
 
                     Stream = stream,
-                    entity = entity
+                    Entity = entity
                 };
             }
         }
@@ -959,9 +971,9 @@ namespace AweCsome
             }
         }
 
-        #endregion Files
+#endregion Files
 
-        #region Counts
+#region Counts
         private int CountItems<T>(CamlQuery query)
         {
             Type entityType = typeof(T);
@@ -1014,6 +1026,6 @@ namespace AweCsome
         }
 
 
-        #endregion Counts
+#endregion Counts
     }
 }

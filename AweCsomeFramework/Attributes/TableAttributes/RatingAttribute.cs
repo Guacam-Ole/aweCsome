@@ -1,16 +1,12 @@
-﻿using OfficeDevPnP.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using AweCsome.Enumerations;
 
 namespace AweCsome.Attributes.TableAttributes
 {
     public class RatingAttribute : Attribute
     {
         public int VotingExperience { get; set; }
-        public RatingAttribute(VotingExperience votingExperience )
+        public RatingAttribute(VotingExperience votingExperience)
         {
             VotingExperience = (int)votingExperience;
         }

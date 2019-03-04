@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace AweCsome.Entities
 {
@@ -11,6 +6,6 @@ namespace AweCsome.Entities
     {
         public string Filename { get; set; }
         public Stream Stream { get; set; }
-        public object entity { get; set; }
+        public object Entity { get; set; }
     }
 }

@@ -6,7 +6,7 @@ namespace AweCsome.Interfaces
 {
     public interface IAweCsomeField
     {
-        object AddFieldToList( object sharePointList, PropertyInfo property, Dictionary<string,Guid> lookupTableIds);
+        object AddFieldToList(object sharePointList, PropertyInfo property, Dictionary<string, Guid> lookupTableIds);
 
         void ChangeDisplaynameFromField(object sharePointList, PropertyInfo property);
 
