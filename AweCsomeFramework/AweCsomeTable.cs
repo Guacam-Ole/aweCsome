@@ -14,8 +14,8 @@ using AweCsome.Interfaces;
 using AweCsome.Interfaces;
 using log4net;
 using Microsoft.SharePoint.Client;
-using File = Microsoft.SharePoint.Client.File;
 using E = AweCsome.Enumerations;
+using File = Microsoft.SharePoint.Client.File;
 
 namespace AweCsome
 {
@@ -68,7 +68,7 @@ namespace AweCsome
                 catch (Exception ex)
                 {
                     ex.Data.Add("Propertyname", property.Name);
-                //    ex.Data.Add("Listname", listItem);
+                    //    ex.Data.Add("Listname", listItem);
                     throw (ex);
                 }
             }
@@ -82,7 +82,7 @@ namespace AweCsome
 
         private E.QuickLaunchOptions? GetQuickLaunchOption(Type entityType)
         {
-            var descriptionAttribute =  entityType.GetCustomAttribute<QuickLaunchOptionAttribute>();
+            var descriptionAttribute = entityType.GetCustomAttribute<QuickLaunchOptionAttribute>();
             return descriptionAttribute?.QuickLaunchOption;
         }
 
@@ -180,9 +180,9 @@ namespace AweCsome
             }
         }
 
-#endregion Helpers
+        #endregion Helpers
 
-#region Structure
+        #region Structure
         private ListCreationInformation BuildListCreationInformation(ClientContext context, Type entityType)
         {
             ListCreationInformation listCreationInfo = new ListCreationInformation
@@ -195,7 +195,7 @@ namespace AweCsome
             if (documentTemplateType.HasValue) listCreationInfo.DocumentTemplateType = documentTemplateType.Value;
 
             E.QuickLaunchOptions? quickLaunchOption = GetQuickLaunchOption(entityType);
-            if (quickLaunchOption.HasValue) listCreationInfo.QuickLaunchOption = (QuickLaunchOptions) quickLaunchOption.Value;
+            if (quickLaunchOption.HasValue) listCreationInfo.QuickLaunchOption = (QuickLaunchOptions)quickLaunchOption.Value;
 
             string url = GetTableUrl(entityType);
             if (url != null) listCreationInfo.Url = url;
@@ -279,7 +279,7 @@ namespace AweCsome
                 {
                     var managedMetadataAttribute = property.GetCustomAttribute<ManagedMetadataAttribute>();
 
-                    Field newField = (Field) _awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
+                    Field newField = (Field)_awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
                     if (newField != null && managedMetadataAttribute != null)
                     {
                         if (_awecsomeTaxonomy == null) _awecsomeTaxonomy = new AweCsomeTaxonomy(_clientContext);
@@ -371,9 +371,9 @@ namespace AweCsome
             DeleteTable(typeof(T), false);
         }
 
-#endregion Structure
+        #endregion Structure
 
-#region Insert
+        #region Insert
         public int InsertItem<T>(T entity)
         {
             Type entityType = typeof(T);
@@ -403,9 +403,9 @@ namespace AweCsome
                 throw;
             }
         }
-#endregion Insert
+        #endregion Insert
 
-#region Select
+        #region Select
 
         private string WrapCamlQuery(string innerConditions)
         {
@@ -480,8 +480,8 @@ namespace AweCsome
                     if (item.FieldValues.ContainsKey(fieldname) && item.FieldValues[fieldname] != null)
                     {
                         sourceValue = item.FieldValues[fieldname];
-                        targetType = Nullable.GetUnderlyingType(property.PropertyType)?? property.PropertyType;
-                        sourceType = Nullable.GetUnderlyingType(sourceValue.GetType())??sourceValue.GetType();
+                        targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                        sourceType = Nullable.GetUnderlyingType(sourceValue.GetType()) ?? sourceValue.GetType();
 
 
                         object propertyValue = EntityHelper.GetPropertyFromItemValue(property, item.FieldValues[fieldname]);
@@ -599,9 +599,9 @@ namespace AweCsome
             return SelectItems<T>(new CamlQuery { ViewXml = CreateMultiCaml<T>(conditions, isAndCondition ? "And" : "Or") });
         }
 
-#endregion Select
+        #endregion Select
 
-#region Update
+        #region Update
 
         public void UpdateItem<T>(T entity)
         {
@@ -653,7 +653,7 @@ namespace AweCsome
             }
         }
 
-        public T Like<T>(int id, int userId) where T: new()
+        public T Like<T>(int id, int userId) where T : new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
 
@@ -686,9 +686,9 @@ namespace AweCsome
             }
         }
 
-#endregion Update
+        #endregion Update
 
-#region Delete
+        #region Delete
 
         public void DeleteItemById<T>(int id)
         {
@@ -716,9 +716,39 @@ namespace AweCsome
             }
         }
 
-#endregion Delete
+        public void Empty<T>()
+        {
+            Type entityType = typeof(T);
+            try
+            {
+                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                using (var clientContext = GetClientContext())
+                {
+                    Web web = clientContext.Web;
+                    ListCollection listCollection = web.Lists;
+                    clientContext.Load(listCollection);
+                    clientContext.ExecuteQuery();
+                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                    if (list == null) throw new ListNotFoundException();
+                    var items = list.GetItems(CamlQuery.CreateAllItemsQuery());
+                    foreach (var item in items)
+                    {
+                        item.DeleteObject();
+                    }
+                    clientContext.ExecuteQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Cannot emptytable of entity of type '{entityType.Name}' ", ex);
+                throw;
+            }
+        }
 
-#region Files
+
+        #endregion Delete
+
+        #region Files
         public List<string> SelectFileNamesFromItem<T>(int id)
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
@@ -845,9 +875,9 @@ namespace AweCsome
                     context.ExecuteQuery();
                     if (string.IsNullOrEmpty(folder.Name)) return null;
 #else
-                context.Load(folder, f => f.Exists);
-                context.ExecuteQuery();
-                if (!folder.Exists) return null;
+                    context.Load(folder, f => f.Exists);
+                    context.ExecuteQuery();
+                    if (!folder.Exists) return null;
 #endif
                 }
                 catch
@@ -971,9 +1001,9 @@ namespace AweCsome
             }
         }
 
-#endregion Files
+        #endregion Files
 
-#region Counts
+        #region Counts
         private int CountItems<T>(CamlQuery query)
         {
             Type entityType = typeof(T);
@@ -1026,6 +1056,7 @@ namespace AweCsome
         }
 
 
-#endregion Counts
+
+        #endregion Counts
     }
 }

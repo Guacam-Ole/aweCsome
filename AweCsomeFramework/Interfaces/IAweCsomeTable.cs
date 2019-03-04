@@ -21,6 +21,7 @@ namespace AweCsome.Interfaces
         List<T> SelectItemsByQuery<T>(string query) where T : new();
         void UpdateItem<T>(T entity);
         void DeleteItemById<T>(int id);
+        void Empty<T>();
         string[] GetAvailableChoicesFromField<T>(string propertyname);
         T Like<T>(int id, int userId) where T : new();
         void Unlike<T>(int id, int userId);
