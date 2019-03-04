@@ -1,4 +1,4 @@
-# aweCsome
+# aweCsome Framework
 aweCsome Framework: Entity Framework for SharePoint Provider Hosted Add-Ins
 
 ## Issues
