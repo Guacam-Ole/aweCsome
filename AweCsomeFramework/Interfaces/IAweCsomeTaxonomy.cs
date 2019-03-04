@@ -1,5 +1,4 @@
 ﻿using AweCsome.Entities;
-//using Microsoft.SharePoint.Client.Taxonomy;
 using System;
 using System.Collections.Generic;
 using System.Linq;

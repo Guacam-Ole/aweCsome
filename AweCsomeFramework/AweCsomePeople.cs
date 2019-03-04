@@ -50,15 +50,15 @@ namespace AweCsome
             return group;
         }
 
-        public List<User> Search(string query, string uniqueField, int maxSuggestions = 100, PrincipalSource principalSource = PrincipalSource.All, PrincipalType principalType = PrincipalType.User, int sharePointGroupId = -1)
+        public List<User> Search(string query, string uniqueField, int maxSuggestions = 100, int principalSource=99, int  principalType = 1, int sharePointGroupId = -1)
         {
             if (string.IsNullOrWhiteSpace(query)) return null;
 
             ClientPeoplePickerQueryParameters querryParams = new ClientPeoplePickerQueryParameters();
             querryParams.AllowMultipleEntities = false;
             querryParams.MaximumEntitySuggestions = maxSuggestions;
-            querryParams.PrincipalSource = principalSource;
-            querryParams.PrincipalType = principalType;
+            querryParams.PrincipalSource = (PrincipalSource)principalSource;
+            querryParams.PrincipalType = (PrincipalType)principalType;
             querryParams.QueryString = query;
             querryParams.SharePointGroupID = sharePointGroupId;
 

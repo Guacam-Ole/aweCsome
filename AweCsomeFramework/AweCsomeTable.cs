@@ -272,7 +272,7 @@ namespace AweCsome
                 {
                     var managedMetadataAttribute = property.GetCustomAttribute<ManagedMetadataAttribute>();
 
-                    Field newField = _awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
+                    Field newField = (Field) _awecsomeField.AddFieldToList(sharePointList, property, lookupTableIds);
                     if (newField != null && managedMetadataAttribute != null)
                     {
                         if (_awecsomeTaxonomy == null) _awecsomeTaxonomy = new AweCsomeTaxonomy(_clientContext);
@@ -317,7 +317,8 @@ namespace AweCsome
 
             var property = typeof(T).GetProperty(propertyName);
 
-            FieldChoice choiceField = _clientContext.CastTo<FieldChoice>(_awecsomeField.GetFieldDefinition(sharePointList, property));
+            var field = (Field)_awecsomeField.GetFieldDefinition(sharePointList, property);
+            FieldChoice choiceField = _clientContext.CastTo<FieldChoice>(field);
             _clientContext.Load(choiceField, q => q.Choices);
             _clientContext.ExecuteQuery();
 

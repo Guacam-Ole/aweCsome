@@ -1,21 +1,18 @@
-﻿using Microsoft.SharePoint.Client;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 
 namespace AweCsome.Interfaces
 {
-    
-
     public interface IAweCsomeField
     {
-        Field AddFieldToList( List sharePointList, PropertyInfo property, Dictionary<string,Guid> lookupTableIds);
+        object AddFieldToList( object sharePointList, PropertyInfo property, Dictionary<string,Guid> lookupTableIds);
 
-        void ChangeDisplaynameFromField(List sharePointList, PropertyInfo property);
+        void ChangeDisplaynameFromField(object sharePointList, PropertyInfo property);
 
-        void ChangeTypeFromField(List sharePointList, PropertyInfo property);
+        void ChangeTypeFromField(object sharePointList, PropertyInfo property);
 
-        Field GetFieldDefinition(List sharePointList, PropertyInfo property);
+        object GetFieldDefinition(object sharePointList, PropertyInfo property);
 
         bool IsMulti(Type propertyType);
     }
