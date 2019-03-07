@@ -170,9 +170,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AweCsomeInterfaces.csproj">
+    <ProjectReference Include="..\AweCsome.Interfaces.csproj">
       <Project>{5db02ff9-0993-4b60-8d23-0aa62935612f}</Project>
-      <Name>AweCsomeInterfaces</Name>
+      <Name>AweCsome.Interfaces</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
