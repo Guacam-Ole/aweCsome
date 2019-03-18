@@ -5,12 +5,12 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
-using E = AweCsome.Enumerations;
 using AweCsome.Interfaces;
 using log4net;
 using Microsoft.SharePoint.ApplicationPages.ClientPickerQuery;
 using Microsoft.SharePoint.Client;
 using Microsoft.SharePoint.Client.Utilities;
+using E = AweCsome.Enumerations;
 
 namespace AweCsome
 {
