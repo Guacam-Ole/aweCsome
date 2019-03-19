@@ -10,7 +10,10 @@ namespace AweCsome.Interfaces
 {
     public interface IAweCsomeTable
     {
-        void CreateTable<T>();
+        bool Exists(string listName);
+        List<T> SelectItemsByTitle<T>(string title) where T : new();
+
+       void CreateTable<T>();
         void DeleteTable<T>();
         void DeleteTableIfExisting<T>();
         int InsertItem<T>(T entity);
