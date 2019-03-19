@@ -319,6 +319,7 @@ namespace AweCsome
             Type propertyType = property.PropertyType;
             if (propertyType.IsGenericType)
             {
+                if (propertyType.IsDictionary() || propertyType.IsArray) return false;
                 return propertyType.GetGenericTypeDefinition() != typeof(Nullable<>);
             }
             return false;
