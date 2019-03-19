@@ -24,7 +24,7 @@ namespace AweCsome
             _clientContext = clientContext;
         }
 
-        public User GetSiteUserById(int id)
+        private User GetSiteUserById(int id)
         {
             var user = _clientContext.Web.SiteUsers.FirstOrDefault(q => q.Id == id);
             _clientContext.Load(user);
@@ -32,7 +32,7 @@ namespace AweCsome
             return user;
         }
 
-        public List<User> GetUsersFromSiteGroup(string groupname)
+        private List<User> GetUsersFromSiteGroup(string groupname)
         {
             var group = GetGroupFromSite(groupname);
             if (group == null) return null;
@@ -51,7 +51,7 @@ namespace AweCsome
             return group;
         }
 
-        public List<object> Search(string query, string uniqueField, int maxSuggestions = 100, Enumerations.PrincipalSource principalSource = Enumerations.PrincipalSource.All, Enumerations.PrincipalType principalType = Enumerations.PrincipalType.User, int sharePointGroupId = -1)
+        private List<object> Search(string query, string uniqueField, int maxSuggestions = 100, Enumerations.PrincipalSource principalSource = Enumerations.PrincipalSource.All, Enumerations.PrincipalType principalType = Enumerations.PrincipalType.User, int sharePointGroupId = -1)
         {
             if (string.IsNullOrWhiteSpace(query)) return null;
 
@@ -80,22 +80,22 @@ namespace AweCsome
 
         List<object> IAweCsomePeople.Search(string query, string uniqueField, int maxSuggestions, E.PrincipalSource principalSource, E.PrincipalType principalType, int sharePointGroupId)
         {
-            throw new NotImplementedException();
+            return Search(query, uniqueField, maxSuggestions, principalSource, principalType, sharePointGroupId);
         }
 
         object IAweCsomePeople.GetSiteUserById(int id)
         {
-            throw new NotImplementedException();
+            return GetSiteUserById(id);
         }
 
         List<object> IAweCsomePeople.GetUsersFromSiteGroup(string groupname)
         {
-            throw new NotImplementedException();
+            return GetUsersFromSiteGroup(groupname)?.Select(q => (object)q).ToList();
         }
 
         object IAweCsomePeople.GetGroupFromSite(string groupname)
         {
-            throw new NotImplementedException();
+            return GetGroupFromSite(groupname);
         }
     }
 }
