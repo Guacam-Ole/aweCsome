@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AweCsome.Entities;
 
 namespace AweCsome.Interfaces
@@ -12,8 +8,7 @@ namespace AweCsome.Interfaces
     {
         bool Exists(string listName);
         List<T> SelectItemsByTitle<T>(string title) where T : new();
-
-       void CreateTable<T>();
+        void CreateTable<T>();
         void DeleteTable<T>();
         void DeleteTableIfExisting<T>();
         int InsertItem<T>(T entity);
