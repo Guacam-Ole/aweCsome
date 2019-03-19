@@ -26,7 +26,9 @@ namespace AweCsome
 
         private User GetSiteUserById(int id)
         {
-            var user = _clientContext.Web.SiteUsers.FirstOrDefault(q => q.Id == id);
+            var user = _clientContext.Web.GetUserById(id);
+            //_clientContext.Load(users)
+            //var user = _clientContext.Web.SiteUsers.FirstOrDefault(q => q.Id == id);
             _clientContext.Load(user);
             _clientContext.ExecuteQuery();
             return user;
