@@ -183,21 +183,6 @@ namespace AweCsome
         #endregion Helpers
 
         #region Structure
-
-        public bool Exists(string listName)
-        {
-            using (var clientContext = GetClientContext())
-            {
-                Web web = clientContext.Web;
-                var listCollection = web.Lists;
-                clientContext.Load(listCollection);
-                clientContext.ExecuteQuery();
-
-                var oldList = listCollection.FirstOrDefault(lst => lst.Title == listName);
-                return oldList != null;
-            }
-        }
-
         private ListCreationInformation BuildListCreationInformation(ClientContext context, Type entityType)
         {
             ListCreationInformation listCreationInfo = new ListCreationInformation
@@ -467,12 +452,7 @@ namespace AweCsome
             string query = $"<Eq><FieldRef Name='{fieldname}' /><Value Type='{fieldTypeName}'>{fieldvalue}</Value></Eq>";
             return wrapCamlQuery ? WrapCamlQuery(query) : query;
         }
-
-        public List<T> SelectItemsByTitle<T>(string title) where T : new()
-        {
-            return SelectItemsByFieldValue<T>("Title", title);
-        }
-
+         
         public List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new()
         {
             Type entityType = typeof(T);
@@ -482,7 +462,10 @@ namespace AweCsome
             return SelectItems<T>(new CamlQuery { ViewXml = CreateFieldEqCaml(fieldProperty, value) });
         }
 
-     
+        public List<T> SelectItemsByTitle<T>(string title) where T: new()
+        {
+            return SelectItemsByFieldValue<T>("Title", title);
+        }
         private void StoreFromListItem<T>(T entity, ListItem item)
         {
             Type entityType = typeof(T);
@@ -1076,7 +1059,8 @@ namespace AweCsome
             return CountItems<T>(new CamlQuery { ViewXml = query });
         }
 
-      
+
+
         #endregion Counts
     }
 }
