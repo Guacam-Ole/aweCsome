@@ -15,8 +15,8 @@
     <tags>SharePoint Entity</tags>    
   </metadata>
   <files>
-    <file src="bin\Debug\AweCsomeO365.dll" target="lib\net452\AweCsomeO365.dll" />
-    <file src="bin\Debug\AweCsomeO365.xml" target="lib\net452\AweCsomeO365.xml" />
+    <file src="bin\Debug\AweCsome.O365.dll" target="lib\net452\AweCsomeO365.dll" />
+    <file src="bin\Debug\AweCsome.O365.xml" target="lib\net452\AweCsomeO365.xml" />
     <file src="..\.github\README.md" target="" />
   </files>
 </package>
