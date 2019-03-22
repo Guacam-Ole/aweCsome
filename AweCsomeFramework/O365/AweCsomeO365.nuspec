@@ -9,10 +9,10 @@
     <licenseUrl>https://github.com/OleAlbers/aweCsome/blob/develop/.github/LICENSE</licenseUrl>
     <projectUrl>https://github.com/OleAlbers/aweCsome</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Entity Framework for SharePoint Provider Hosted Add-Ins</description>
-    <releaseNotes>Initial Release.</releaseNotes>
+    <description>The AweCsome-Framework is like an Entity Framework for SharePoint Provider Hosted Add-Ins. It uses CSOM to communicate with SharePoint.</description>
+    <releaseNotes>This is a beta CI-Release</releaseNotes>
     <copyright>Copyright 2019</copyright>
-    <tags>SharePoint Entity</tags>    
+    <tags>SharePoint, Entity</tags>    
 	<dependencies>
 		<group targetFramework="net452">	
 			<dependency id="SharePointPnPCoreOnline" version="3.6.1902" />			
