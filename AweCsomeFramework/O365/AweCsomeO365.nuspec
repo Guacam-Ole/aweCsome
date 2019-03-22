@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>AweCsome.O365</id>
-    <version>0.9.0-alpha</version>
+    <version>$version$</version>
     <title>AweCsome Framework for O365</title>
     <authors>Ole Albers</authors>
     <owners>Ole Albers</owners>
