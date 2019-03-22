@@ -13,6 +13,12 @@
     <releaseNotes>Initial Release.</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>SharePoint Entity</tags>    
+	<dependencies>
+		<group targetFramework="net452">	
+			<dependency id="log4net" version="2.0.8" />
+			<dependency id="OfficeDevPnP.Core" version="3.6.1902" />			
+		</group>
+	</dependencies>
   </metadata>
   <files>
     <file src="bin\Debug\AweCsome.O365.dll" target="lib\net452\AweCsomeO365.dll" />
