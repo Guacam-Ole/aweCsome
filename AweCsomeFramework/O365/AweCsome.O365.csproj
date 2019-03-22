@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\AweCsome.O365.xml</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup>
+    <Title>Just the Debug version of AweCsomeNess</Title>
+  </PropertyGroup>
+  
   <ItemGroup>
     <Reference Include="AngleSharp, Version=0.9.9.0, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea, processorArchitecture=MSIL">
       <HintPath>..\..\packages\AngleSharp.0.9.11\lib\net45\AngleSharp.dll</HintPath>
