@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace AweCsome.Attributes.TableAttributes
 {
-    public class ListTemplateAttribute : Attribute
+    public class ListTemplateTypeAttribute : Attribute
     {
         public int TemplateTypeId { get; set; }
 
-        public ListTemplateAttribute(int templateTypeId)
+        public ListTemplateTypeAttribute(int templateTypeId)
         {
             TemplateTypeId = templateTypeId;
         }

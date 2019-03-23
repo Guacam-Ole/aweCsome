@@ -71,10 +71,9 @@
     <Compile Include="Attributes\IgnoreAttributes\IgnoreOnUpdateAttribute.cs" />
     <Compile Include="Attributes\InternalNameAttribute.cs" />
     <Compile Include="Attributes\TableAttributes\DocumentTemplateTypeAttribute.cs" />
-    <Compile Include="Attributes\TableAttributes\ListTemplateAttribute.cs" />
+    <Compile Include="Attributes\TableAttributes\ListTemplateTypeAttribute.cs" />
     <Compile Include="Attributes\TableAttributes\QuickLaunchOptionAttribute.cs" />
     <Compile Include="Attributes\TableAttributes\RatingAttribute.cs" />
-    <Compile Include="Attributes\TableAttributes\TableUrlAttribute.cs" />
     <Compile Include="Attributes\TableAttributes\TemplateFeatureIdAttribute.cs" />
     <Compile Include="Attributes\TableAttributes\VersioningAttribute.cs" />
     <Compile Include="Entities\AweCsomeLibraryFile.cs" />
