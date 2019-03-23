@@ -1,5 +1,5 @@
 # AweCsome Framework
-AweCsome Framework: Entity Framework for SharePoint Provider Hosted Add-Ins
+AweCsome Framework: Entity Framework for SharePoint Provider Hosted Add-Ins. If you need a quick Overview what it does and if it can help you, read the [Why use AweCsome?](/help/about.md) document.
 
 ## Issues
 If you find a bug or have a feature request, feel free to place an issue here. If you need support, please use [Stackoverflow](https://stackoverflow.com) or [SharePoint SE](https://sharepoint.stackexchange.com) instead.
