@@ -12,7 +12,7 @@ public class Car {
    public string Manufacturer {get;set;}
    public Colors Color {get;set;}
    public string LicensePlate {get;set;}
-   puülic DateTime BuyDate {get;set;}
+   public DateTime BuyDate {get;set;}
    public DateTime? LastInspection {get;set;}
 }
 
@@ -24,7 +24,7 @@ public class Customer {
 
 
 ## Creating lists
-At first let's create lists for those entities in SharePoint using Csom. We assume we already created the ClientContext. Let's start with the `car` - List:
+At first we will create lists for those entities in SharePoint using Csom. We assume we already have a ClientContext. Let's start with the `Car` - List:
 
 ### Classic approach using pure CSOM
 
@@ -51,6 +51,7 @@ schemaColor+="</Field>";
 Field color = carList.Fields.AddFieldAsXml(schemaColor, true, AddFieldOptions.AddFieldInternalNameHint);
 clientContext.ExecuteQuery();
 ```
+> *you don't need to use the XML-approach but have specific Methods for each Fieldtype like ```ChoiceField``` which makes it a BIT less > ugly, but it is the best approach when you try to automate that task lateron. Either way you have no connection to your entities.*
 
 ### Using AweCsome
 Let's see what we have to do to create the same list using AweCsome:
@@ -59,7 +60,7 @@ IAweCsomeTable aweCsomeTable = new AweCsome.AweCsomeTable(clientContext);
 aweCsomeTable.CreateTable<Car>();
 ```
 
-Much better to read, right? In both cases you have the same table at the end including all fields to be required whre they should be and the choice field offering exactly the right options.
+Much better to read, right? In both cases you have the same table at the end including all fields to be required where they should be and the choice field offering exactly the right options.
 Just for completion, the second list:
 
 ### Second List, classic CSOM
@@ -72,7 +73,7 @@ clientContext.Load(carList);
 clientContext.ExecuteQuery();
 Guid carListId= carList.Id;
 ```
-And now we can create the list and fields:
+And now we can create the ```Customer```-list and fields:
 
 ```csharp
 ListCreationInformation creationInfo = new ListCreationInformation();  
@@ -115,7 +116,7 @@ var mx5=new Car {
 }
 var rx8=new Car {
   Manufacturer="Mazda",
-  LicensePlate="HH-OA-1234",
+  LicensePlate="HH-OD-13",
   BuyDate=new DateTime(2019,4,34),
   Color=Colors.Green,
   LastInspection=DateTime.Now
@@ -165,7 +166,7 @@ Creating the Customer:
 ```csharp
 clientContext.Load(clientContext.Web);
 clientContext.ExecuteQuery();
-List carList=clientContext.Web.Lists.GetByTitle("Customer");
+List carList=clientContext.Web.Lists.GetByTitle("Car");
 var itemCreateInfo=new ListItemCreationInformation();
 ListItem hodorItem=carList.AddItem(itemCreateInfo);
 hodorItem["Name"]=hodor.Name;
@@ -183,31 +184,31 @@ rx8.Id=aweCsomeTable.InsertItem(rx8);
 aweCsomeTable.InsertItem(hodor);
 ```
 That was easy, wasn't it? 
-Well, to be honest, I cheated a little bit. I added the ```Id``` field to the entities **after** I created the list in SharePoint. If I had them there before that AweCsome would not have been able to create the lists.
-The reason is simple: *evey* Property creates a Field by default. But if there already is an internal field with the same name (like "Id") this does not work. So we have to add some attributes to the Id:
+Well, to be honest, I cheated a little bit. I added the ```Id``` field to the entities **after** I created the list in SharePoint. If I had them there before, AweCsome would not have been able to create the lists.
+The reason is simple: *every* Property creates a Field by default. But if there already is an internal field with the same name (like "Id") we have a conflict and AweCsome aborts creating that list. Thankfully we have some attributes for that purpose:
 ```csharp
 [IgnoreOnCreation, IgnoreOnInsert, IgnoreOnUpdate]
 public int Id {get;set;}
 ```
-This prevents the Id from being created, inserted or updated - which makes sense as the Id is completely maintained by SharePoint itself.
+This prevents the Id from being created, inserted or updated - which makes sense as the Id is completely maintained by SharePoint itself which does not really like it if we fiddle with that value.
 You can also simply change the class to
 ```csharp
 public class Car:AweCsomeListItem {...}
 ```
-This way AweCsome already takes care of all important fields from Custom Lists like Id, Title, Author and so on.
+This way AweCsome already takes care of all important fields from Custom Lists like ```Id```, ```Title```, ```Author``` and so on.
 
 ## Updating and Selecting data
-I will not bother you by writing down classic CSOM-Examples for Update and Select. They are as long and ugly as inserting data like shown above. In AweCsome these Actions look like this:
+I will not bother you by writing down classic CSOM-Examples for Update and Select. They are as long and ugly as inserting data like shown above. In the following AweCsome-example we retrieve every car and schedule the Inspection for next week:
 
 ```csharp
 IAweCsomeTable aweCsomeTable = new AweCsome.AweCsomeTable(clientContext);
 var allCars=aweCsomeTable.SelectAllItems<Car>();
 foreach (var car in allCars) {
-  car.LastInspection=DateTime.Now;
+  car.LastInspection=DateTime.Now.AddDays(7);
   aweCSomeTable.Update(car);
 }
 ```
 
 ## Convinced?
-Hope you liked those small examples. If you decide to use AweCsome check the Wikipedia how to use it.
+Hope you liked those small examples. If you decide to use AweCsome check the [Wiki](https://github.com/OleAlbers/aweCsome/wiki) how to use it and what other fancy things you can do.
 
