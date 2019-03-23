@@ -24,7 +24,7 @@ public class Customer {
 
 
 ## Creating lists
-At first let's create lists for those entities in SharePoint using Csom. We assume we already created the ClientContext. Let's start with the `car` - List:
+At first we will create lists for those entities in SharePoint using Csom. We assume we already have a ClientContext. Let's start with the `car` - List:
 
 ### Classic approach using pure CSOM
 
