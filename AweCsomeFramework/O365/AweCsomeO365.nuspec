@@ -6,7 +6,7 @@
     <title>AweCsome Framework for O365</title>
     <authors>Ole</authors>
     <owners>Ole</owners>
-    <licenseUrl>https://github.com/OleAlbers/aweCsome/blob/develop/.github/LICENSE</licenseUrl>
+    <licenseUrl>https://github.com/OleAlbers/aweCsome/blob/develop/.github/LICENSE.md</licenseUrl>
     <projectUrl>https://github.com/OleAlbers/aweCsome</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The AweCsome-Framework is like an Entity Framework for SharePoint Provider Hosted Add-Ins. It uses CSOM to communicate with SharePoint.</description>
