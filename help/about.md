@@ -12,7 +12,7 @@ public class Car {
    public string Manufacturer {get;set;}
    public Colors Color {get;set;}
    public string LicensePlate {get;set;}
-   puülic DateTime BuyDate {get;set;}
+   public DateTime BuyDate {get;set;}
    public DateTime? LastInspection {get;set;}
 }
 
