@@ -62,7 +62,7 @@ namespace AweCsome
 
         public static int GetListTemplateType(Type entityType)
         {
-            var listTemplateTypeAttribute = entityType.GetCustomAttribute<ListTemplateAttribute>();
+            var listTemplateTypeAttribute = entityType.GetCustomAttribute<ListTemplateTypeAttribute>();
             return listTemplateTypeAttribute == null ? (int)ListTemplateType.GenericList : listTemplateTypeAttribute.TemplateTypeId;
         }
 

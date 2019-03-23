@@ -11,8 +11,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The AweCsome-Framework is like an Entity Framework for SharePoint Provider Hosted Add-Ins. It uses CSOM to communicate with SharePoint.</description>
     <releaseNotes>This is a beta CI-Release</releaseNotes>
-    <copyright>Copyright 2019</copyright>
-    <tags>SharePoint, Entity</tags>    
+    <copyright>Copyright 2019 Ole Albers</copyright>
+    <tags>SharePoint, Entity, Office, AddInModel, AppModel, Office365, SharePointOnline</tags>    
 	<dependencies>
 		<group targetFramework="net452">	
 			<dependency id="SharePointPnPCoreOnline" version="3.6.1902" />			
