@@ -51,6 +51,7 @@ schemaColor+="</Field>";
 Field color = carList.Fields.AddFieldAsXml(schemaColor, true, AddFieldOptions.AddFieldInternalNameHint);
 clientContext.ExecuteQuery();
 ```
+*you don't need to use the XML-approach but have specific Methods for each Fieldtype like ```ChoiceField```, but if you want to go anything like automate that task, XML is still the best approach and either way you have no connection to your entities.*
 
 ### Using AweCsome
 Let's see what we have to do to create the same list using AweCsome:
