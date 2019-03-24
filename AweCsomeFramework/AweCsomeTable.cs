@@ -74,11 +74,11 @@ namespace AweCsome
             }
         }
 
-        private string GetTableUrl(Type entityType)
-        {
-            var descriptionAttribute = entityType.GetCustomAttribute<Attributes.TableAttributes.TableUrlAttribute>();
-            return descriptionAttribute?.Url;
-        }
+        //private string GetTableUrl(Type entityType)
+        //{
+        //    var descriptionAttribute = entityType.GetCustomAttribute<Attributes.TableAttributes.TableUrlAttribute>();
+        //    return descriptionAttribute?.Url;
+        //}
 
         private E.QuickLaunchOptions? GetQuickLaunchOption(Type entityType)
         {
@@ -197,8 +197,8 @@ namespace AweCsome
             E.QuickLaunchOptions? quickLaunchOption = GetQuickLaunchOption(entityType);
             if (quickLaunchOption.HasValue) listCreationInfo.QuickLaunchOption = (QuickLaunchOptions)quickLaunchOption.Value;
 
-            string url = GetTableUrl(entityType);
-            if (url != null) listCreationInfo.Url = url;
+            //string url = GetTableUrl(entityType);
+            //if (url != null) listCreationInfo.Url = url;
 
             return listCreationInfo;
         }
