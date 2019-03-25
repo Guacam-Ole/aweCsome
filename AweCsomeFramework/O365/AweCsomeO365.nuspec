@@ -15,7 +15,7 @@
     <tags>SharePoint, Entity, Office, AddInModel, AppModel, Office365, SharePointOnline</tags>    
 	<dependencies>
 		<group targetFramework="net452">	
-			<dependency id="SharePointPnPCoreOnline" version="3.6.1902" />			
+			<dependency id="SharePointPnPCoreOnline" version="3.7.1903" />			
 			<dependency id="log4net" version="2.0.8" />
 		</group>
 	</dependencies>
