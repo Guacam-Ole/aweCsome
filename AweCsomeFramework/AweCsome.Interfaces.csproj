@@ -60,7 +60,7 @@
     <Compile Include="Attributes\FieldAttributes\RequiredAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\TextAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\UniqueAttribute.cs" />
-    <Compile Include="Attributes\FieldAttributes\TableUrlAttribute.cs" />
+    <Compile Include="Attributes\FieldAttributes\UrlAttribute.cs" />
     <Compile Include="Attributes\FieldAttributes\UserAttribute.cs" />
     <Compile Include="Attributes\IgnoreAttributes\IgnoreOnCreationAttribute.cs" />
     <Compile Include="Attributes\IgnoreAttributes\IgnoreOnInsertAttribute.cs" />
