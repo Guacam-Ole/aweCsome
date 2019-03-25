@@ -4,7 +4,7 @@
     <id>AweCsome.Interfaces</id>
     <version>$version$</version>
     <title>AweCsome Framework Interfaces</title>
-    <authors>Ole</authors>
+    <authors>Ole Albers http://dotnet.work</authors>
     <owners>Ole</owners>
     <licenseUrl>https://github.com/OleAlbers/aweCsome/blob/develop/.github/LICENSE.md</licenseUrl>
     <projectUrl>https://github.com/OleAlbers/aweCsome</projectUrl>
