@@ -4,7 +4,7 @@
     <id>AweCsome.O365</id>
     <version>$version$</version>
     <title>AweCsome Framework for O365</title>
-    <authors>Ole Albers http://dotnet.work</authors>
+    <authors>Ole Albers ( https://dotnet.work )</authors>
     <owners>Ole</owners>
     <licenseUrl>https://github.com/OleAlbers/aweCsome/blob/develop/.github/LICENSE.md</licenseUrl>
     <projectUrl>https://github.com/OleAlbers/aweCsome</projectUrl>
