@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("AweCsome.Interfaces")]
-[assembly: AssemblyDescription("AweCsome-Framework Interfaces")]
+[assembly: AssemblyTitle("AweCsome.O365")]
+[assembly: AssemblyDescription("AweCsome-Framework for Office 365")]
 
 
 // Setting ComVisible to false makes the types in this assembly not visible
