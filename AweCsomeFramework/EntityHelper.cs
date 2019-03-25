@@ -112,7 +112,7 @@ namespace AweCsome
 
         public static bool PropertyIsUrl(PropertyInfo property)
         {
-            return property.GetCustomAttribute<TableUrlAttribute>() != null;
+            return property.GetCustomAttribute<UrlAttribute>() != null;
         }
 
         public static bool PropertyIsLookup(PropertyInfo property)
@@ -187,7 +187,7 @@ namespace AweCsome
             detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<NoteAttribute>(property);
             detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<NumberAttribute>(property);
             detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<TextAttribute>(property);
-            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<Attributes.FieldAttributes.TableUrlAttribute>(property);
+            detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<Attributes.FieldAttributes.UrlAttribute>(property);
             detectedFieldType = detectedFieldType ?? GetFieldTypeByAttribute<UserAttribute>(property);
             return detectedFieldType;
         }

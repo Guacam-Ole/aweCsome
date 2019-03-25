@@ -277,7 +277,7 @@ namespace AweCsome
         private void GetFieldCreationDetailsUrl(PropertyInfo property, out string fieldAttributes)
         {
             fieldAttributes = null;
-            var urlAttribute = property.GetCustomAttribute<TableUrlAttribute>();
+            var urlAttribute = property.GetCustomAttribute<UrlAttribute>();
             if (urlAttribute != null)
             {
                 fieldAttributes = $"Format='{urlAttribute.UrlFieldFormatType}'";
