@@ -221,7 +221,7 @@ namespace AweCsome
             }
         }
 
-        public void CreateTable<T>()
+        public Guid CreateTable<T>()
         {
             Type entityType = typeof(T);
             string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
@@ -258,6 +258,7 @@ namespace AweCsome
                     }
 
                     clientContext.ExecuteQuery();
+                    return newList.Id;
                 }
                 catch (Exception ex)
                 {

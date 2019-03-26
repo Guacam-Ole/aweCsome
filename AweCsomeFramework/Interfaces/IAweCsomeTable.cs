@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AweCsome.Entities;
 
 namespace AweCsome.Interfaces
@@ -11,11 +8,10 @@ namespace AweCsome.Interfaces
     public interface IAweCsomeTable
     {
         List<T> SelectItemsByTitle<T>(string title) where T : new();
-
-       void CreateTable<T>();
+        Guid CreateTable<T>();
         void DeleteTable<T>();
         void DeleteTableIfExisting<T>();
-        int InsertItem<T>(T entity); 
+        int InsertItem<T>(T entity);
         T SelectItemById<T>(int id) where T : new();
         List<T> SelectAllItems<T>() where T : new();
         List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new();

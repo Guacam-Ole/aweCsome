@@ -167,6 +167,7 @@
     <Compile Include="..\AweCsomeTable.cs" />
     <Compile Include="..\AweCsomeTaxonomy.cs" />
     <Compile Include="..\EntityHelper.cs" />
+    <Compile Include="AweCsomeHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
