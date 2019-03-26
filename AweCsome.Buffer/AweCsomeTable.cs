@@ -26,7 +26,7 @@ namespace AweCsome.Buffer
 
         public string AddFolderToLibrary<T>(string folder)
         {
-            throw new NotImplementedException();
+            return _baseTable.AddFolderToLibrary<T>(folder);   // NOT buffered
         }
 
         public void AttachFileToItem<T>(int id, string filename, Stream filestream)
@@ -83,12 +83,12 @@ namespace AweCsome.Buffer
         {
             _baseTable.DeleteTable<T>();
             BufferState.RemoveTable(_helpers.GetListName<T>());
-            _baseTable.DeleteTable<T>();
         }
 
         public void DeleteTableIfExisting<T>()
         {
-            throw new NotImplementedException();
+            _baseTable.DeleteTableIfExisting<T>();
+            BufferState.RemoveTable(_helpers.GetListName<T>());
         }
 
         public void Empty<T>()
@@ -112,7 +112,7 @@ namespace AweCsome.Buffer
                 TableName = listname,
                 State = Command.States.Pending
             });
-            return itemId * -1;
+            return itemId ;
         }
 
         public T Like<T>(int id, int userId) where T : new()
@@ -175,7 +175,7 @@ namespace AweCsome.Buffer
             throw new NotImplementedException();
         }
 
-        public void Unlike<T>(int id, int userId)
+        public T Unlike<T>(int id, int userId) where T:new()
         {
             throw new NotImplementedException();
         }

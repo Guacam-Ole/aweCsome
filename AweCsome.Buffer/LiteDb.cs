@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Web.Hosting;
 
 namespace AweCsome.Buffer
 {
@@ -34,6 +36,14 @@ namespace AweCsome.Buffer
 
         public int Insert<T>(T item, string listname)
         {
+            var idProperty = typeof(T).GetProperty("ID", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            if (idProperty == null) throw new Exception("cannot use buffer without Id of type int");
+            var collection = GetCollection<T>(listname);
+            int minId = collection.Min().AsInt32;
+            if (minId > 0) minId = 0;
+            minId--;
+            idProperty.SetValue(item, minId);
+
             return GetCollection<T>(listname).Insert(item);
         }
 
@@ -42,9 +52,9 @@ namespace AweCsome.Buffer
             return _database.GetCollection(name).Count();
         }
 
-        private string CreateConnectionString()
+        private string CreateConnectionString(string databasename)
         {
-            throw new NotImplementedException();
+            return HostingEnvironment.MapPath("/db/"+databasename.Replace("https", "").Replace("http", "").Replace(":", "").Replace("/", "") + ".test.liteDB");
         }
 
         private LiteDB.LiteDatabase GetDatabase(string databaseName, bool isQueue)
@@ -54,11 +64,11 @@ namespace AweCsome.Buffer
                 string dbModeSetting = ConfigurationManager.AppSettings["DbMode"];
                 if (dbModeSetting == null)
                 {
-                    _dbMode = DbModes.Memory;
+                    _dbMode = DbModes.File;
                 }
                 else
                 {
-                    _dbMode = DbModes.File;
+                    _dbMode = DbModes.Memory;
                 }
             }
             lock (_dbLock)
@@ -72,7 +82,7 @@ namespace AweCsome.Buffer
                 }
                 else
                 {
-                    return new LiteDB.LiteDatabase(CreateConnectionString());
+                    return new LiteDB.LiteDatabase(CreateConnectionString(databaseName));
                 }
             }
         }
