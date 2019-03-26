@@ -258,6 +258,8 @@ namespace AweCsome
                     }
 
                     clientContext.ExecuteQuery();
+                    clientContext.Load(newList, nl => nl.Id);
+                    clientContext.ExecuteQuery();
                     return newList.Id;
                 }
                 catch (Exception ex)
@@ -676,7 +678,7 @@ namespace AweCsome
             return entity;
         }
 
-        public void Unlike<T>(int id, int userId)
+        public T Unlike<T>(int id, int userId) where T:new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
 
@@ -689,6 +691,9 @@ namespace AweCsome
                 likeArray.Remove(userLike);
                 UpdateLikes(item, likeArray);
             }
+            var entity = new T();
+            StoreFromListItem(entity, item);
+            return entity;
         }
 
         #endregion Update

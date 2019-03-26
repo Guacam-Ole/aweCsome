@@ -22,7 +22,7 @@ namespace AweCsome.Interfaces
         void Empty<T>();
         string[] GetAvailableChoicesFromField<T>(string propertyname);
         T Like<T>(int id, int userId) where T : new();
-        void Unlike<T>(int id, int userId);
+        T Unlike<T>(int id, int userId) where T : new();
         List<string> SelectFileNamesFromItem<T>(int id);
         Dictionary<string, Stream> SelectFilesFromItem<T>(int id);
         void AttachFileToItem<T>(int id, string filename, Stream filestream);
