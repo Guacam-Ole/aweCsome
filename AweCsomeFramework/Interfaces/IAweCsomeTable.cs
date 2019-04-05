@@ -24,7 +24,7 @@ namespace AweCsome.Interfaces
         T Like<T>(int id, int userId) where T : new();
         T Unlike<T>(int id, int userId) where T : new();
         List<string> SelectFileNamesFromItem<T>(int id);
-        Dictionary<string, Stream> SelectFilesFromItem<T>(int id);
+        Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename = null);
         void AttachFileToItem<T>(int id, string filename, Stream filestream);
         void DeleteFileFromItem<T>(int id, string filename);
         string AttachFileToLibrary<T>(string folder, string filename, Stream filestream, T entity);

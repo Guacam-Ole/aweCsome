@@ -158,6 +158,8 @@ namespace AweCsome
             using (var clientContext = GetClientContext())
             {
                 Web web = clientContext.Web;
+                clientContext.Load(web, w => w.Url);
+                clientContext.ExecuteQuery();
                 var targetUrl = string.Format("{0}/Lists/{1}/Attachments/{2}", web.Url, listname, id);
 
                 Folder attachmentsFolder = web.GetFolderByServerRelativeUrl(targetUrl);
@@ -763,20 +765,24 @@ namespace AweCsome
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             FileCollection attachments = GetAttachments(listname, id);
+            if (attachments == null) return new List<string>();
             return attachments.Select(q => q.Name).ToList();
         }
 
-        public Dictionary<string, Stream> SelectFilesFromItem<T>(int id)
+        public Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename=null)
         {
             long totalSize = 0;
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             FileCollection attachments = GetAttachments(listname, id);
+           
 
             var attachmentStreams = new Dictionary<string, Stream>();
             using (var clientContext = GetClientContext())
             {
                 foreach (var attachment in attachments)
                 {
+                    if (filename != null && filename != attachment.Name) continue;
+
                     MemoryStream targetStream = new MemoryStream();
                     var stream = attachment.OpenBinaryStream();
                     clientContext.ExecuteQuery();
