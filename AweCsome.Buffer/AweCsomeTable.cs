@@ -191,5 +191,10 @@ namespace AweCsome.Buffer
             BufferState.AddTable(_helpers.GetListName<T>(), newId);
             return newId;
         }
+
+        public Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename = null)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
