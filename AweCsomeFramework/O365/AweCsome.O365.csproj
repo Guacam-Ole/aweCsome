@@ -13,6 +13,7 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
 	 <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+	<RepositoryUrl>https://github.com/OleAlbers/aweCsome</RepositoryUrl>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>

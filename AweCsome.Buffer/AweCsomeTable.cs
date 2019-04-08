@@ -140,11 +140,7 @@ namespace AweCsome.Buffer
             throw new NotImplementedException();
         }
 
-        public Dictionary<string, Stream> SelectFilesFromItem<T>(int id)
-        {
-            throw new NotImplementedException();
-        }
-
+   
         public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new()
         {
             throw new NotImplementedException();
