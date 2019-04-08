@@ -11,6 +11,8 @@
     <RootNamespace>AweCsome</RootNamespace>
     <AssemblyName>AweCsome.O365</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+	 <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
