@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Web.Hosting;
+using AweCsome.Interfaces;
 
 namespace AweCsome.Buffer
 {
@@ -15,13 +16,14 @@ namespace AweCsome.Buffer
         private static List<MemoryDatabase> _memoryDb = new List<MemoryDatabase>();
         private static object _dbLock = new object();
         private LiteDB.LiteDatabase _database;
+        private IAweCsomeHelpers _helpers;
 
-        public LiteDb(string databaseName, bool queue)
+        public LiteDb(IAweCsomeHelpers helpers, string databaseName, bool queue)
         {
             if (queue) databaseName += ".QUEUE";
             _database = GetDatabase(databaseName, queue);
+            _helpers = helpers;
         }
-
 
         public void DeleteTable(string name)
         {
@@ -36,20 +38,21 @@ namespace AweCsome.Buffer
 
         public int Insert<T>(T item, string listname)
         {
-            var idProperty = typeof(T).GetProperty("ID", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-            if (idProperty == null) throw new Exception("cannot use buffer without Id of type int");
+           
             var collection = GetCollection<T>(listname);
             int minId = collection.Min().AsInt32;
             if (minId > 0) minId = 0;
             minId--;
-            idProperty.SetValue(item, minId);
+            _helpers.SetId<T>(item, minId);
 
-            return GetCollection<T>(listname).Insert(item);
+            return collection.Insert(item);
         }
 
-        public int Count(string name)
+  
+
+        public LiteDB.LiteCollection<T> GetCollection<T>()
         {
-            return _database.GetCollection(name).Count();
+            return _database.GetCollection<T>();
         }
 
         private string CreateConnectionString(string databasename)
@@ -75,7 +78,6 @@ namespace AweCsome.Buffer
             {
                 if (_dbMode == DbModes.Memory)
                 {
-
                     var oldDb = _memoryDb.FirstOrDefault(q => q.Filename == databaseName);
                     if (oldDb == null) _memoryDb.Add(new MemoryDatabase { Filename = databaseName, IsQueue = isQueue, Database = new LiteDB.LiteDatabase(new MemoryStream()) });
                     return _memoryDb.First(q => q.Filename == databaseName).Database;

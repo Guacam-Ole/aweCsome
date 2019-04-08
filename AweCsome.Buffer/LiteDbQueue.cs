@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using AweCsome.Interfaces;
 
 namespace AweCsome.Buffer
 {
     public class LiteDbQueue : LiteDb
     {
-        public LiteDbQueue(string databaseName, bool queue) : base(databaseName, queue)
+        public LiteDbQueue(IAweCsomeHelpers helpers, string databaseName, bool queue) : base(helpers, databaseName, queue)
         {
         }
 

@@ -27,8 +27,6 @@ namespace AweCsome
         private User GetSiteUserById(int id)
         {
             var user = _clientContext.Web.GetUserById(id);
-            //_clientContext.Load(users)
-            //var user = _clientContext.Web.SiteUsers.FirstOrDefault(q => q.Id == id);
             _clientContext.Load(user);
             _clientContext.ExecuteQuery();
             return user;
@@ -65,7 +63,6 @@ namespace AweCsome
             querryParams.QueryString = query;
             querryParams.SharePointGroupID = sharePointGroupId;
 
-            //execute query to Sharepoint
             ClientResult<string> clientResult = ClientPeoplePickerWebServiceInterface.ClientPeoplePickerSearchUser(_clientContext, querryParams);
             _clientContext.ExecuteQuery();
             dynamic target = new JavaScriptSerializer().DeserializeObject(clientResult.Value);
