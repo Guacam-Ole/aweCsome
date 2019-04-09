@@ -69,10 +69,37 @@ namespace AweCsome.Buffer
             _database.FileStorage.Delete(existingFile.Id);
         }
 
+        public List<string> GetAttachmentNamesFromItem<T>(int id)
+        {
+            var matches = new List<string>();
+            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.Attachment, ParentId=id, Listname = _helpers.GetListName<T>() }, true);
+            var files = _database.FileStorage.Find(prefix);
+            if (matches == null) return null;
+            foreach (var file in files)
+            {
+                matches.Add(file.Filename);
+            }
+            return matches;
+        }
+
+        public List<string> GetFilenamesFromLibrary<T>(string folder)
+        {
+            var matches = new List<string>();
+
+            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.DocLib, Folder = folder, Listname = _helpers.GetListName<T>() }, true);
+
+            var files = _database.FileStorage.Find(prefix);
+            foreach (var file in files)
+            {
+                matches.Add(file.Filename);
+            }
+            return matches;
+        }
+
         public Dictionary<string, Stream> GetAttachmentsFromItem<T>(int id)
         {
             var matches = new Dictionary<string, Stream>();
-            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.Attachment, ParentId = id, Listname = _helpers.GetListName<T>() });
+            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.Attachment, ParentId = id, Listname = _helpers.GetListName<T>() },true);
             var files = _database.FileStorage.Find(prefix);
             if (matches == null) return null;
             foreach (var file in files)
@@ -88,7 +115,7 @@ namespace AweCsome.Buffer
         {
             var matches= new List<AweCsomeLibraryFile>();
 
-            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.DocLib, Folder = folder, Listname = _helpers.GetListName<T>() });
+            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.DocLib, Folder = folder, Listname = _helpers.GetListName<T>() },true);
                 
             var files = _database.FileStorage.Find(prefix);
             foreach (var file in files)

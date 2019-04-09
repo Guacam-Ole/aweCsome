@@ -254,7 +254,7 @@ namespace AweCsome.Buffer
         {
             var localFiles = _db.GetFilesFromDocLib<T>(foldername);
             if (filename != null) localFiles = localFiles.Where(q => q.Filename == filename).ToList();
-            if (localFiles.FirstOrDefault()!=null)
+            if (localFiles.FirstOrDefault() != null)
             {
                 return localFiles.FirstOrDefault();
             }
@@ -264,21 +264,26 @@ namespace AweCsome.Buffer
 
         public List<string> SelectFileNamesFromItem<T>(int id)
         {
-            // TODO: join from buffer & physical files
-            throw new NotImplementedException();
+            var localFiles=_db.GetAttachmentNamesFromItem<T>(id);
+            var remoteFiles = _baseTable.SelectFileNamesFromItem<T>(id);
+            localFiles.ForEach(q => remoteFiles.Add(q));
+            return remoteFiles;
         }
 
         public List<string> SelectFileNamesFromLibrary<T>(string foldername)
         {
-            // TODO: join from buffer & physical files
-            throw new NotImplementedException();
+            var localFiles = _db.GetFilenamesFromLibrary<T>(foldername);
+            var remoteFiles = _baseTable.SelectFileNamesFromLibrary<T>(foldername);
+            localFiles.ForEach(q => remoteFiles.Add(q));
+            return remoteFiles;
         }
-
 
         public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new()
         {
-            // TODO: join from buffer & physical files
-            throw new NotImplementedException();
+            var localFiles = _db.GetFilesFromDocLib<T>(foldername);
+            var spFiles = _baseTable.SelectFilesFromLibrary<T>(foldername);
+            localFiles.ForEach(q => spFiles.Add(q));
+            return spFiles;
         }
 
         public T SelectItemById<T>(int id) where T : new()
