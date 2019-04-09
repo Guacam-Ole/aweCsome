@@ -8,7 +8,8 @@ namespace AweCsome.Buffer
 {
     public class Command
     {
-        public enum Actions { DeleteTable, CreateTable, Insert, Update, Delete, SendMail, Empty }
+        public enum Actions { DeleteTable, CreateTable, Insert, Update, Delete, SendMail, Empty, UploadAttachment, RemoveAttachment, UploadFile, RemoveFile }
+
         public enum States { Pending, Failed, Succeeded, Delayed}
 
         public Actions Action { get; set; }

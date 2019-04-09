@@ -10,6 +10,8 @@ namespace AweCsome.Buffer
 {
     public class AweCsomeTable : IAweCsomeTable
     {
+
+
         private IAweCsomeTable _baseTable;
         private IAweCsomeHelpers _helpers;
         private LiteDb _db;
@@ -28,14 +30,45 @@ namespace AweCsome.Buffer
             return _baseTable.AddFolderToLibrary<T>(folder);   // NOT buffered
         }
 
+
+
         public void AttachFileToItem<T>(int id, string filename, Stream filestream)
         {
-            throw new NotImplementedException();
+            _db.AddAttachmentToItem(new BufferFileMeta
+            {
+                AttachmentType = BufferFileMeta.AttachmentTypes.Attachment,
+                Filename = filename,
+                Listname = _helpers.GetListName<T>(),
+                ParentId = id
+            }, filestream);
+
+
+            _queue.QueueAddCommand(new Command
+            {
+                Action = Command.Actions.UploadAttachment,
+                ItemId = id,
+                TableName = _helpers.GetListName<T>()
+            });
         }
 
         public string AttachFileToLibrary<T>(string folder, string filename, Stream filestream, T entity)
         {
-            throw new NotImplementedException();
+            _db.AddAttachmentToItem(new BufferFileMeta
+            {
+                AttachmentType = BufferFileMeta.AttachmentTypes.DocLib,
+                Filename = filename,
+                Listname = _helpers.GetListName<T>(),
+                Folder = folder,
+                AdditionalInformation = entity
+            }, filestream);
+
+            _queue.QueueAddCommand(new Command
+            {
+                Action = Command.Actions.UploadFile,
+                TableName = _helpers.GetListName<T>()
+            });
+
+            return $"{folder}/{filename}";
         }
 
         public int CountItems<T>()
@@ -94,12 +127,39 @@ namespace AweCsome.Buffer
 
         public void DeleteFileFromItem<T>(int id, string filename)
         {
-            throw new NotImplementedException();
+            _db.RemoveAttachmentFromItem(new BufferFileMeta
+            {
+                ParentId = id,
+                Listname = _helpers.GetListName<T>(),
+                AttachmentType = BufferFileMeta.AttachmentTypes.Attachment,
+                Filename = filename
+            });
+            _queue.QueueAddCommand(new Command
+            {
+                Action = Command.Actions.RemoveAttachment,
+                ItemId = id,
+                TableName = _helpers.GetListName<T>()
+            });
         }
 
         public void DeleteFilesFromDocumentLibrary<T>(string path, List<string> filenames)
         {
-            throw new NotImplementedException();
+            foreach (var filename in filenames)
+            {
+                _db.RemoveAttachmentFromItem(new BufferFileMeta
+                {
+                    Listname = _helpers.GetListName<T>(),
+                    AttachmentType = BufferFileMeta.AttachmentTypes.DocLib,
+                    Filename = filename,
+                    Folder = path
+                });
+                _queue.QueueAddCommand(new Command
+                {
+                    Action = Command.Actions.RemoveFile,
+                    Parameters = new object[] { filename, path },
+                    TableName = _helpers.GetListName<T>()
+                });
+            }
         }
 
         public void DeleteFolderFromDocumentLibrary<T>(string path, string folder)
@@ -196,22 +256,26 @@ namespace AweCsome.Buffer
 
         public AweCsomeLibraryFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new()
         {
+            // TODO: join from buffer & physical files
             throw new NotImplementedException();
         }
 
         public List<string> SelectFileNamesFromItem<T>(int id)
         {
+            // TODO: join from buffer & physical files
             throw new NotImplementedException();
         }
 
         public List<string> SelectFileNamesFromLibrary<T>(string foldername)
         {
+            // TODO: join from buffer & physical files
             throw new NotImplementedException();
         }
 
 
         public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new()
         {
+            // TODO: join from buffer & physical files
             throw new NotImplementedException();
         }
 
@@ -323,6 +387,7 @@ namespace AweCsome.Buffer
 
         public Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename = null)
         {
+            // TODO: join from buffer & physical files
             throw new NotImplementedException();
         }
     }

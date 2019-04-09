@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AweCsomeTable.cs" />
+    <Compile Include="BufferFileMeta.cs" />
     <Compile Include="BufferState.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="LiteDbQueue.cs" />
