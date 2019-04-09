@@ -10,8 +10,6 @@ namespace AweCsome.Buffer
 {
     public class AweCsomeTable : IAweCsomeTable
     {
-
-
         private IAweCsomeTable _baseTable;
         private IAweCsomeHelpers _helpers;
         private LiteDb _db;
@@ -30,18 +28,15 @@ namespace AweCsome.Buffer
             return _baseTable.AddFolderToLibrary<T>(folder);   // NOT buffered
         }
 
-
-
         public void AttachFileToItem<T>(int id, string filename, Stream filestream)
         {
-            _db.AddAttachmentToItem(new BufferFileMeta
+            _db.AddAttachment(new BufferFileMeta
             {
                 AttachmentType = BufferFileMeta.AttachmentTypes.Attachment,
                 Filename = filename,
                 Listname = _helpers.GetListName<T>(),
                 ParentId = id
             }, filestream);
-
 
             _queue.QueueAddCommand(new Command
             {
@@ -53,7 +48,7 @@ namespace AweCsome.Buffer
 
         public string AttachFileToLibrary<T>(string folder, string filename, Stream filestream, T entity)
         {
-            _db.AddAttachmentToItem(new BufferFileMeta
+            _db.AddAttachment(new BufferFileMeta
             {
                 AttachmentType = BufferFileMeta.AttachmentTypes.DocLib,
                 Filename = filename,
@@ -127,7 +122,7 @@ namespace AweCsome.Buffer
 
         public void DeleteFileFromItem<T>(int id, string filename)
         {
-            _db.RemoveAttachmentFromItem(new BufferFileMeta
+            _db.RemoveAttachment(new BufferFileMeta
             {
                 ParentId = id,
                 Listname = _helpers.GetListName<T>(),
@@ -146,7 +141,7 @@ namespace AweCsome.Buffer
         {
             foreach (var filename in filenames)
             {
-                _db.RemoveAttachmentFromItem(new BufferFileMeta
+                _db.RemoveAttachment(new BufferFileMeta
                 {
                     Listname = _helpers.GetListName<T>(),
                     AttachmentType = BufferFileMeta.AttachmentTypes.DocLib,
@@ -164,7 +159,8 @@ namespace AweCsome.Buffer
 
         public void DeleteFolderFromDocumentLibrary<T>(string path, string folder)
         {
-            throw new NotImplementedException();
+            // not buffered
+            _baseTable.DeleteFolderFromDocumentLibrary<T>(path, folder);
         }
 
         public void DeleteItemById<T>(int id)
@@ -256,8 +252,14 @@ namespace AweCsome.Buffer
 
         public AweCsomeLibraryFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new()
         {
-            // TODO: join from buffer & physical files
-            throw new NotImplementedException();
+            var localFiles = _db.GetFilesFromDocLib<T>(foldername);
+            if (filename != null) localFiles = localFiles.Where(q => q.Filename == filename).ToList();
+            if (localFiles.FirstOrDefault()!=null)
+            {
+                return localFiles.FirstOrDefault();
+            }
+            var spFile = _baseTable.SelectFileFromLibrary<T>(foldername, filename);
+            return spFile;
         }
 
         public List<string> SelectFileNamesFromItem<T>(int id)
@@ -387,8 +389,11 @@ namespace AweCsome.Buffer
 
         public Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename = null)
         {
-            // TODO: join from buffer & physical files
-            throw new NotImplementedException();
+            var localFiles = _db.GetAttachmentsFromItem<T>(id);
+            if (filename != null) localFiles = localFiles.Where(q => q.Key == filename).ToDictionary(q => q.Key, q => q.Value);
+            var spFiles = _baseTable.SelectFilesFromItem<T>(id, filename) ?? new Dictionary<string, Stream>();
+            localFiles.ToList().ForEach(q => spFiles.Add(q.Key, q.Value));
+            return spFiles;
         }
     }
 }

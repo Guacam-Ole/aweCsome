@@ -4,6 +4,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Web.Hosting;
+using AweCsome.Entities;
 using AweCsome.Interfaces;
 
 namespace AweCsome.Buffer
@@ -33,9 +34,16 @@ namespace AweCsome.Buffer
             _database.DropCollection(name);
         }
 
-        private string GetStringIdFromFilename(string prefix, string listname, int id, string filename)
+        private string CleanUpLiteDbId(string dirtyName)
         {
-            return $"{prefix}_{listname}_{id}_{Rand()}_{filename}";
+            return dirtyName.Replace("/", "").Replace("\\", "").Replace("-", "_");
+        }
+
+        private string GetStringIdFromFilename(BufferFileMeta meta, bool pathOnly = false)
+        {
+            string stringId = $"{meta.AttachmentType}_{meta.Listname}_{meta.Folder}_{meta.ParentId}_";
+            if (!pathOnly) stringId += "{Rand()}_{meta.Filename}";
+            return CleanUpLiteDbId(stringId);
         }
 
         private string Rand(int length = 8)
@@ -54,31 +62,47 @@ namespace AweCsome.Buffer
             return _database.FileStorage;
         }
 
-
-        public void RemoveAttachmentFromItem(BufferFileMeta meta)
+        public void RemoveAttachment( BufferFileMeta meta)
         {
-            RemoveAttachmentFromItemOrDocLib(PrefixAttachment, meta);
-        }
-
-        public void RemoveFileFromDocLib(BufferFileMeta meta)
-        {
-            RemoveAttachmentFromItemOrDocLib(PrefixFile, meta);
-        }
-
-        private void RemoveAttachmentFromItemOrDocLib(string prefix, BufferFileMeta meta)
-        {
-            var existingFile = _database.FileStorage.Find(GetStringIdFromFilename(prefix, meta.Listname, meta.ParentId, meta.Filename)).FirstOrDefault();
+            var existingFile = _database.FileStorage.Find(GetStringIdFromFilename(meta)).FirstOrDefault();
             if (existingFile == null) return;
             _database.FileStorage.Delete(existingFile.Id);
         }
-        public void AddAttachmentToItem(BufferFileMeta meta, Stream fileStream)
+
+        public Dictionary<string, Stream> GetAttachmentsFromItem<T>(int id)
         {
-            AddImageOrAttachment(PrefixAttachment, meta, fileStream);
+            var matches = new Dictionary<string, Stream>();
+            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.Attachment, ParentId = id, Listname = _helpers.GetListName<T>() });
+            var files = _database.FileStorage.Find(prefix);
+            if (matches == null) return null;
+            foreach (var file in files)
+            {
+                MemoryStream fileStream = new MemoryStream((int)file.Length);
+                file.CopyTo(fileStream);
+                matches.Add(file.Filename, fileStream);
+            }
+            return matches;
         }
 
-        public void AddFileToDocLib(BufferFileMeta meta, Stream fileStream)
+        public List<AweCsomeLibraryFile> GetFilesFromDocLib<T>(string folder)
         {
-            AddImageOrAttachment(PrefixFile, meta, fileStream);
+            var matches= new List<AweCsomeLibraryFile>();
+
+            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.DocLib, Folder = folder, Listname = _helpers.GetListName<T>() });
+                
+            var files = _database.FileStorage.Find(prefix);
+            foreach (var file in files)
+            {
+                MemoryStream fileStream = new MemoryStream((int)file.Length);
+                file.CopyTo(fileStream);
+                matches.Add(new AweCsomeLibraryFile
+                {
+                    Stream = fileStream,
+                    Filename = file.Filename,
+                    Entity = file.Metadata
+                });
+            }
+            return matches;
         }
 
         private LiteDB.BsonDocument GetMetadataFromAttachment(BufferFileMeta meta)
@@ -90,13 +114,15 @@ namespace AweCsome.Buffer
             doc[nameof(BufferFileMeta.Id)] = meta.Id;
             doc[nameof(BufferFileMeta.Listname)] = meta.Listname;
             doc[nameof(BufferFileMeta.ParentId)] = meta.ParentId;
+            doc[nameof(BufferFileMeta.AdditionalInformation)] = null; // meta.AdditionalInformation; // TODO; Serialize AdditionalInformation property
 
             return doc;
         }
 
-        private void AddImageOrAttachment(string prefix, BufferFileMeta meta, Stream fileStream)
+        public void AddAttachment(BufferFileMeta meta, Stream fileStream)
         {
             int calculatedIndex = 0;
+            string prefix = GetStringIdFromFilename(meta, true);
             var existingFiles = _database.FileStorage.Find(prefix);
             if (existingFiles.Count() > 0)
             {
@@ -105,11 +131,9 @@ namespace AweCsome.Buffer
             }
             calculatedIndex--;
             meta.SetId(calculatedIndex);
-            var uploadedFile = _database.FileStorage.Upload(GetStringIdFromFilename(prefix, meta.Listname, meta.ParentId, meta.Filename), meta.Filename, fileStream);
+            var uploadedFile = _database.FileStorage.Upload(GetStringIdFromFilename(meta), meta.Filename, fileStream);
             _database.FileStorage.SetMetadata(uploadedFile.Id, GetMetadataFromAttachment(meta));
         }
-
-
 
         public int Insert<T>(T item, string listname)
         {
@@ -122,8 +146,6 @@ namespace AweCsome.Buffer
 
             return collection.Insert(item);
         }
-
-
 
         public LiteDB.LiteCollection<T> GetCollection<T>()
         {
