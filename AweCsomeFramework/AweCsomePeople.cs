@@ -97,9 +97,18 @@ namespace AweCsome
             return GetGroupFromSite(groupname);
         }
 
-        public bool UserIsInGroup(string groupname, int userId)
+        public bool UserIsInGroup(string groupname, int? userId = null)
         {
+            userId = userId ?? ((User)GetCurrentUser()).Id;
             return GetUsersFromSiteGroup(groupname).FirstOrDefault(q => q.Id == userId) != null;
+        }
+
+        public object GetCurrentUser()
+        {
+            var web = _clientContext.Web;
+            _clientContext.Load(web, w => w.CurrentUser);
+            _clientContext.ExecuteQuery();
+            return web.CurrentUser;
         }
     }
 }
