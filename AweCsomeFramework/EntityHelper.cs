@@ -47,6 +47,36 @@ namespace AweCsome
             return internalNameAttribute == null ? entityType.Name : internalNameAttribute.InternalName;
         }
 
+        //public static List GetListByTitle(this Web web, string listname)
+        //{
+        //    var lists = web.Lists;
+        //    web.Context.Load(lists);
+        //    web.Context.ExecuteQuery();
+        //    var list=web.Lists.FirstOrDefault(q => q.Title == listname);
+        //    web.Context.Load(list);
+        //    web.Context.ExecuteQuery();
+        //    return list;
+        //}
+
+        //public static bool GroupExists(this Web web, string groupname)
+        //{
+        //    var allGroups = web.SiteGroups;
+        //    web.Context.Load(allGroups);
+        //    web.Context.ExecuteQuery();
+        //    return allGroups.FirstOrDefault(q => q.Title == groupname) != null;
+        //}
+
+        //public static void EnsureFolder(this Folder folder, string subfolder)
+        //{
+        //    var subfolders = folder.Folders;
+        //    folder.Context.Load(subfolders);
+        //    folder.Context.ExecuteQuery();
+        //    if (subfolders.FirstOrDefault(q=>q.Name==subfolder)==null) {
+        //        folder.Folders.Add(subfolder);
+        //    }
+        //}
+
+
         public static string GetDisplayNameFromEntitiyType(Type entityType)
         {
             var displayNameAttribute = entityType.GetCustomAttribute<DisplayNameAttribute>();
