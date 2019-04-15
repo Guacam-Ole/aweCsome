@@ -9,5 +9,6 @@ namespace AweCsome.Interfaces
         object GetSiteUserById(int id);
         List<object> GetUsersFromSiteGroup(string groupname);
         object GetGroupFromSite(string groupname);
+        bool UserIsInGroup(string groupname, int userId);
     }
 }

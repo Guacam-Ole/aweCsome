@@ -96,5 +96,10 @@ namespace AweCsome
         {
             return GetGroupFromSite(groupname);
         }
+
+        public bool UserIsInGroup(string groupname, int userId)
+        {
+            return GetUsersFromSiteGroup(groupname).FirstOrDefault(q => q.Id == userId) != null;
+        }
     }
 }
