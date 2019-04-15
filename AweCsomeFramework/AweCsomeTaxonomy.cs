@@ -17,7 +17,6 @@ namespace AweCsome
     public class AweCsomeTaxonomy : IAweCsomeTaxonomy
     {
         private ClientContext _clientContext;
-   //     public ClientContext ClientContext { set { _clientContext = value; } }
         public int Lcid { get; set; } = 1033;
 
         public AweCsomeTaxonomy(ClientContext clientContext)

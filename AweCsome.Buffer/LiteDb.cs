@@ -4,17 +4,18 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Web.Hosting;
+using AweCsome.Buffer.BufferInterfaces;
 using AweCsome.Entities;
 using AweCsome.Interfaces;
 
 namespace AweCsome.Buffer
 {
-    public class LiteDb
+    public class LiteDb : ILiteDb
     {
-        private Random random = new Random();
         private const string RandomChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
         private const string PrefixAttachment = "UploadAttachment_";
         private const string PrefixFile = "UploadFile_";
+        private Random random = new Random();
         private enum DbModes { Memory, File, Undefined };
         private DbModes _dbMode = DbModes.Undefined;
         private static List<MemoryDatabase> _memoryDb = new List<MemoryDatabase>();
@@ -62,7 +63,7 @@ namespace AweCsome.Buffer
             return _database.FileStorage;
         }
 
-        public void RemoveAttachment( BufferFileMeta meta)
+        public void RemoveAttachment(BufferFileMeta meta)
         {
             var existingFile = _database.FileStorage.Find(GetStringIdFromFilename(meta)).FirstOrDefault();
             if (existingFile == null) return;
@@ -72,7 +73,7 @@ namespace AweCsome.Buffer
         public List<string> GetAttachmentNamesFromItem<T>(int id)
         {
             var matches = new List<string>();
-            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.Attachment, ParentId=id, Listname = _helpers.GetListName<T>() }, true);
+            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.Attachment, ParentId = id, Listname = _helpers.GetListName<T>() }, true);
             var files = _database.FileStorage.Find(prefix);
             if (matches == null) return null;
             foreach (var file in files)
@@ -99,7 +100,7 @@ namespace AweCsome.Buffer
         public Dictionary<string, Stream> GetAttachmentsFromItem<T>(int id)
         {
             var matches = new Dictionary<string, Stream>();
-            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.Attachment, ParentId = id, Listname = _helpers.GetListName<T>() },true);
+            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.Attachment, ParentId = id, Listname = _helpers.GetListName<T>() }, true);
             var files = _database.FileStorage.Find(prefix);
             if (matches == null) return null;
             foreach (var file in files)
@@ -113,10 +114,10 @@ namespace AweCsome.Buffer
 
         public List<AweCsomeLibraryFile> GetFilesFromDocLib<T>(string folder)
         {
-            var matches= new List<AweCsomeLibraryFile>();
+            var matches = new List<AweCsomeLibraryFile>();
 
-            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.DocLib, Folder = folder, Listname = _helpers.GetListName<T>() },true);
-                
+            string prefix = GetStringIdFromFilename(new BufferFileMeta { AttachmentType = BufferFileMeta.AttachmentTypes.DocLib, Folder = folder, Listname = _helpers.GetListName<T>() }, true);
+
             var files = _database.FileStorage.Find(prefix);
             foreach (var file in files)
             {
