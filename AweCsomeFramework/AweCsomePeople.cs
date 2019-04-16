@@ -44,8 +44,12 @@ namespace AweCsome
 
         public Group GetGroupFromSite(string groupname)
         {
-            if (!_clientContext.Web.GroupExists(groupname)) return null;
-            var group = _clientContext.Web.SiteGroups.FirstOrDefault(q => q.Title == groupname);
+            var allGroups = _clientContext.Web.SiteGroups;
+            _clientContext.Load(allGroups);
+            _clientContext.ExecuteQuery();
+            var group = allGroups.FirstOrDefault(q => q.Title == groupname);
+            if (group == null) return null;
+
             _clientContext.Load(group);
             _clientContext.ExecuteQuery();
             return group;
@@ -106,7 +110,7 @@ namespace AweCsome
             }
             catch (Exception ex)
             {
-                return false;
+                throw;
             }
         }
 
