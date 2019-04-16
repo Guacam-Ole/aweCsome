@@ -99,8 +99,15 @@ namespace AweCsome
 
         public bool UserIsInGroup(string groupname, int? userId = null)
         {
-            userId = userId ?? ((User)GetCurrentUser()).Id;
-            return GetUsersFromSiteGroup(groupname).FirstOrDefault(q => q.Id == userId) != null;
+            try
+            {
+                userId = userId ?? ((User)GetCurrentUser()).Id;
+                return GetUsersFromSiteGroup(groupname)?.FirstOrDefault(q => q.Id == userId) != null;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
         public object GetCurrentUser()
