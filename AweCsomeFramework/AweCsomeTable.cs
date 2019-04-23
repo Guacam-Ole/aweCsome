@@ -873,7 +873,7 @@ namespace AweCsome
             }
         }
 
-        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new()
+        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername, bool retrieveContent=true) where T : new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             var allFiles = new List<AweCsomeLibraryFile>();
@@ -906,11 +906,14 @@ namespace AweCsome
                 if (folder.Files == null) return null;
                 foreach (var file in folder.Files)
                 {
-                    var fileStream = file.OpenBinaryStream();
-                    context.ExecuteQuery();
                     MemoryStream stream = new MemoryStream();
-                    fileStream.Value.CopyTo(stream);
-                    stream.Position = 0;
+                    if (retrieveContent)
+                    {
+                        var fileStream = file.OpenBinaryStream();
+                        context.ExecuteQuery();
+                        fileStream.Value.CopyTo(stream);
+                        stream.Position = 0;
+                    }
                     var entity = new T();
 
                     StoreFromListItem(entity, file.ListItemAllFields);

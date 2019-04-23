@@ -28,7 +28,7 @@ namespace AweCsome.Interfaces
         void AttachFileToItem<T>(int id, string filename, Stream filestream);
         void DeleteFileFromItem<T>(int id, string filename);
         string AttachFileToLibrary<T>(string folder, string filename, Stream filestream, T entity);
-        List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new();
+        List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername, bool retrieveContent = true) where T : new();
         AweCsomeLibraryFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new();
         List<string> SelectFileNamesFromLibrary<T>(string foldername);
         string AddFolderToLibrary<T>(string folder);

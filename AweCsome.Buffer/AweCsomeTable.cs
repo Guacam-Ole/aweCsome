@@ -278,10 +278,10 @@ namespace AweCsome.Buffer
             return remoteFiles;
         }
 
-        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new()
+        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername, bool retrieveContent = true) where T : new()
         {
             var localFiles = _db.GetFilesFromDocLib<T>(foldername);
-            var spFiles = _baseTable.SelectFilesFromLibrary<T>(foldername);
+            var spFiles = _baseTable.SelectFilesFromLibrary<T>(foldername, retrieveContent);
             localFiles.ForEach(q => spFiles.Add(q));
             return spFiles;
         }
