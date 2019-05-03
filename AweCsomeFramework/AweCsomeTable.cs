@@ -498,6 +498,10 @@ namespace AweCsome
                         {
                             property.SetValue(entity, propertyValue);
                         }
+                        else if (targetType==typeof(int) && sourceValue is FieldLookupValue)
+                        {
+                            property.SetValue(entity, ((FieldLookupValue)sourceValue).LookupId);
+                        }
                         else
                         {
                             property.SetValue(entity, Convert.ChangeType(propertyValue, targetType));

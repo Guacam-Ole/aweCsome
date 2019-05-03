@@ -148,6 +148,7 @@ namespace AweCsome
         public static bool PropertyIsLookup(PropertyInfo property)
         {
             if (property.GetCustomAttribute<LookupBaseAttribute>(true) != null) return true;
+            if (property.GetCustomAttribute<UserAttribute>(true) != null) return true;
             Type propertyType = property.PropertyType;
             if (propertyType == typeof(KeyValuePair<int, string>)) return true; // Single-Lookup
             if (propertyType == typeof(Dictionary<int, string>)) return true; // Multi-Lookup
