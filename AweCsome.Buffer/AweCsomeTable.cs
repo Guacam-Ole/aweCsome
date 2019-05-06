@@ -19,8 +19,8 @@ namespace AweCsome.Buffer
         {
             _baseTable = baseTable;
             _helpers = helpers;
-            _db = new LiteDb(helpers, databasename, false);
-            _queue = new LiteDbQueue(helpers, databasename, true);
+            _db = new LiteDb(helpers, databasename);
+            _queue = new LiteDbQueue(helpers, databasename);
         }
 
         public string AddFolderToLibrary<T>(string folder)

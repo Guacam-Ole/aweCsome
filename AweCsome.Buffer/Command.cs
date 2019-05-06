@@ -19,5 +19,10 @@ namespace AweCsome.Buffer
         public States State { get; set; } = States.Pending;
         public int? ItemId { get; set; } 
         public DateTime Created { get; } = DateTime.Now;
+
+        public override string ToString()
+        {
+            return $"{Id} [Action:{Action}, Table:{TableName}, State: {State}, ItemId:{ItemId}, Created: {Created}, parametercount: {Parameters?.Length}]";
+        }
     }
 }

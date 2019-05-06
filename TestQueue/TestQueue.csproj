@@ -4,16 +4,17 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{94AE61DB-4301-4B6E-98B9-0BEEA00A8CA9}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AweCsome.Buffer</RootNamespace>
-    <AssemblyName>AweCsome.Buffer</AssemblyName>
+    <ProjectGuid>{14989ED0-AB8C-45DE-8D53-FDB95E6D12F7}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>TestQueue</RootNamespace>
+    <AssemblyName>TestQueue</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -31,16 +33,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LiteDB, Version=4.1.4.0, Culture=neutral, PublicKeyToken=4ee40123013c9f27, processorArchitecture=MSIL">
-      <HintPath>..\packages\LiteDB.4.1.4\lib\net40\LiteDB.dll</HintPath>
-    </Reference>
-    <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,24 +43,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AweCsomeTable.cs" />
-    <Compile Include="BufferFileMeta.cs" />
-    <Compile Include="BufferState.cs" />
-    <Compile Include="Command.cs" />
-    <Compile Include="LiteDbQueue.cs" />
-    <Compile Include="MemoryDatabase.cs" />
-    <Compile Include="LiteDb.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TableBufferState.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AweCsome.Buffer\AweCsome.Buffer.csproj">
+      <Project>{94AE61DB-4301-4B6E-98B9-0BEEA00A8CA9}</Project>
+      <Name>AweCsome.Buffer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AweCsomeFramework\AweCsome.Interfaces.csproj">
       <Project>{5DB02FF9-0993-4B60-8D23-0AA62935612F}</Project>
       <Name>AweCsome.Interfaces</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\AweCsomeFramework\O365\AweCsome.O365.csproj">
+      <Project>{EFEF55F5-D4A0-4488-87CE-D76E1F5C63D4}</Project>
+      <Name>AweCsome.O365</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
