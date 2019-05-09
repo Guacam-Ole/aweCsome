@@ -25,7 +25,7 @@ namespace AweCsome
         {
             var idProperty = typeof(T).GetProperty("ID", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (idProperty == null) throw new Exception("cannot use buffer without Id of type int");
-            if (idProperty.GetType() != typeof(int)) throw new TypeAccessException("id must be int");
+            if (idProperty.PropertyType != typeof(int)) throw new TypeAccessException("id must be int");
             return idProperty;
         }
 

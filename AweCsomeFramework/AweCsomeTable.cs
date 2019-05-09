@@ -31,7 +31,6 @@ namespace AweCsome
             _clientContext = clientContext;
         }
 
-        //     public ClientContext ClientContext { set { _clientContext = value; } }
 
         #region Helpers
 
@@ -618,7 +617,7 @@ namespace AweCsome
 
         public void UpdateItem<T>(T entity)
         {
-            Type entityType = typeof(T);
+            Type entityType = entity.GetType();
             try
             {
                 PropertyInfo idProperty = entityType.GetProperty(AweCsomeField.SuffixId);
