@@ -746,9 +746,11 @@ namespace AweCsome
                     List list = listCollection.FirstOrDefault(q => q.Title == listName);
                     if (list == null) throw new ListNotFoundException();
                     var items = list.GetItems(CamlQuery.CreateAllItemsQuery());
-                    foreach (var item in items)
+                    clientContext.Load(items);
+                    clientContext.ExecuteQuery();
+                    while (items.Count>0)
                     {
-                        item.DeleteObject();
+                        items.First().DeleteObject();
                     }
                     clientContext.ExecuteQuery();
                 }

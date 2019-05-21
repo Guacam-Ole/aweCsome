@@ -14,11 +14,12 @@ namespace AweCsome.Buffer
 
         public Actions Action { get; set; }
         public object[] Parameters { get; set; }
-        public Guid Id { get;  } = Guid.NewGuid();  // Default ID for LiteDB
+        public int Id { get; set; } 
         public string TableName { get; set; }
         public States State { get; set; } = States.Pending;
         public int? ItemId { get; set; } 
         public DateTime Created { get; } = DateTime.Now;
+        public string FullyQualifiedName{ get; set; }
 
         public override string ToString()
         {

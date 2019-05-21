@@ -13,15 +13,17 @@ namespace AweCsome.Buffer
         private IAweCsomeTable _baseTable;
         private IAweCsomeHelpers _helpers;
         private LiteDb _db;
-        private LiteDbQueue _queue;
+        public LiteDbQueue Queue { get; }
 
         public AweCsomeTable(IAweCsomeTable baseTable, IAweCsomeHelpers helpers, string databasename)
         {
             _baseTable = baseTable;
             _helpers = helpers;
             _db = new LiteDb(helpers, databasename);
-            _queue = new LiteDbQueue(helpers, databasename);
+            Queue = new LiteDbQueue(helpers, baseTable, databasename);
         }
+
+       
 
         public string AddFolderToLibrary<T>(string folder)
         {
@@ -38,7 +40,7 @@ namespace AweCsome.Buffer
                 ParentId = id
             }, filestream);
 
-            _queue.QueueAddCommand(new Command
+            Queue.AddCommand(new Command
             {
                 Action = Command.Actions.UploadAttachment,
                 ItemId = id,
@@ -57,7 +59,7 @@ namespace AweCsome.Buffer
                 AdditionalInformation = entity
             }, filestream);
 
-            _queue.QueueAddCommand(new Command
+            Queue.AddCommand(new Command
             {
                 Action = Command.Actions.UploadFile,
                 TableName = _helpers.GetListName<T>()
@@ -129,7 +131,7 @@ namespace AweCsome.Buffer
                 AttachmentType = BufferFileMeta.AttachmentTypes.Attachment,
                 Filename = filename
             });
-            _queue.QueueAddCommand(new Command
+            Queue.AddCommand(new Command
             {
                 Action = Command.Actions.RemoveAttachment,
                 ItemId = id,
@@ -148,7 +150,7 @@ namespace AweCsome.Buffer
                     Filename = filename,
                     Folder = path
                 });
-                _queue.QueueAddCommand(new Command
+                Queue.AddCommand(new Command
                 {
                     Action = Command.Actions.RemoveFile,
                     Parameters = new object[] { filename, path },
@@ -166,7 +168,7 @@ namespace AweCsome.Buffer
         public void DeleteItemById<T>(int id)
         {
             _db.GetCollection<T>().Delete(id);
-            _queue.QueueAddCommand(new Command
+            Queue.AddCommand(new Command
             {
                 Action = Command.Actions.Delete,
                 ItemId = id,
@@ -191,10 +193,11 @@ namespace AweCsome.Buffer
         public void Empty<T>()
         {
             _db.GetCollection<T>().Delete(LiteDB.Query.All());
-            _queue.QueueAddCommand(new Command
+            Queue.AddCommand(new Command
             {
                 Action = Command.Actions.Empty,
-                TableName = _helpers.GetListName<T>()
+                TableName = _helpers.GetListName<T>(),
+                FullyQualifiedName = typeof(T).FullName
             });
         }
 
@@ -207,11 +210,12 @@ namespace AweCsome.Buffer
         {
             string listname = _helpers.GetListName<T>();
             int itemId = _db.Insert(entity, listname);
-            _queue.QueueAddCommand(new Command
+            Queue.AddCommand(new Command
             {
                 Action = Command.Actions.Insert,
                 ItemId = itemId,
-                TableName = listname
+                TableName = listname,
+                FullyQualifiedName=typeof(T).FullName
             });
             return itemId;
         }
@@ -236,7 +240,7 @@ namespace AweCsome.Buffer
             likesCount++;
 
             _db.GetCollection<T>().Update(item);
-            _queue.QueueAddCommand(new Command
+            Queue.AddCommand(new Command
             {
                 Action = Command.Actions.Update,
                 ItemId = id,
@@ -264,7 +268,7 @@ namespace AweCsome.Buffer
 
         public List<string> SelectFileNamesFromItem<T>(int id)
         {
-            var localFiles=_db.GetAttachmentNamesFromItem<T>(id);
+            var localFiles = _db.GetAttachmentNamesFromItem<T>(id);
             var remoteFiles = _baseTable.SelectFileNamesFromItem<T>(id);
             localFiles.ForEach(q => remoteFiles.Add(q));
             return remoteFiles;
@@ -365,7 +369,7 @@ namespace AweCsome.Buffer
             likesCount--;
 
             _db.GetCollection<T>().Update(item);
-            _queue.QueueAddCommand(new Command
+            Queue.AddCommand(new Command
             {
                 Action = Command.Actions.Update,
                 ItemId = id,
@@ -377,7 +381,7 @@ namespace AweCsome.Buffer
         public void UpdateItem<T>(T entity)
         {
             _db.GetCollection<T>().Update(entity);
-            _queue.QueueAddCommand(new Command
+            Queue.AddCommand(new Command
             {
                 Action = Command.Actions.Update,
                 ItemId = _helpers.GetId(entity),

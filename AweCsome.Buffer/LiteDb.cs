@@ -6,6 +6,7 @@ using System.Linq;
 using System.Web.Hosting;
 using AweCsome.Entities;
 using AweCsome.Interfaces;
+using LiteDB;
 
 namespace AweCsome.Buffer
 {
@@ -20,13 +21,24 @@ namespace AweCsome.Buffer
         private static List<MemoryDatabase> _memoryDb = new List<MemoryDatabase>();
         private static object _dbLock = new object();
         private LiteDB.LiteDatabase _database;
-        private IAweCsomeHelpers _helpers;
+        protected IAweCsomeHelpers _helpers;
+        protected string _databaseName;
 
         public LiteDb(IAweCsomeHelpers helpers, string databaseName, bool queue = false)
         {
+            _databaseName = databaseName;
             if (queue) databaseName += ".QUEUE";
             _database = GetDatabase(databaseName, queue);
             _helpers = helpers;
+            RegisterMappers();
+        }
+
+        private void RegisterMappers()
+        {
+            BsonMapper.Global.RegisterType<KeyValuePair<int, string>>(
+                serialize: (pair) => $"{pair.Key}[-]{pair.Value}",
+                deserialize: (bson) => new KeyValuePair<int, string>(int.Parse(bson.AsString.Split(new string[] { "[-]" },StringSplitOptions.None)[0]), bson.AsString.Split(new string[] { "[-]" }, StringSplitOptions.None)[1])
+                );
         }
 
         public void DeleteTable(string name)
@@ -51,10 +63,22 @@ namespace AweCsome.Buffer
             return new string(Enumerable.Repeat(RandomChars, length).Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-        protected LiteDB.LiteCollection<T> GetCollection<T>(string name)
+        protected void DropCollection<T>(string name)
         {
             name = name ?? typeof(T).Name;
+            _database.DropCollection(name);
+        }
+
+        protected LiteDB.LiteCollection<T> GetCollection<T>(string name)
+        {
+            
+            name = name ?? typeof(T).Name;
             return _database.GetCollection<T>(name);
+        }
+
+        public LiteCollection<BsonDocument> GetCollection(string name)
+        {
+            return  _database.GetCollection(name);
         }
 
         private LiteDB.LiteStorage GetStorage()
@@ -166,17 +190,22 @@ namespace AweCsome.Buffer
         {
 
             var collection = GetCollection<T>(listname);
-            int minId = collection.Min().AsInt32;
+            int minId = collection.Min("Id").AsInt32;
             if (minId > 0) minId = 0;
             minId--;
             _helpers.SetId<T>(item, minId);
 
-            return collection.Insert(item);
+           return  collection.Insert(item);
         }
 
         public LiteDB.LiteCollection<T> GetCollection<T>()
         {
             return _database.GetCollection<T>();
+        }
+
+        public IEnumerable<string> GetCollectionNames()
+        {
+            return _database.GetCollectionNames();
         }
 
         private string CreateConnectionString(string databasename)
@@ -189,7 +218,7 @@ namespace AweCsome.Buffer
             }
             else
             {
-                localPath = localPath.Replace("https", "").Replace("http", "").Replace(":", "").Replace("/", "");
+                //     localPath = localPath.Replace("https", "").Replace("http", "").Replace(":", "").Replace("/", "");
             }
             return "Filename=" + localPath;
         }
