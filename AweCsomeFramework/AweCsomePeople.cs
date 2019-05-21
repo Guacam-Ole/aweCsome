@@ -44,8 +44,12 @@ namespace AweCsome
 
         public Group GetGroupFromSite(string groupname)
         {
-            if (!_clientContext.Web.GroupExists(groupname)) return null;
-            var group = _clientContext.Web.SiteGroups.FirstOrDefault(q => q.Title == groupname);
+            var allGroups = _clientContext.Web.SiteGroups;
+            _clientContext.Load(allGroups);
+            _clientContext.ExecuteQuery();
+            var group = allGroups.FirstOrDefault(q => q.Title == groupname);
+            if (group == null) return null;
+
             _clientContext.Load(group);
             _clientContext.ExecuteQuery();
             return group;
@@ -95,6 +99,27 @@ namespace AweCsome
         object IAweCsomePeople.GetGroupFromSite(string groupname)
         {
             return GetGroupFromSite(groupname);
+        }
+
+        public bool UserIsInGroup(string groupname, int? userId = null)
+        {
+            try
+            {
+                userId = userId ?? ((User)GetCurrentUser()).Id;
+                return GetUsersFromSiteGroup(groupname)?.FirstOrDefault(q => q.Id == userId) != null;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public object GetCurrentUser()
+        {
+            var web = _clientContext.Web;
+            _clientContext.Load(web, w => w.CurrentUser);
+            _clientContext.ExecuteQuery();
+            return web.CurrentUser;
         }
     }
 }

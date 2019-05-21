@@ -31,7 +31,6 @@ namespace AweCsome
             _clientContext = clientContext;
         }
 
-        //     public ClientContext ClientContext { set { _clientContext = value; } }
 
         #region Helpers
 
@@ -498,6 +497,10 @@ namespace AweCsome
                         {
                             property.SetValue(entity, propertyValue);
                         }
+                        else if (targetType==typeof(int) && sourceValue is FieldLookupValue)
+                        {
+                            property.SetValue(entity, ((FieldLookupValue)sourceValue).LookupId);
+                        }
                         else
                         {
                             property.SetValue(entity, Convert.ChangeType(propertyValue, targetType));
@@ -614,7 +617,7 @@ namespace AweCsome
 
         public void UpdateItem<T>(T entity)
         {
-            Type entityType = typeof(T);
+            Type entityType = entity.GetType();
             try
             {
                 PropertyInfo idProperty = entityType.GetProperty(AweCsomeField.SuffixId);
@@ -743,9 +746,11 @@ namespace AweCsome
                     List list = listCollection.FirstOrDefault(q => q.Title == listName);
                     if (list == null) throw new ListNotFoundException();
                     var items = list.GetItems(CamlQuery.CreateAllItemsQuery());
-                    foreach (var item in items)
+                    clientContext.Load(items);
+                    clientContext.ExecuteQuery();
+                    while (items.Count>0)
                     {
-                        item.DeleteObject();
+                        items.First().DeleteObject();
                     }
                     clientContext.ExecuteQuery();
                 }
@@ -873,7 +878,7 @@ namespace AweCsome
             }
         }
 
-        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername) where T : new()
+        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername, bool retrieveContent=true) where T : new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             var allFiles = new List<AweCsomeLibraryFile>();
@@ -906,11 +911,14 @@ namespace AweCsome
                 if (folder.Files == null) return null;
                 foreach (var file in folder.Files)
                 {
-                    var fileStream = file.OpenBinaryStream();
-                    context.ExecuteQuery();
                     MemoryStream stream = new MemoryStream();
-                    fileStream.Value.CopyTo(stream);
-                    stream.Position = 0;
+                    if (retrieveContent)
+                    {
+                        var fileStream = file.OpenBinaryStream();
+                        context.ExecuteQuery();
+                        fileStream.Value.CopyTo(stream);
+                        stream.Position = 0;
+                    }
                     var entity = new T();
 
                     StoreFromListItem(entity, file.ListItemAllFields);
