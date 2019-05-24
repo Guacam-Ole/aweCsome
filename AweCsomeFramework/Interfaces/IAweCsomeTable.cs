@@ -38,5 +38,9 @@ namespace AweCsome.Interfaces
         int CountItemsByQuery<T>(string query);
         void DeleteFilesFromDocumentLibrary<T>(string path, List<string> filenames);
         void DeleteFolderFromDocumentLibrary<T>(string path, string folder);
+        bool HasChangesSince<T>(DateTime compareDate) where T : new();
+        List<KeyValuePair<AweCsomeListUpdate, T>> ModifiedItemsSince<T>(DateTime compareDate) where T : new();
+
+
     }
 }

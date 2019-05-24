@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using AweCsome.Attributes.FieldAttributes;
+﻿using AweCsome.Attributes.FieldAttributes;
 using AweCsome.Attributes.IgnoreAttributes;
 using AweCsome.Attributes.TableAttributes;
 using AweCsome.Entities;
@@ -14,6 +7,13 @@ using AweCsome.Interfaces;
 using AweCsome.Interfaces;
 using log4net;
 using Microsoft.SharePoint.Client;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using E = AweCsome.Enumerations;
 using File = Microsoft.SharePoint.Client.File;
 
@@ -73,11 +73,7 @@ namespace AweCsome
             }
         }
 
-        //private string GetTableUrl(Type entityType)
-        //{
-        //    var descriptionAttribute = entityType.GetCustomAttribute<Attributes.TableAttributes.TableUrlAttribute>();
-        //    return descriptionAttribute?.Url;
-        //}
+
 
         private E.QuickLaunchOptions? GetQuickLaunchOption(Type entityType)
         {
@@ -179,6 +175,20 @@ namespace AweCsome
                 clientContext.ExecuteQuery();
                 return attachments;
             }
+        }
+
+        private List GetList<T>(ClientContext clientContext)
+        {
+            Type entityType = typeof(T);
+            string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+
+            Web web = clientContext.Web;
+            ListCollection listCollection = web.Lists;
+            clientContext.Load(listCollection);
+            clientContext.ExecuteQuery();
+            List list = listCollection.FirstOrDefault(q => q.Title == listName);
+            return list;
+
         }
 
         #endregion Helpers
@@ -456,7 +466,7 @@ namespace AweCsome
             string query = $"<Eq><FieldRef Name='{fieldname}' /><Value Type='{fieldTypeName}'>{fieldvalue}</Value></Eq>";
             return wrapCamlQuery ? WrapCamlQuery(query) : query;
         }
-         
+
         public List<T> SelectItemsByFieldValue<T>(string fieldname, object value) where T : new()
         {
             Type entityType = typeof(T);
@@ -466,7 +476,7 @@ namespace AweCsome
             return SelectItems<T>(new CamlQuery { ViewXml = CreateFieldEqCaml(fieldProperty, value) });
         }
 
-        public List<T> SelectItemsByTitle<T>(string title) where T: new()
+        public List<T> SelectItemsByTitle<T>(string title) where T : new()
         {
             return SelectItemsByFieldValue<T>("Title", title);
         }
@@ -497,7 +507,7 @@ namespace AweCsome
                         {
                             property.SetValue(entity, propertyValue);
                         }
-                        else if (targetType==typeof(int) && sourceValue is FieldLookupValue)
+                        else if (targetType == typeof(int) && sourceValue is FieldLookupValue)
                         {
                             property.SetValue(entity, ((FieldLookupValue)sourceValue).LookupId);
                         }
@@ -683,7 +693,7 @@ namespace AweCsome
             return entity;
         }
 
-        public T Unlike<T>(int id, int userId) where T:new()
+        public T Unlike<T>(int id, int userId) where T : new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
 
@@ -748,7 +758,7 @@ namespace AweCsome
                     var items = list.GetItems(CamlQuery.CreateAllItemsQuery());
                     clientContext.Load(items);
                     clientContext.ExecuteQuery();
-                    while (items.Count>0)
+                    while (items.Count > 0)
                     {
                         items.First().DeleteObject();
                     }
@@ -774,12 +784,12 @@ namespace AweCsome
             return attachments.Select(q => q.Name).ToList();
         }
 
-        public Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename=null)
+        public Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename = null)
         {
             long totalSize = 0;
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             FileCollection attachments = GetAttachments(listname, id);
-           
+
 
             var attachmentStreams = new Dictionary<string, Stream>();
             using (var clientContext = GetClientContext())
@@ -878,7 +888,7 @@ namespace AweCsome
             }
         }
 
-        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername, bool retrieveContent=true) where T : new()
+        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername, bool retrieveContent = true) where T : new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             var allFiles = new List<AweCsomeLibraryFile>();
@@ -1081,6 +1091,71 @@ namespace AweCsome
 
 
 
+
         #endregion Counts
+
+        #region Changes
+
+        public bool HasChangesSince<T>(DateTime compareDate) where T : new()
+        {
+            return ModifiedItemsSince<T>(compareDate).Count > 0;
+        }
+
+        public List<KeyValuePair<AweCsomeListUpdate, T>> ModifiedItemsSince<T>(DateTime compareDate) where T : new()
+        {
+            var modifiedItems = new List<KeyValuePair<AweCsomeListUpdate, T>>();
+            using (var clientContext = GetClientContext())
+            {
+                List list = GetList<T>(clientContext);
+                if (list == null) throw new ListNotFoundException();
+                var changeQuery = new ChangeQuery(false, false);
+                changeQuery.Item = true;
+                changeQuery.Update = true;
+                changeQuery.DeleteObject = true;
+                changeQuery.Add = true;
+
+                changeQuery.ChangeTokenStart = new ChangeToken();
+                changeQuery.ChangeTokenStart.StringValue = string.Format("1;3;{0};{1};-1", list.Id.ToString(), compareDate.ToUniversalTime().Ticks.ToString());
+
+                var changeCollection = list.GetChanges(changeQuery);
+                clientContext.Load(changeCollection);
+                clientContext.ExecuteQuery();
+                var changeItemCollection = new List<ChangeItem>();
+
+                foreach (var change in changeCollection)
+                {
+                    if (!(change is ChangeItem)) continue;
+                    changeItemCollection.Add((ChangeItem)change);
+                }
+
+                foreach (var changeItem in changeItemCollection)
+                { 
+                    var updateInfo = new AweCsomeListUpdate { ChangeDate = changeItem.Time, Id=changeItem.ItemId };
+                    switch (changeItem.ChangeType)
+                    {
+                        case ChangeType.Add:
+                            updateInfo.ChangeType = AweCsomeListUpdate.ChangeTypes.Add;
+                            break;
+                        case ChangeType.DeleteObject:
+                            updateInfo.ChangeType = AweCsomeListUpdate.ChangeTypes.Delete;
+                            break;
+                        case ChangeType.Update:
+                            updateInfo.ChangeType = AweCsomeListUpdate.ChangeTypes.Update;
+                            break;
+                    }
+                    T itemContent = default(T);
+                    bool hasBeenDeletedLaterOn = changeItemCollection.Any(q => q.ItemId==changeItem.ItemId && q.ChangeType == ChangeType.DeleteObject);
+                    if (!hasBeenDeletedLaterOn)
+                    {
+                        itemContent = SelectItemById<T>(changeItem.ItemId);
+                    }
+                    modifiedItems.Add(new KeyValuePair<AweCsomeListUpdate, T>(updateInfo, itemContent));
+                }
+            }
+            return modifiedItems;
+        }
+
+
+        #endregion
     }
 }

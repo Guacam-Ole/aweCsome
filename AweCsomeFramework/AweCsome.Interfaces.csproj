@@ -79,6 +79,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\AweCsomeListUpdate.cs" />
     <Compile Include="Interfaces\IAweCsomeHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Attributes\DescriptionAttribute.cs" />
