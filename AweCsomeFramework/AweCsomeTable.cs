@@ -539,6 +539,16 @@ namespace AweCsome
             return SelectItems<T>(CamlQuery.CreateAllItemsQuery());
         }
 
+        public bool Exists<T>()
+        {
+            using (var clientContext = GetClientContext()) {
+                var web = clientContext.Web;
+                clientContext.Load(web);
+                clientContext.ExecuteQuery();
+                return web.ListExists(EntityHelper.GetInternalNameFromEntityType(typeof(T)));
+            }
+        }
+
         ListItem GetListItemById(string listname, int id)
         {
             using (var clientContext = GetClientContext())

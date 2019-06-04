@@ -40,6 +40,7 @@ namespace AweCsome.Interfaces
         void DeleteFolderFromDocumentLibrary<T>(string path, string folder);
         bool HasChangesSince<T>(DateTime compareDate) where T : new();
         List<KeyValuePair<AweCsomeListUpdate, T>> ModifiedItemsSince<T>(DateTime compareDate) where T : new();
+        bool Exists<T>();
 
 
     }
