@@ -48,6 +48,11 @@ namespace AweCsome
 
         private void AssignPropertiesToListItem<T>(T entity, ListItem listItem)
         {
+            if (entity==null)
+            {
+                _log.Error("Nothing to assign");
+                return;
+            }
             Type entityType = typeof(T);
             foreach (var property in entityType.GetProperties())
             {
