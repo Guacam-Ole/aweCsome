@@ -33,7 +33,7 @@ namespace AweCsome.Interfaces
         List<string> SelectFileNamesFromLibrary<T>(string foldername);
         string AddFolderToLibrary<T>(string folder);
         int CountItems<T>();
-        int CountItemsByFieldValue<T>(string fieldname, object value);
+        int CountItemsByFieldValue<T>(string fieldname, object value) where T : new();
         int CountItemsByMultipleFieldValues<T>(Dictionary<string, object> conditions, bool isAndCondition = true);
         int CountItemsByQuery<T>(string query);
         void DeleteFilesFromDocumentLibrary<T>(string path, List<string> filenames);
