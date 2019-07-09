@@ -713,7 +713,7 @@ namespace AweCsome
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
 
             ListItem item = GetListItemById(listname, id);
-            var likeArray = ((FieldUserValue[])item.FieldValues.First(fn => fn.Key == "LikedBy").Value).ToList();
+            var likeArray = ((FieldUserValue[])item.FieldValues.First(fn => fn.Key == "LikedBy").Value)?.ToList() ?? new List<FieldUserValue>();
             var userLike = likeArray.FirstOrDefault(q => q.LookupId == userId);
 
             if (userLike != null)
@@ -1085,7 +1085,7 @@ namespace AweCsome
             return CountItems<T>(CamlQuery.CreateAllItemsQuery());
         }
 
-        public int CountItemsByFieldValue<T>(string fieldname, object value)
+        public int CountItemsByFieldValue<T>(string fieldname, object value) where T : new()
         {
             Type entityType = typeof(T);
             PropertyInfo fieldProperty = entityType.GetProperty(fieldname);
