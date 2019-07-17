@@ -14,9 +14,10 @@
     <copyright>Copyright 2019 Ole Albers</copyright>
     <tags>SharePoint, Entity, Office, AddInModel, AppModel, Office365, SharePointOnline</tags>    
 	<dependencies>
-		<group targetFramework="net452">	
+	<group targetFramework="net452">	
 			<dependency id="SharePointPnPCoreOnline" version="3.11" />			
 			<dependency id="log4net" version="2.0" />
+			<dependency id="AweCsome.Interfaces" version="0.9" />			
 		</group>
 	</dependencies>
   </metadata>
