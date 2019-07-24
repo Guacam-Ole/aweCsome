@@ -809,20 +809,23 @@ namespace AweCsome
             var attachmentStreams = new Dictionary<string, Stream>();
             using (var clientContext = GetClientContext())
             {
-                foreach (var attachment in attachments)
+                if (attachments != null)
                 {
-                    if (filename != null && filename != attachment.Name) continue;
+                    foreach (var attachment in attachments)
+                    {
+                        if (filename != null && filename != attachment.Name) continue;
 
-                    MemoryStream targetStream = new MemoryStream();
-                    var stream = attachment.OpenBinaryStream();
-                    clientContext.ExecuteQuery();
-                    stream.Value.CopyTo(targetStream);
-                    attachmentStreams.Add(attachment.Name, targetStream);
-                    totalSize += targetStream.Length;
+                        MemoryStream targetStream = new MemoryStream();
+                        var stream = attachment.OpenBinaryStream();
+                        clientContext.ExecuteQuery();
+                        stream.Value.CopyTo(targetStream);
+                        attachmentStreams.Add(attachment.Name, targetStream);
+                        totalSize += targetStream.Length;
+                    }
                 }
             }
 
-            _log.DebugFormat($"Retrieved '{attachments.Count}' attachments from {listname}({id}). Size:{totalSize} Bytes");
+            _log.DebugFormat($"Retrieved '{attachments?.Count}' attachments from {listname}({id}). Size:{totalSize} Bytes");
             return attachmentStreams;
         }
 

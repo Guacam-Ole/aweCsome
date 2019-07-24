@@ -9,4 +9,4 @@ using System.Reflection;
 [assembly: AssemblyCopyright("Copyright © 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("0.9.5")]
+[assembly: AssemblyVersion("0.9.6")]
