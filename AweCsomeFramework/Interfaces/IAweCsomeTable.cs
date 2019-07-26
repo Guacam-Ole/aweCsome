@@ -41,6 +41,7 @@ namespace AweCsome.Interfaces
         bool HasChangesSince<T>(DateTime compareDate) where T : new();
         List<KeyValuePair<AweCsomeListUpdate, T>> ModifiedItemsSince<T>(DateTime compareDate) where T : new();
         bool Exists<T>();
+        void UpdateTableStructure<T>();
 
 
     }
