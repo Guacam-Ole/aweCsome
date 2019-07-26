@@ -47,37 +47,10 @@ namespace AweCsome
             return internalNameAttribute == null ? entityType.Name : internalNameAttribute.InternalName;
         }
 
-        //public static List GetListByTitle(this Web web, string listname)
-        //{
-        //    var lists = web.Lists;
-        //    web.Context.Load(lists);
-        //    web.Context.ExecuteQuery();
-        //    var list=web.Lists.FirstOrDefault(q => q.Title == listname);
-        //    web.Context.Load(list);
-        //    web.Context.ExecuteQuery();
-        //    return list;
-        //}
-
-        //public static bool GroupExists(this Web web, string groupname)
-        //{
-        //    var allGroups = web.SiteGroups;
-        //    web.Context.Load(allGroups);
-        //    web.Context.ExecuteQuery();
-        //    return allGroups.FirstOrDefault(q => q.Title == groupname) != null;
-        //}
-
-        //public static void EnsureFolder(this Folder folder, string subfolder)
-        //{
-        //    var subfolders = folder.Folders;
-        //    folder.Context.Load(subfolders);
-        //    folder.Context.ExecuteQuery();
-        //    if (subfolders.FirstOrDefault(q=>q.Name==subfolder)==null) {
-        //        folder.Folders.Add(subfolder);
-        //    }
-        //}
+    
 
 
-        public static string GetDisplayNameFromEntitiyType(Type entityType)
+        public static string GetDisplayNameFromEntityType(Type entityType)
         {
             var displayNameAttribute = entityType.GetCustomAttribute<DisplayNameAttribute>();
             return displayNameAttribute == null ? entityType.Name : displayNameAttribute.DisplayName;
@@ -337,6 +310,16 @@ namespace AweCsome
             return Enum.Parse(enumType, GetEnumDisplaynames(enumType).First(q => q.Value == displayValue).Key);
         }
 
+        public static PropertyInfo PropertyFromField(this Type entityType, string fieldName)
+        {
+            foreach (var property in entityType.GetProperties())            {
+                if (GetInternalNameFromProperty(property) == fieldName) return property;
+            }
+            return null;
+        }
+
+   
+
         public static object GetItemValueFromProperty<T>(PropertyInfo property, T entity)
         {
             Type propertyType = property.PropertyType;
@@ -364,15 +347,7 @@ namespace AweCsome
                     return CreateLookupFromId(((int)property.PropertyType.GetProperty(AweCsomeField.SuffixId).GetValue(item)));
                 }
             }
-            //else if (PropertyIsImage(property))
-            //{
-
-            //    throw new NotImplementedException();
-            //}
-            //else if (PropertyIsUrl(property))
-            //{
-            //    throw new NotImplementedException();
-            //}
+    
             if (propertyType.IsEnum)
             {
                 return property.PropertyType.GetEnumDisplayNameFromInternalname(property.GetValue(entity).ToString());

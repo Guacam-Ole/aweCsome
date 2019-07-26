@@ -286,3 +286,7 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+tstframework/
+tstframeworkWeb/BigList.cs
+tstframeworkWeb/
+AweCsome.O365xx.sln

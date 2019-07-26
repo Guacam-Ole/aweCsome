@@ -48,7 +48,7 @@ namespace AweCsome
 
         private void AssignPropertiesToListItem<T>(T entity, ListItem listItem)
         {
-            if (entity==null)
+            if (entity == null)
             {
                 _log.Error("Nothing to assign");
                 return;
@@ -193,7 +193,6 @@ namespace AweCsome
             clientContext.ExecuteQuery();
             List list = listCollection.FirstOrDefault(q => q.Title == listName);
             return list;
-
         }
 
         #endregion Helpers
@@ -237,6 +236,75 @@ namespace AweCsome
             }
         }
 
+        public void UpdateTableStructure<T>()
+        {
+            Type entityType = typeof(T);
+            string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+            int columnsAddedCount = 0;
+            int columnsModifiedCount = 0;
+            int columnsRemovedCount = 0;
+
+            using (var clientContext = GetClientContext())
+            {
+                try
+                {
+                    var existingList = GetList<T>(clientContext);
+                    if (existingList == null) throw new ListNotFoundException();
+                    Dictionary<string, Guid> lookupTableIds = GetLookupTableIds(clientContext, entityType);
+
+                    var fields = existingList.Fields;
+                    clientContext.Load(fields);
+                    clientContext.ExecuteQuery();
+                    List<string> fieldNames = new List<string>();
+                    foreach (var field in fields.ToList())
+                    {
+                        if (!field.CanBeDeleted) continue;
+                        fieldNames.Add(field.InternalName);
+                        PropertyInfo fieldProperty = entityType.PropertyFromField(field.InternalName);
+                        if (fieldProperty == null)
+                        {
+                            field.DeleteObject();
+                            columnsRemovedCount++;
+                            _log.Debug($"Deleted field '{field.InternalName}'");
+                        }
+                        else
+                        {
+                            var newFieldType = EntityHelper.GetFieldType(fieldProperty);
+                            if (newFieldType != field.TypeAsString)
+                            {
+                                _awecsomeField.ChangeTypeFromField(existingList, fieldProperty);
+                                columnsModifiedCount++;
+                                _log.Debug($"Modified field '{field.InternalName}' from {field.TypeAsString} to {newFieldType}");
+                            }
+                        }
+                    }
+
+                    foreach (var property in entityType.GetProperties())
+                    {
+                        string internalName = EntityHelper.GetInternalNameFromProperty(property);
+                        if (fieldNames.Contains(internalName)) continue;
+
+                        _awecsomeField.AddFieldToList(existingList, property, lookupTableIds);
+                        columnsAddedCount++;
+                        _log.Debug($"Added field '{internalName}'");
+                    }
+
+                    clientContext.ExecuteQuery();
+
+                    _log.Info($"Changed List '{listName}': Added {columnsAddedCount} fields, modified {columnsModifiedCount} fields and removed {columnsRemovedCount} fields");
+                }
+                catch (Exception ex)
+                {
+                    var outerException = new Exception("error updating list", ex);
+                    outerException.Data.Add("List", listName);
+
+                    _log.Error($"Failed updating list {listName}", ex);
+                    throw outerException;
+                }
+
+                _log.Debug($"List '{listName}' updated. {columnsAddedCount} columns have been added, {columnsModifiedCount} have been modified, {columnsRemovedCount} columns have been removed");
+            }
+        }
         public Guid CreateTable<T>()
         {
             Type entityType = typeof(T);
@@ -248,12 +316,10 @@ namespace AweCsome
                 {
                     ValidateBeforeListCreation(clientContext, listName);
                     Dictionary<string, Guid> lookupTableIds = GetLookupTableIds(clientContext, entityType);
-
                     ListCreationInformation listCreationInfo = BuildListCreationInformation(clientContext, entityType);
 
                     var newList = clientContext.Web.Lists.Add(listCreationInfo);
-                    SetRating<T>(newList);
-                    SetVersioning<T>(newList);
+
                     if (lookupTableIds.ContainsKey(listName))
                     {
                         _clientContext.Load(newList);
@@ -261,6 +327,9 @@ namespace AweCsome
 
                         lookupTableIds[listName] = newList.Id;
                     }
+                    SetRating<T>(newList);
+                    SetVersioning<T>(newList);
+
                     AddFieldsToTable(clientContext, newList, entityType.GetProperties(), lookupTableIds);
                     foreach (var property in entityType.GetProperties().Where(q => q.GetCustomAttribute<IgnoreOnCreationAttribute>() != null && q.GetCustomAttribute<DisplayNameAttribute>() != null))
                     {
@@ -320,23 +389,20 @@ namespace AweCsome
                     {
                         context.ExecuteQuery();
                     }
-
                 }
                 catch (Exception ex)
                 {
                     _log.Error($"Failed to create field '{property.Name}'", ex);
                     throw;
                 }
-
             }
             context.ExecuteQuery();
             // TODO: Very Loooong tables: Split executeQuery
         }
 
-
         public string[] GetAvailableChoicesFromField<T>(string propertyName)
         {
-            string listTitle = EntityHelper.GetDisplayNameFromEntitiyType(typeof(T));
+            string listTitle = EntityHelper.GetDisplayNameFromEntityType(typeof(T));
             List sharePointList = _clientContext.Web.Lists.GetByTitle(listTitle);
             _clientContext.Load(sharePointList);
             _clientContext.ExecuteQuery();
@@ -546,7 +612,8 @@ namespace AweCsome
 
         public bool Exists<T>()
         {
-            using (var clientContext = GetClientContext()) {
+            using (var clientContext = GetClientContext())
+            {
                 var web = clientContext.Web;
                 clientContext.Load(web);
                 clientContext.ExecuteQuery();
@@ -1147,8 +1214,8 @@ namespace AweCsome
                 }
 
                 foreach (var changeItem in changeItemCollection)
-                { 
-                    var updateInfo = new AweCsomeListUpdate { ChangeDate = changeItem.Time, Id=changeItem.ItemId };
+                {
+                    var updateInfo = new AweCsomeListUpdate { ChangeDate = changeItem.Time, Id = changeItem.ItemId };
                     switch (changeItem.ChangeType)
                     {
                         case ChangeType.Add:
@@ -1162,7 +1229,7 @@ namespace AweCsome
                             break;
                     }
                     T itemContent = default(T);
-                    bool hasBeenDeletedLaterOn = changeItemCollection.Any(q => q.ItemId==changeItem.ItemId && q.ChangeType == ChangeType.DeleteObject);
+                    bool hasBeenDeletedLaterOn = changeItemCollection.Any(q => q.ItemId == changeItem.ItemId && q.ChangeType == ChangeType.DeleteObject);
                     if (!hasBeenDeletedLaterOn)
                     {
                         itemContent = SelectItemById<T>(changeItem.ItemId);

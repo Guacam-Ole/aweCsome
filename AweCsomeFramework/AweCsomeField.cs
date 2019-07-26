@@ -367,6 +367,7 @@ namespace AweCsome
 
             fieldToChange.SchemaXml = fieldXml;
             fieldToChange.Update();
+
         }
     }
 }
