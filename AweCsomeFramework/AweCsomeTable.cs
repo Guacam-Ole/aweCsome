@@ -258,7 +258,7 @@ namespace AweCsome
                     List<string> fieldNames = new List<string>();
                     foreach (var field in fields.ToList())
                     {
-                        if (!field.CanBeDeleted) continue;
+                        if (!field.CanBeDeleted || field.Hidden || field.FieldTypeKind == FieldType.Invalid) continue;
                         fieldNames.Add(field.InternalName);
                         PropertyInfo fieldProperty = entityType.PropertyFromField(field.InternalName);
                         if (fieldProperty == null)
@@ -270,7 +270,7 @@ namespace AweCsome
                         else
                         {
                             var newFieldType = EntityHelper.GetFieldType(fieldProperty);
-                            if (newFieldType != field.TypeAsString)
+                            if (newFieldType != field.FieldTypeKind.ToString())
                             {
                                 _awecsomeField.ChangeTypeFromField(existingList, fieldProperty);
                                 columnsModifiedCount++;
@@ -283,8 +283,8 @@ namespace AweCsome
                     {
                         string internalName = EntityHelper.GetInternalNameFromProperty(property);
                         if (fieldNames.Contains(internalName)) continue;
-
-                        _awecsomeField.AddFieldToList(existingList, property, lookupTableIds);
+                        var newField = _awecsomeField.AddFieldToList(existingList, property, lookupTableIds);
+                        if (newField == null) continue;
                         columnsAddedCount++;
                         _log.Debug($"Added field '{internalName}'");
                     }
