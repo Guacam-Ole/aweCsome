@@ -17,4 +17,23 @@ Simply type `Update-Package -reinstall` and you should be ready to go.
 ## Getting Help
 Documentation can be found at the **Wiki**
 
+## Build status:
+### Develop (CI)
+* Interfaces 
+[![Build Status](https://olealbers.visualstudio.com/AweCsome/_apis/build/status/Debug/AweCsome-Interfaces-Develop?branchName=develop)](https://olealbers.visualstudio.com/AweCsome/_build/latest?definitionId=7&branchName=develop)
 
+* SharePoint O365
+[![Build Status](https://olealbers.visualstudio.com/AweCsome/_apis/build/status/Debug/AweCsome-365-Develop?branchName=develop)](https://olealbers.visualstudio.com/AweCsome/_build/latest?definitionId=5&branchName=develop)
+
+* SharePoint 2013
+[![Build Status](https://olealbers.visualstudio.com/AweCsome/_apis/build/status/Debug/AweCsome-2013-Develop?branchName=develop)](https://olealbers.visualstudio.com/AweCsome/_build/latest?definitionId=6&branchName=develop)
+
+### Master (stable)
+* Interfaces
+[![Build Status](https://olealbers.visualstudio.com/AweCsome/_apis/build/status/Release/AweCsome-Interfaces-Master?branchName=master)](https://olealbers.visualstudio.com/AweCsome/_build/latest?definitionId=9&branchName=master)
+
+* SharePoint O365
+[![Build Status](https://olealbers.visualstudio.com/AweCsome/_apis/build/status/Release/AweCsome-365-Master?branchName=master)](https://olealbers.visualstudio.com/AweCsome/_build/latest?definitionId=10&branchName=master)
+
+* SharePoint 2013
+[![Build Status](https://olealbers.visualstudio.com/AweCsome/_apis/build/status/Release/AweCsome-2013-Master?branchName=master)](https://olealbers.visualstudio.com/AweCsome/_build/latest?definitionId=11&branchName=master)
