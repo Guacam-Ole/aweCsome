@@ -14,8 +14,8 @@
     <tags>SharePoint, Entity, Office, AddInModel, AppModel, Office365, SharePointOnline</tags>    	
   </metadata>
   <files>
-    <file src="bin\Debug\AweCsome.Interfaces.dll" target="lib\net452\AweCsome.Interfaces.dll" />
-    <file src="bin\Debug\AweCsome.Interfaces.pdb" target="lib\net452\AweCsome.Interfaces.pdb" />
+    <file src="bin\Release\AweCsome.Interfaces.dll" target="lib\net452\AweCsome.Interfaces.dll" />
+    <file src="bin\Release\AweCsome.Interfaces.pdb" target="lib\net452\AweCsome.Interfaces.pdb" />
     <file src="..\.github\README.md" target="" />
   </files>
 </package>
