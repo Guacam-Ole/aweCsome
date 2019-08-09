@@ -37,3 +37,11 @@ Documentation can be found at the **Wiki**
 
 * SharePoint 2013
 [![Build Status](https://olealbers.visualstudio.com/AweCsome/_apis/build/status/Release/AweCsome-2013-Master?branchName=master)](https://olealbers.visualstudio.com/AweCsome/_build/latest?definitionId=11&branchName=master)
+
+## NuGet-Packages
+All AweCsome-Packages are available as NuGet-Packages. They can be found here:
+[AweCsome.Interfaces](https://www.nuget.org/packages/AweCsome.Interfaces/)
+
+[AweCsome.O365](https://www.nuget.org/packages/AweCsome.O365/)
+
+[AweCSome.2013](https://www.nuget.org/packages/AweCsome.2013/)
