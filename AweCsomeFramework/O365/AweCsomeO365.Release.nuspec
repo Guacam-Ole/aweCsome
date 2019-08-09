@@ -21,8 +21,8 @@
 	</dependencies>
   </metadata>
   <files>
-    <file src="bin\Debug\AweCsome.O365.dll" target="lib\net452\AweCsome.O365.dll" />
-    <file src="bin\Debug\AweCsome.O365.pdb" target="lib\net452\AweCsome.O365.pdb" />
+    <file src="bin\Release\AweCsome.O365.dll" target="lib\net452\AweCsome.O365.dll" />
+    <file src="bin\Release\AweCsome.O365.pdb" target="lib\net452\AweCsome.O365.pdb" />
     <file src="..\..\.github\README.md" target="" />
   </files>
 </package>
