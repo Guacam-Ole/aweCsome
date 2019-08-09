@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2041
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AweCsome2013", "AweCsomeFramework\2013\AweCsome.2013.csproj", "{EFEF55F5-D4A0-4488-87CE-D76E1F5C63D4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AweCsomeInterfaces", "AweCsomeFramework\AweCsome.Interfaces.csproj", "{5DB02FF9-0993-4B60-8D23-0AA62935612F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AweCsome.2013", "AweCsomeFramework\2013\AweCsome.2013.csproj", "{EFEF55F5-D4A0-4488-87CE-D76E1F5C63D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{EFEF55F5-D4A0-4488-87CE-D76E1F5C63D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EFEF55F5-D4A0-4488-87CE-D76E1F5C63D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EFEF55F5-D4A0-4488-87CE-D76E1F5C63D4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5DB02FF9-0993-4B60-8D23-0AA62935612F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5DB02FF9-0993-4B60-8D23-0AA62935612F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5DB02FF9-0993-4B60-8D23-0AA62935612F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5DB02FF9-0993-4B60-8D23-0AA62935612F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
