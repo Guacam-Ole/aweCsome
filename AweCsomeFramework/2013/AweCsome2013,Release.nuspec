@@ -8,9 +8,9 @@
     <owners>Ole Albers</owners>
     <licenseUrl>https://github.com/OleAlbers/aweCsome/blob/develop/.github/LICENSE.md</licenseUrl>
     <projectUrl>https://github.com/OleAlbers/aweCsome</projectUrl>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>The AweCsome-Framework is like an Entity Framework for SharePoint Provider Hosted Add-Ins. It uses CSOM to communicate with SharePoint.</description>
-    <releaseNotes>This is a PreRelease</releaseNotes>
+   
     <copyright>Copyright 2019 Ole Albers</copyright>
     <tags>SharePoint, Entity, Office, AddInModel, AppModel</tags>    
 	<dependencies>
@@ -22,8 +22,8 @@
 	</dependencies>
   </metadata>
   <files>
-    <file src="bin\Debug\AweCsome.2013.dll" target="lib\net452\AweCsome.2013.dll" />
-    <file src="bin\Debug\AweCsome.2013.pdb" target="lib\net452\AweCsome.2013.pdb" />
+    <file src="bin\Release\AweCsome.2013.dll" target="lib\net452\AweCsome.2013.dll" />
+    <file src="bin\Release\AweCsome.2013.pdb" target="lib\net452\AweCsome.2013.pdb" />
     <file src="..\..\.github\README.md" target="" />
   </files>
 </package>
