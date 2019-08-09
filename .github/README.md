@@ -40,6 +40,7 @@ Documentation can be found at the **Wiki**
 
 ## NuGet-Packages
 All AweCsome-Packages are available as NuGet-Packages. They can be found here:
+
 [AweCsome.Interfaces](https://www.nuget.org/packages/AweCsome.Interfaces/)
 
 [AweCsome.O365](https://www.nuget.org/packages/AweCsome.O365/)
