@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>AweCsome.Interfaces</id>
+    <version>$version$</version>
+    <title>AweCsome Framework Interfaces</title>
+    <authors>Ole Albers ( https://dotnet.work )</authors>
+    <owners>Ole Albers</owners>
+    <licenseUrl>https://github.com/OleAlbers/aweCsome/blob/develop/.github/LICENSE.md</licenseUrl>
+    <projectUrl>https://github.com/OleAlbers/aweCsome</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>The AweCsome-Framework is like an Entity Framework for SharePoint Provider Hosted Add-Ins. It uses CSOM to communicate with SharePoint.</description>
+    <releaseNotes>This is a PreRelease</releaseNotes>
+    <copyright>Copyright 2019 Ole Albers</copyright>
+    <tags>SharePoint, Entity, Office, AddInModel, AppModel, Office365, SharePointOnline</tags>    	
+  </metadata>
+  <files>
+    <file src="bin\Debug\AweCsome.Interfaces.dll" target="lib\net452\AweCsome.Interfaces.dll" />
+    <file src="bin\Debug\AweCsome.Interfaces.pdb" target="lib\net452\AweCsome.Interfaces.pdb" />
+    <file src="..\.github\README.md" target="" />
+  </files>
+</package>

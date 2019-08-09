@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.SharePoint.Client;
-using Microsoft.SharePoint.Client.Utilities;
+﻿using System.Collections.Generic;
+using AweCsome.Enumerations;
 
 namespace AweCsome.Interfaces
 {
     public interface IAweCsomePeople
     {
-        List<User> Search(string query, string uniqueField, int maxSuggestions=100, PrincipalSource principalSource= PrincipalSource.All, PrincipalType prinzipalType= PrincipalType.User, int sharePointGroupId=-1);
+        List<object> Search(string query, string uniqueField, int maxSuggestions = 100, PrincipalSource principalSource = PrincipalSource.All, PrincipalType principalType = PrincipalType.User, int sharePointGroupId = -1);
+        object GetSiteUserById(int id);
+        List<object> GetUsersFromSiteGroup(string groupname);
+        object GetGroupFromSite(string groupname);
+        bool UserIsInGroup(string groupname, int? userId=null);
+        object GetCurrentUser();
     }
 }

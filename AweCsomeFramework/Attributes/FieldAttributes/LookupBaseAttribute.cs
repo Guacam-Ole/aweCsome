@@ -1,9 +1,5 @@
-﻿using Microsoft.SharePoint.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using AweCsome.Enumerations;
 
 namespace AweCsome.Attributes.FieldAttributes
 {
@@ -12,6 +8,6 @@ namespace AweCsome.Attributes.FieldAttributes
         public string List { get; set; }
         public string Field { get; set; } = "Title";
         RelationshipDeleteBehaviorType RelationshipDeleteBehaviorType { get; set; } = RelationshipDeleteBehaviorType.None;
-        public  const string AssociatedFieldType = nameof(FieldType.Lookup);
+        public const string AssociatedFieldType = "Lookup";
     }
 }

@@ -1,9 +1,4 @@
-﻿using Microsoft.SharePoint.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace AweCsome.Attributes.FieldAttributes
 {
@@ -14,7 +9,7 @@ namespace AweCsome.Attributes.FieldAttributes
         public DisplayChoicesTypes DisplayChoices { get; set; }
         public bool AllowFillIn { get; set; }
         public string DefaultValue { get; set; }
-        public const string AssociatedFieldType = nameof(FieldType.Choice);
+        public const string AssociatedFieldType = "Choice";
 
         public ChoiceAttribute() { }
         public ChoiceAttribute(Type enumType)

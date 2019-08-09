@@ -1,9 +1,4 @@
-﻿using Microsoft.SharePoint.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace AweCsome.Attributes.FieldAttributes
 {
@@ -11,7 +6,7 @@ namespace AweCsome.Attributes.FieldAttributes
     {
         public int MaxCharacters { get; set; } = 255;
         public string DefaultValue { get; set; }
-        public const string AssociatedFieldType = nameof(FieldType.Text);
+        public const string AssociatedFieldType = "Text";
 
     }
 }

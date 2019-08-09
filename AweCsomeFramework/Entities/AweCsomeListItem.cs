@@ -1,11 +1,7 @@
-﻿using AweCsome.Attributes;
+﻿using System;
+using System.Collections.Generic;
 using AweCsome.Attributes.FieldAttributes;
 using AweCsome.Attributes.IgnoreAttributes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AweCsome.Entities
 {

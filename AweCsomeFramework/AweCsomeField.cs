@@ -20,8 +20,10 @@ namespace AweCsome
         public const string Title = "Title";
 
 
-        public Field AddFieldToList(List sharePointList, PropertyInfo property, Dictionary<string, Guid> lookupTableIds)
+        public object AddFieldToList(object sharePointListObj, PropertyInfo property, Dictionary<string, Guid> lookupTableIds)
+
         {
+            var sharePointList = (List)sharePointListObj;
             var ignoreOnCreationAttribute = property.GetCustomAttribute<IgnoreOnCreationAttribute>();
             if (ignoreOnCreationAttribute != null && ignoreOnCreationAttribute.IgnoreOnCreation) return null;
             var addToDefaultViewAttribute = property.GetCustomAttribute<AddToDefaultViewAttribute>();
@@ -317,6 +319,7 @@ namespace AweCsome
             Type propertyType = property.PropertyType;
             if (propertyType.IsGenericType)
             {
+                if (propertyType.IsDictionary() || propertyType.IsArray) return false;
                 return propertyType.GetGenericTypeDefinition() != typeof(Nullable<>);
             }
             return false;
@@ -334,8 +337,9 @@ namespace AweCsome
             return enumCaml;
         }
 
-        public void ChangeDisplaynameFromField(List sharePointList, PropertyInfo property)
+        public void ChangeDisplaynameFromField(object sharePointListObj, PropertyInfo property)
         {
+            var sharePointList = (List)sharePointListObj;
             var internalName = EntityHelper.GetInternalNameFromProperty(property);
             var displayName = EntityHelper.GetDisplayNameFromProperty(property);
 
@@ -344,9 +348,26 @@ namespace AweCsome
             fieldToChange.Update();
         }
 
-        public Field GetFieldDefinition(List sharePointList, PropertyInfo property)
+        public object GetFieldDefinition(object sharePointListObj, PropertyInfo property)
         {
+            var sharePointList = (List)sharePointListObj;
             return sharePointList.Fields.GetByInternalNameOrTitle(EntityHelper.GetInternalNameFromProperty(property));
+        }
+
+        // TODO: Allow this for Lookups, too
+        public void ChangeTypeFromField(object sharePointListObj, PropertyInfo property)
+        {
+            var sharePointList = (List)sharePointListObj;
+            var internalName = EntityHelper.GetInternalNameFromProperty(property);
+            var addToDefaultViewAttribute = property.GetCustomAttribute<AddToDefaultViewAttribute>();
+
+            var fieldToChange = sharePointList.Fields.GetByInternalNameOrTitle(internalName);
+
+            string fieldXml = GetFieldCreationXml(property, null);
+
+            fieldToChange.SchemaXml = fieldXml;
+            fieldToChange.Update();
+
         }
     }
 }

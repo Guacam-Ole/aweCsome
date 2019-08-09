@@ -10,5 +10,10 @@ namespace AweCsome.Attributes.TableAttributes
     {
         public bool EnableVersioning { get; set; } = true;
         public bool EnableMinorVersioning { get; set; } = false;
+        public VersioningAttribute(bool enableVersioning=true, bool enableMinorVersioning=false)
+        {
+            EnableVersioning = enableVersioning;
+            EnableMinorVersioning = enableMinorVersioning;
+        }
     }
 }

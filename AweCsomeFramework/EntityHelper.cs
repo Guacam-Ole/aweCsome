@@ -1,4 +1,5 @@
-﻿using AweCsome.Attributes;
+﻿
+using AweCsome.Attributes;
 using AweCsome.Attributes.FieldAttributes;
 using AweCsome.Attributes.TableAttributes;
 using log4net;
@@ -46,7 +47,10 @@ namespace AweCsome
             return internalNameAttribute == null ? entityType.Name : internalNameAttribute.InternalName;
         }
 
-        public static string GetDisplayNameFromEntitiyType(Type entityType)
+    
+
+
+        public static string GetDisplayNameFromEntityType(Type entityType)
         {
             var displayNameAttribute = entityType.GetCustomAttribute<DisplayNameAttribute>();
             return displayNameAttribute == null ? entityType.Name : displayNameAttribute.DisplayName;
@@ -61,7 +65,7 @@ namespace AweCsome
 
         public static int GetListTemplateType(Type entityType)
         {
-            var listTemplateTypeAttribute = entityType.GetCustomAttribute<ListTemplateAttribute>();
+            var listTemplateTypeAttribute = entityType.GetCustomAttribute<ListTemplateTypeAttribute>();
             return listTemplateTypeAttribute == null ? (int)ListTemplateType.GenericList : listTemplateTypeAttribute.TemplateTypeId;
         }
 
@@ -117,6 +121,7 @@ namespace AweCsome
         public static bool PropertyIsLookup(PropertyInfo property)
         {
             if (property.GetCustomAttribute<LookupBaseAttribute>(true) != null) return true;
+            if (property.GetCustomAttribute<UserAttribute>(true) != null) return true;
             Type propertyType = property.PropertyType;
             if (propertyType == typeof(KeyValuePair<int, string>)) return true; // Single-Lookup
             if (propertyType == typeof(Dictionary<int, string>)) return true; // Multi-Lookup
@@ -305,6 +310,16 @@ namespace AweCsome
             return Enum.Parse(enumType, GetEnumDisplaynames(enumType).First(q => q.Value == displayValue).Key);
         }
 
+        public static PropertyInfo PropertyFromField(this Type entityType, string fieldName)
+        {
+            foreach (var property in entityType.GetProperties())            {
+                if (GetInternalNameFromProperty(property) == fieldName) return property;
+            }
+            return null;
+        }
+
+   
+
         public static object GetItemValueFromProperty<T>(PropertyInfo property, T entity)
         {
             Type propertyType = property.PropertyType;
@@ -332,15 +347,7 @@ namespace AweCsome
                     return CreateLookupFromId(((int)property.PropertyType.GetProperty(AweCsomeField.SuffixId).GetValue(item)));
                 }
             }
-            //else if (PropertyIsImage(property))
-            //{
-
-            //    throw new NotImplementedException();
-            //}
-            //else if (PropertyIsUrl(property))
-            //{
-            //    throw new NotImplementedException();
-            //}
+    
             if (propertyType.IsEnum)
             {
                 return property.PropertyType.GetEnumDisplayNameFromInternalname(property.GetValue(entity).ToString());

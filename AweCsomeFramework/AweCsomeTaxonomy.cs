@@ -1,4 +1,4 @@
-﻿using AweCsome.Entities;
+﻿using E=AweCsome.Entities;
 using Microsoft.SharePoint.Client;
 using Microsoft.SharePoint.Client.Taxonomy;
 using System;
@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AweCsome.Interfaces;
+using AweCsome.Enumerations;
+using AweCsome.Entities;
 
 namespace AweCsome
 {
@@ -15,8 +17,12 @@ namespace AweCsome
     public class AweCsomeTaxonomy : IAweCsomeTaxonomy
     {
         private ClientContext _clientContext;
-        public ClientContext ClientContext { set { _clientContext = value; } }
         public int Lcid { get; set; } = 1033;
+
+        public AweCsomeTaxonomy(ClientContext clientContext)
+        {
+            _clientContext = clientContext;
+        }
 
         private AweCsomeTag GetTermChildren(Term term, AweCsomeTag parent)
         {
@@ -55,19 +61,19 @@ namespace AweCsome
             return tag.Name != null && tag.Name.IndexOf(query, StringComparison.InvariantCultureIgnoreCase) >= 0;
         }
 
-        public void GetTermSetIds(TaxonomyTypes taxonomyType, string termSetName, string groupName, bool createIfMissing, out Guid termStoreId, out Guid termSetId)
+        public void GetTermSetIds(TaxonomyTypes taxonomyType, string termSetName, string groupName, bool createIfNotExisting, out Guid termStoreId, out Guid termSetId)
         {
             TermStore termStore;
             TermSet termSet;
             Site site = _clientContext.Site;
-            GetTermSet(taxonomyType, termSetName, groupName, createIfMissing, out termStore, out termSet);
+            GetTermSet(taxonomyType, termSetName, groupName, createIfNotExisting, out termStore, out termSet);
 
             if (termSet == null)
             {
-                if (!createIfMissing) throw new KeyNotFoundException("Taxonomy missing");
+                if (!createIfNotExisting) throw new KeyNotFoundException("Taxonomy missing");
 
                 TermGroup termGroup = groupName == null
-                    ? termStore.GetSiteCollectionGroup(site, createIfMissing)
+                    ? termStore.GetSiteCollectionGroup(site, createIfNotExisting)
                     : termStore.GetTermGroupByName(groupName);
 
                 termSetId = Guid.NewGuid();

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>AweCsome.O365</id>
+    <version>$version$</version>
+    <title>AweCsome Framework for O365</title>
+    <authors>Ole Albers ( https://dotnet.work )</authors>
+    <owners>Ole Albers</owners>
+    <licenseUrl>https://github.com/OleAlbers/aweCsome/blob/develop/.github/LICENSE.md</licenseUrl>
+    <projectUrl>https://github.com/OleAlbers/aweCsome</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>The AweCsome-Framework is like an Entity Framework for SharePoint Provider Hosted Add-Ins. It uses CSOM to communicate with SharePoint.</description>
+    <releaseNotes>This is a PreRelease</releaseNotes>
+    <copyright>Copyright 2019 Ole Albers</copyright>
+    <tags>SharePoint, Entity, Office, AddInModel, AppModel, Office365, SharePointOnline</tags>    
+	<dependencies>
+	<group targetFramework="net452">	
+			<dependency id="SharePointPnPCoreOnline" version="3.11" />			
+			<dependency id="log4net" version="2.0" />
+			<dependency id="AweCsome.Interfaces" version="0.10" />			
+		</group>
+	</dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Debug\AweCsome.O365.dll" target="lib\net452\AweCsome.O365.dll" />
+    <file src="bin\Debug\AweCsome.O365.pdb" target="lib\net452\AweCsome.O365.pdb" />
+    <file src="..\..\.github\README.md" target="" />
+  </files>
+</package>
