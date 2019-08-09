@@ -13,3 +13,8 @@ You can install AweCsome using NuGet. You always need to install two packages: [
 If you want to build the source by yourself using Visual Studio you need to update the nuget - packages to met your local structure.
 
 Simply type `Update-Package -reinstall` and you should be ready to go.
+
+## Getting Help
+Documentation can be found at the **Wiki**
+
+
