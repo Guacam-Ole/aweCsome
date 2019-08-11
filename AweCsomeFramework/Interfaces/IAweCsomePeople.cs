@@ -8,8 +8,8 @@ namespace AweCsome.Interfaces
     {
         List<AweCsomeUser> Search(string query, string uniqueField, int maxSuggestions = 100, PrincipalSource principalSource = PrincipalSource.All, PrincipalType principalType = PrincipalType.User, int sharePointGroupId = -1);
         AweCsomeUser GetSiteUserById(int id);
-        List<object> GetUsersFromSiteGroup(string groupname);
-        object GetGroupFromSite(string groupname);
+        List<AweCsomeUser> GetUsersFromSiteGroup(string groupname);
+        AweCsomeGroup GetGroupFromSite(string groupname);
         bool UserIsInGroup(string groupname, int? userId=null);
         AweCsomeUser GetCurrentUser();
     }
