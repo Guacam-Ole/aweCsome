@@ -127,7 +127,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\AweCsomeGroup.cs" />
     <Compile Include="Entities\AweCsomeListUpdate.cs" />
+    <Compile Include="Entities\AweCsomeUser.cs" />
     <Compile Include="Interfaces\IAweCsomeHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Attributes\DescriptionAttribute.cs" />
