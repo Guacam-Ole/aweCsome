@@ -17,7 +17,7 @@
 	<group targetFramework="net452">	
 			<dependency id="SharePointPnPCoreOnline" version="3.11" />			
 			<dependency id="log4net" version="2.0" />
-			<dependency id="AweCsome.Interfaces"  />			
+			<dependency id="AweCsome.Interfaces" version="2.0" />			
 		</group>
 	</dependencies>
   </metadata>
