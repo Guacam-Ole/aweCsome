@@ -81,6 +81,7 @@ namespace AweCsome
             {
                 User ensuredUser = _clientContext.Web.EnsureUser(user[uniqueField]);
                 _clientContext.Load(ensuredUser);
+                _clientContext.ExecuteQuery();
                 matches.Add(ToAweCsomeUser(ensuredUser, false));
             }
             _clientContext.ExecuteQuery();
@@ -139,7 +140,7 @@ namespace AweCsome
                 if (userProperty == null) continue;
                 if (!userProperty.CanRead) continue;
                 if (userProperty.PropertyType != property.PropertyType) continue;
-                property.SetValue(aweCsomeUser, userProperty.GetValue(property.Name));
+                property.SetValue(aweCsomeUser, userProperty.GetValue(user));
             }
 
             if (getGroups && user.Groups!=null) 
