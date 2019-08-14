@@ -1,16 +1,16 @@
-﻿using System;
+﻿using AweCsome.Entities;
+using AweCsome.Interfaces;
+using log4net;
+using Microsoft.SharePoint.ApplicationPages.ClientPickerQuery;
+using Microsoft.SharePoint.Client;
+using Microsoft.SharePoint.Client.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
-using AweCsome.Entities;
-using AweCsome.Interfaces;
-using log4net;
-using Microsoft.SharePoint.ApplicationPages.ClientPickerQuery;
-using Microsoft.SharePoint.Client;
-using Microsoft.SharePoint.Client.Utilities;
 using E = AweCsome.Enumerations;
 
 namespace AweCsome
@@ -43,7 +43,7 @@ namespace AweCsome
             return users.ToList().Select(q => ToAweCsomeUser(q)).ToList();
         }
 
-        public  AweCsomeGroup GetGroupFromSite(string groupname)
+        public AweCsomeGroup GetGroupFromSite(string groupname)
         {
             return ToAweCsomeGroup(GetSharePointGroupFromSite(groupname));
         }
@@ -129,7 +129,7 @@ namespace AweCsome
             return ToAweCsomeUser(web.CurrentUser);
         }
 
-        private AweCsomeUser ToAweCsomeUser(User user, bool getGroups=true)
+        private AweCsomeUser ToAweCsomeUser(User user, bool getGroups = true)
         {
             var aweCsomeUser = new AweCsomeUser { Groups = new List<AweCsomeGroup>() };
             var userType = typeof(User);
@@ -143,20 +143,27 @@ namespace AweCsome
                 property.SetValue(aweCsomeUser, userProperty.GetValue(user));
             }
 
-            if (getGroups && user.Groups!=null) 
+            if (getGroups)
             {
-                foreach( var group in user.Groups)
+                _clientContext.Load(user.Groups);
+                _clientContext.ExecuteQuery();
+                if (user.Groups != null)
                 {
-                    aweCsomeUser.Groups.Add(ToAweCsomeGroup(group, false));
+
+                    foreach (var group in user.Groups)
+                    {
+                        aweCsomeUser.Groups.Add(ToAweCsomeGroup(group, false));
+                    }
                 }
             }
             return aweCsomeUser;
         }
 
-        private AweCsomeGroup ToAweCsomeGroup(Group group, bool getUsers=true)
+        private AweCsomeGroup ToAweCsomeGroup(Group group, bool getUsers = true)
         {
-            var aweCsomeGroup = new AweCsomeGroup { Users = new List<AweCsomeUser>()};
+            var aweCsomeGroup = new AweCsomeGroup { Users = new List<AweCsomeUser>() };
             var groupType = typeof(Group);
+     
             foreach (var property in typeof(AweCsomeGroup).GetProperties())
             {
                 if (!property.CanWrite) continue;
@@ -164,10 +171,10 @@ namespace AweCsome
                 if (groupProperty == null) continue;
                 if (!groupProperty.CanRead) continue;
                 if (groupProperty.PropertyType != property.PropertyType) continue;
-                property.SetValue(aweCsomeGroup, groupProperty.GetValue(property.Name));
+                property.SetValue(aweCsomeGroup, groupProperty.GetValue(group));
             }
 
-            if (getUsers && group.Users!= null)
+            if (getUsers && group.Users != null)
             {
                 foreach (var user in group.Users)
                 {
