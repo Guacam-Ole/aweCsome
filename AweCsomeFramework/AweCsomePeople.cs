@@ -129,7 +129,7 @@ namespace AweCsome
             return ToAweCsomeUser(web.CurrentUser);
         }
 
-        public List<AweCsomeUser> IAweCsomePeople.GetVisitors()
+        public List<AweCsomeUser> GetVisitors()
         {
             var group = _clientContext.Web.AssociatedVisitorGroup;
             _clientContext.Load(group);
@@ -137,7 +137,7 @@ namespace AweCsome
             return GetUsersFromSiteGroup(group.Title);
         }
 
-        public List<AweCsomeUser> IAweCsomePeople.GetOwners()
+        public List<AweCsomeUser> GetOwners()
         {
             var group = _clientContext.Web.AssociatedOwnerGroup;
             _clientContext.Load(group);
@@ -145,7 +145,7 @@ namespace AweCsome
             return GetUsersFromSiteGroup(group.Title);
         }
 
-        public List<AweCsomeUser> IAweCsomePeople.GetMembers()
+        public List<AweCsomeUser> GetMembers()
         {
             var group = _clientContext.Web.AssociatedMemberGroup;
             _clientContext.Load(group);
@@ -153,7 +153,7 @@ namespace AweCsome
             return GetUsersFromSiteGroup(group.Title);
         }
 
-        public List<AweCsomeUser> IAweCsomePeople.GetSiteUsers()
+        public List<AweCsomeUser> GetSiteUsers()
         {
             var users = _clientContext.Web.SiteUsers;
             _clientContext.Load(users);
