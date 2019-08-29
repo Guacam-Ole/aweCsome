@@ -129,6 +129,39 @@ namespace AweCsome
             return ToAweCsomeUser(web.CurrentUser);
         }
 
+        public List<AweCsomeUser> IAweCsomePeople.GetVisitors()
+        {
+            var group = _clientContext.Web.AssociatedVisitorGroup;
+            _clientContext.Load(group);
+            _clientContext.ExecuteQuery();
+            return GetUsersFromSiteGroup(group.Title);
+        }
+
+        public List<AweCsomeUser> IAweCsomePeople.GetOwners()
+        {
+            var group = _clientContext.Web.AssociatedOwnerGroup;
+            _clientContext.Load(group);
+            _clientContext.ExecuteQuery();
+            return GetUsersFromSiteGroup(group.Title);
+        }
+
+        public List<AweCsomeUser> IAweCsomePeople.GetMembers()
+        {
+            var group = _clientContext.Web.AssociatedMemberGroup;
+            _clientContext.Load(group);
+            _clientContext.ExecuteQuery();
+            return GetUsersFromSiteGroup(group.Title);
+        }
+
+        public List<AweCsomeUser> IAweCsomePeople.GetSiteUsers()
+        {
+            var users = _clientContext.Web.SiteUsers;
+            _clientContext.Load(users);
+            _clientContext.ExecuteQuery();
+
+            return users.Select(q => ToAweCsomeUser(q, false)).ToList();
+        }
+
         private AweCsomeUser ToAweCsomeUser(User user, bool getGroups = true)
         {
             var aweCsomeUser = new AweCsomeUser { Groups = new List<AweCsomeGroup>() };
