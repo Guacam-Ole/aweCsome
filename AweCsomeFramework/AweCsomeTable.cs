@@ -345,6 +345,7 @@ namespace AweCsome
                     clientContext.ExecuteQuery();
                     clientContext.Load(newList, nl => nl.Id);
                     clientContext.ExecuteQuery();
+                    _log.Debug($"List '{listName}' created.");
                     return newList.Id;
                 }
                 catch (Exception ex)
@@ -356,7 +357,6 @@ namespace AweCsome
                     throw outerException;
                 }
             }
-            _log.Debug($"List '{listName}' created.");
         }
 
         private void AddFieldsToTable(ClientContext context, List sharePointList, PropertyInfo[] properties, Dictionary<string, Guid> lookupTableIds)
