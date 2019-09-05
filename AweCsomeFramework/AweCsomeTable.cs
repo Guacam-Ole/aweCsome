@@ -59,13 +59,22 @@ namespace AweCsome
                 try
                 {
                     if (!property.CanRead) continue;
-                    var ignoreAttribute = property.GetCustomAttribute<IgnoreOnInsertAttribute>();
-                    if (ignoreAttribute != null && ignoreAttribute.IgnoreOnInsert) continue;
                     var value = EntityHelper.GetItemValueFromProperty(property, entity);
+                    var ignoreAttribute = property.GetCustomAttribute<IgnoreOnInsertAttribute>();
+                    if (ignoreAttribute != null && ignoreAttribute.IgnoreOnInsert)
+                    {
+                        if (!ignoreAttribute.OnlyIfEmpty) continue;
+                        if (value == null) continue;
+                    }
+
                     if (property.PropertyType == typeof(DateTime))
                     {
                         var year = ((DateTime)value).Year;
-                        if (year < 1900 || year > 8900) throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
+                        if (year < 1900 || year > 8900)
+                        {
+                            if (ignoreAttribute != null) continue;  // Empty Date
+                            throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
+                        }
                     }
                     if (value != null) listItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
                 }
@@ -729,9 +738,23 @@ namespace AweCsome
                     foreach (var property in entityType.GetProperties())
                     {
                         if (!property.CanRead) continue;
-                        var ignoreOnUpdateAttribute = property.GetCustomAttribute<IgnoreOnUpdateAttribute>();
-                        if (ignoreOnUpdateAttribute != null && ignoreOnUpdateAttribute.IgnoreOnUpdate) continue;
                         var value = EntityHelper.GetItemValueFromProperty(property, entity);
+                        var ignoreOnUpdateAttribute = property.GetCustomAttribute<IgnoreOnUpdateAttribute>();
+                        if (ignoreOnUpdateAttribute != null && ignoreOnUpdateAttribute.IgnoreOnUpdate)
+                        {
+                            if (!ignoreOnUpdateAttribute.OnlyIfEmpty) continue;
+                            if (value == null) continue;
+                        }
+                        if (property.PropertyType == typeof(DateTime))
+                        {
+                            var year = ((DateTime)value).Year;
+                            if (year < 1900 || year > 8900)
+                            {
+                                if (ignoreOnUpdateAttribute != null) continue;  // Empty Date
+                                throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
+                            }
+                        }
+
                         if (value is KeyValuePair<int, string> && ((KeyValuePair<int, string>)value).Key == 0) value = null; // Lookup/Person with no value 
                         existingItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
                     }
