@@ -42,7 +42,7 @@ namespace AweCsome.Interfaces
         List<KeyValuePair<AweCsomeListUpdate, T>> ModifiedItemsSince<T>(DateTime compareDate) where T : new();
         bool Exists<T>();
         void UpdateTableStructure<T>();
-
+ 
 
     }
 }

@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AweCsome.Attributes.IgnoreAttributes
 {
-    public class IgnoreOnInsertAttribute:Attribute
+    public class IgnoreOnInsertAttribute : Attribute
     {
+        public bool OnlyIfEmpty { get; set; } = false;
         public bool IgnoreOnInsert { get; set; } = true;
     }
 }

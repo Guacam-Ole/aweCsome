@@ -12,5 +12,9 @@ namespace AweCsome.Interfaces
         AweCsomeGroup GetGroupFromSite(string groupname);
         bool UserIsInGroup(string groupname, int? userId=null);
         AweCsomeUser GetCurrentUser();
+        List<AweCsomeUser> GetVisitors();
+        List<AweCsomeUser> GetOwners();
+        List<AweCsomeUser> GetMembers();
+        List<AweCsomeUser> GetSiteUsers();
     }
 }
