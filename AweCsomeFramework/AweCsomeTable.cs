@@ -718,6 +718,7 @@ namespace AweCsome
 
         public void UpdateItem<T>(T entity)
         {
+            if (entity == null) throw new Exception("Entity is null");
             Type entityType = entity.GetType();
             try
             {
@@ -737,26 +738,33 @@ namespace AweCsome
                     ListItem existingItem = list.GetItemById(idValue.Value);
                     foreach (var property in entityType.GetProperties())
                     {
-                        if (!property.CanRead) continue;
-                        var value = EntityHelper.GetItemValueFromProperty(property, entity);
-                        var ignoreOnUpdateAttribute = property.GetCustomAttribute<IgnoreOnUpdateAttribute>();
-                        if (ignoreOnUpdateAttribute != null && ignoreOnUpdateAttribute.IgnoreOnUpdate)
+                        try
                         {
-                            if (!ignoreOnUpdateAttribute.OnlyIfEmpty) continue;
-                            if (value == null) continue;
-                        }
-                        if (property.PropertyType == typeof(DateTime))
-                        {
-                            var year = ((DateTime)value).Year;
-                            if (year < 1900 || year > 8900)
+                            if (!property.CanRead) continue;
+                            var value = EntityHelper.GetItemValueFromProperty(property, entity);
+                            var ignoreOnUpdateAttribute = property.GetCustomAttribute<IgnoreOnUpdateAttribute>();
+                            if (ignoreOnUpdateAttribute != null && ignoreOnUpdateAttribute.IgnoreOnUpdate)
                             {
-                                if (ignoreOnUpdateAttribute != null) continue;  // Empty Date
-                                throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
+                                if (!ignoreOnUpdateAttribute.OnlyIfEmpty) continue;
+                                if (value == null) continue;
                             }
-                        }
+                            if (property.PropertyType == typeof(DateTime))
+                            {
+                                var year = ((DateTime)value).Year;
+                                if (year < 1900 || year > 8900)
+                                {
+                                    if (ignoreOnUpdateAttribute != null) continue;  // Empty Date
+                                    throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
+                                }
+                            }
 
-                        if (value is KeyValuePair<int, string> && ((KeyValuePair<int, string>)value).Key == 0) value = null; // Lookup/Person with no value 
-                        existingItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
+                            if (value is KeyValuePair<int, string> && ((KeyValuePair<int, string>)value).Key == 0) value = null; // Lookup/Person with no value 
+                            existingItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Error in assigning value from field '{property?.Name}'", ex);
+                        }
                     }
                     existingItem.Update();
                     clientContext.ExecuteQuery();
@@ -764,8 +772,7 @@ namespace AweCsome
             }
             catch (Exception ex)
             {
-                _log.Error($"Cannot update data from entity of type '{entityType.Name}'", ex);
-                throw;
+                throw new Exception($"Cannot update data from entity of type '{entityType?.Name}'", ex);
             }
         }
 
