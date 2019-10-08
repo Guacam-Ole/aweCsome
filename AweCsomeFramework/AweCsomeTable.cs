@@ -491,6 +491,10 @@ namespace AweCsome
                     return newItem.Id;
                 }
             }
+            catch (Microsoft.SharePoint.Client.ServerException ex) {
+                _log.Warn($"ErrorCode: {ex.ServerErrorCode},Correlation: {ex.ServerErrorTraceCorrelationId}, Type: {ex.ServerErrorTypeName}, Value: {ex.ServerErrorValue}");
+                throw;
+            }
             catch (Exception ex)
             {
                 _log.Error($"Cannot insert data from entity of type '{entityType.Name}'", ex);
@@ -601,6 +605,17 @@ namespace AweCsome
                         property.SetValue(entity, item.Id);
                     }
                 }
+                catch (Microsoft.SharePoint.Client.ServerException ex)
+                {
+                    _log.Warn($"ErrorCode: {ex.ServerErrorCode},Correlation: {ex.ServerErrorTraceCorrelationId}, Type: {ex.ServerErrorTypeName}, Value: {ex.ServerErrorValue}");
+                    string errorMessage = $"Could not store data from field '{fieldname}' ";
+                    _log.Error(errorMessage, ex);
+                    var exception = new Exception(errorMessage, ex);
+                    exception.Data.Add("Field", fieldname);
+                    exception.Data.Add("SourceValue", sourceValue);
+                    exception.Data.Add("SourceType", sourceType);
+                    exception.Data.Add("TargetType", targetType);
+                }
                 catch (Exception ex)
                 {
                     string errorMessage = $"Could not store data from field '{fieldname}' ";
@@ -610,6 +625,7 @@ namespace AweCsome
                     exception.Data.Add("SourceValue", sourceValue);
                     exception.Data.Add("SourceType", sourceType);
                     exception.Data.Add("TargetType", targetType);
+                   
                 }
             }
         }
