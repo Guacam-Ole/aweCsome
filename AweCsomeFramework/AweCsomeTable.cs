@@ -904,12 +904,13 @@ namespace AweCsome
         #endregion Delete
 
         #region Files
-        public List<string> SelectFileNamesFromItem<T>(int id)
+        public List<KeyValuePair<DateTime, string>> SelectFileNamesFromItem<T>(int id)
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             FileCollection attachments = GetAttachments(listname, id);
-            if (attachments == null) return new List<string>();
-            return attachments.Select(q => q.Name).ToList();
+            if (attachments == null) return new List<KeyValuePair<DateTime, string>>();
+            
+            return attachments.Select(q => new KeyValuePair<DateTime, string>(q.TimeCreated, q.Name)).ToList();
         }
 
         public Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename = null)
