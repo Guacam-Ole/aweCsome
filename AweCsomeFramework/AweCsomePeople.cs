@@ -117,6 +117,7 @@ namespace AweCsome
             }
             catch (Exception ex)
             {
+                _log.Error($"Error on UserIsInGroup '{groupname}'", ex);
                 throw;
             }
         }

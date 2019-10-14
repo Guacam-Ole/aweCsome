@@ -491,6 +491,10 @@ namespace AweCsome
                     return newItem.Id;
                 }
             }
+            catch (Microsoft.SharePoint.Client.ServerException ex) {
+                _log.Warn($"ErrorCode: {ex.ServerErrorCode},Correlation: {ex.ServerErrorTraceCorrelationId}, Type: {ex.ServerErrorTypeName}, Value: {ex.ServerErrorValue}");
+                throw;
+            }
             catch (Exception ex)
             {
                 _log.Error($"Cannot insert data from entity of type '{entityType.Name}'", ex);
@@ -601,6 +605,17 @@ namespace AweCsome
                         property.SetValue(entity, item.Id);
                     }
                 }
+                catch (Microsoft.SharePoint.Client.ServerException ex)
+                {
+                    _log.Warn($"ErrorCode: {ex.ServerErrorCode},Correlation: {ex.ServerErrorTraceCorrelationId}, Type: {ex.ServerErrorTypeName}, Value: {ex.ServerErrorValue}");
+                    string errorMessage = $"Could not store data from field '{fieldname}' ";
+                    _log.Error(errorMessage, ex);
+                    var exception = new Exception(errorMessage, ex);
+                    exception.Data.Add("Field", fieldname);
+                    exception.Data.Add("SourceValue", sourceValue);
+                    exception.Data.Add("SourceType", sourceType);
+                    exception.Data.Add("TargetType", targetType);
+                }
                 catch (Exception ex)
                 {
                     string errorMessage = $"Could not store data from field '{fieldname}' ";
@@ -610,6 +625,7 @@ namespace AweCsome
                     exception.Data.Add("SourceValue", sourceValue);
                     exception.Data.Add("SourceType", sourceType);
                     exception.Data.Add("TargetType", targetType);
+                   
                 }
             }
         }
@@ -718,6 +734,7 @@ namespace AweCsome
 
         public void UpdateItem<T>(T entity)
         {
+            if (entity == null) throw new Exception("Entity is null");
             Type entityType = entity.GetType();
             try
             {
@@ -737,26 +754,33 @@ namespace AweCsome
                     ListItem existingItem = list.GetItemById(idValue.Value);
                     foreach (var property in entityType.GetProperties())
                     {
-                        if (!property.CanRead) continue;
-                        var value = EntityHelper.GetItemValueFromProperty(property, entity);
-                        var ignoreOnUpdateAttribute = property.GetCustomAttribute<IgnoreOnUpdateAttribute>();
-                        if (ignoreOnUpdateAttribute != null && ignoreOnUpdateAttribute.IgnoreOnUpdate)
+                        try
                         {
-                            if (!ignoreOnUpdateAttribute.OnlyIfEmpty) continue;
-                            if (value == null) continue;
-                        }
-                        if (property.PropertyType == typeof(DateTime))
-                        {
-                            var year = ((DateTime)value).Year;
-                            if (year < 1900 || year > 8900)
+                            if (!property.CanRead) continue;
+                            var value = EntityHelper.GetItemValueFromProperty(property, entity);
+                            var ignoreOnUpdateAttribute = property.GetCustomAttribute<IgnoreOnUpdateAttribute>();
+                            if (ignoreOnUpdateAttribute != null && ignoreOnUpdateAttribute.IgnoreOnUpdate)
                             {
-                                if (ignoreOnUpdateAttribute != null) continue;  // Empty Date
-                                throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
+                                if (!ignoreOnUpdateAttribute.OnlyIfEmpty) continue;
+                                if (value == null) continue;
                             }
-                        }
+                            if (property.PropertyType == typeof(DateTime))
+                            {
+                                var year = ((DateTime)value).Year;
+                                if (year < 1900 || year > 8900)
+                                {
+                                    if (ignoreOnUpdateAttribute != null) continue;  // Empty Date
+                                    throw new ArgumentOutOfRangeException("SharePoint-Datetime must be within 1900 and 8900");
+                                }
+                            }
 
-                        if (value is KeyValuePair<int, string> && ((KeyValuePair<int, string>)value).Key == 0) value = null; // Lookup/Person with no value 
-                        existingItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
+                            if (value is KeyValuePair<int, string> && ((KeyValuePair<int, string>)value).Key == 0) value = null; // Lookup/Person with no value 
+                            existingItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Error in assigning value from field '{property?.Name}'", ex);
+                        }
                     }
                     existingItem.Update();
                     clientContext.ExecuteQuery();
@@ -764,8 +788,7 @@ namespace AweCsome
             }
             catch (Exception ex)
             {
-                _log.Error($"Cannot update data from entity of type '{entityType.Name}'", ex);
-                throw;
+                throw new Exception($"Cannot update data from entity of type '{entityType?.Name}'", ex);
             }
         }
 
@@ -881,12 +904,13 @@ namespace AweCsome
         #endregion Delete
 
         #region Files
-        public List<string> SelectFileNamesFromItem<T>(int id)
+        public List<KeyValuePair<DateTime, string>> SelectFileNamesFromItem<T>(int id)
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             FileCollection attachments = GetAttachments(listname, id);
-            if (attachments == null) return new List<string>();
-            return attachments.Select(q => q.Name).ToList();
+            if (attachments == null) return new List<KeyValuePair<DateTime, string>>();
+            
+            return attachments.Select(q => new KeyValuePair<DateTime, string>(q.TimeCreated, q.Name)).ToList();
         }
 
         public Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename = null)
