@@ -10,7 +10,7 @@ namespace AweCsome.Entities
         public object Entity { get; set; }
 
         public enum CheckoutTypes { None, Online, Offline }
-        public enum FileLevels { Checkout, Draft, Public }
+        public enum FileLevels { Checkout, Draft, Published }
 
         public long Length { get; set; }
         public string Version { get; set; }
