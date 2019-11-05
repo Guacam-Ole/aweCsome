@@ -21,5 +21,6 @@ namespace AweCsome.Entities
         public FileLevels Level { get; set; }
         public DateTime Created { get; set; }
         public DateTime? Modified { get; set; }
+        public string Folder { get; set; }
     }
 }
