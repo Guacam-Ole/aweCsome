@@ -913,14 +913,41 @@ namespace AweCsome
             return attachments.Select(q => new KeyValuePair<DateTime, string>(q.TimeCreated, q.Name)).ToList();
         }
 
-        public Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename = null)
+        private AweCsomeFile CastFileToAweCsomeFile(File file, object entity)
         {
-            long totalSize = 0;
+            using (var clientContext = GetClientContext())
+            {
+                MemoryStream targetStream = new MemoryStream();
+                var stream = file.OpenBinaryStream();
+                clientContext.ExecuteQuery();
+                stream.Value.CopyTo(targetStream);
+
+                return new AweCsomeFile
+                {
+                    Author = file.Author.Id,
+                    CheckedOutBy = file.CheckedOutByUser.Id,
+                    CheckInComment = file.CheckInComment,
+                    CheckoutType = (AweCsomeFile.CheckoutTypes)Enum.Parse(typeof(AweCsomeFile.CheckoutTypes), file.CheckOutType.ToString()),
+                    Created = file.TimeCreated,
+                    Filename = file.Name,
+                    Length = file.Length,
+                    Modified = file.TimeLastModified,
+                    Level = (AweCsomeFile.FileLevels)Enum.Parse(typeof(AweCsomeFile.FileLevels), file.Level.ToString()),
+                    Version = $"{file.MajorVersion}.{file.MinorVersion}",
+                    Stream=targetStream,
+                    Entity=entity
+                };
+            }
+        }
+
+        public List<AweCsomeFile> SelectFilesFromItem<T>(int id, string filename = null)
+        {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             FileCollection attachments = GetAttachments(listname, id);
 
+            var attachmentStreams = new List<AweCsomeFile>();
 
-            var attachmentStreams = new Dictionary<string, Stream>();
+            //var attachmentStreams = new Dictionary<string, Stream>();
             using (var clientContext = GetClientContext())
             {
                 if (attachments != null)
@@ -928,17 +955,12 @@ namespace AweCsome
                     foreach (var attachment in attachments)
                     {
                         if (filename != null && filename != attachment.Name) continue;
-
-                        MemoryStream targetStream = new MemoryStream();
-                        var stream = attachment.OpenBinaryStream();
-                        clientContext.ExecuteQuery();
-                        stream.Value.CopyTo(targetStream);
-                        attachmentStreams.Add(attachment.Name, targetStream);
-                        totalSize += targetStream.Length;
+                        attachmentStreams.Add(CastFileToAweCsomeFile(attachment, null));
                     }
                 }
             }
 
+            long totalSize = attachmentStreams.Sum(q => q.Length);
             _log.DebugFormat($"Retrieved '{attachments?.Count}' attachments from {listname}({id}). Size:{totalSize} Bytes");
             return attachmentStreams;
         }
@@ -1020,10 +1042,10 @@ namespace AweCsome
             }
         }
 
-        public List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername, bool retrieveContent = true) where T : new()
+        public List<AweCsomeFile> SelectFilesFromLibrary<T>(string foldername, bool retrieveContent = true) where T : new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
-            var allFiles = new List<AweCsomeLibraryFile>();
+            var allFiles = new List<AweCsomeFile>();
             using (ClientContext context = GetClientContext())
             {
                 Web web = context.Web;
@@ -1045,7 +1067,7 @@ namespace AweCsome
                 }
                 catch
                 {
-                    return null; // There is no cleaner way to do this on CSOM
+                    return null; // Sadly there is no cleaner way to do this on CSOM
                 }
                 context.Load(folder.Files);
                 context.Load(folder.Files, f => f.Include(q => q.ListItemAllFields));
@@ -1053,32 +1075,18 @@ namespace AweCsome
                 if (folder.Files == null) return null;
                 foreach (var file in folder.Files)
                 {
-                    MemoryStream stream = new MemoryStream();
-                    if (retrieveContent)
-                    {
-                        var fileStream = file.OpenBinaryStream();
-                        context.ExecuteQuery();
-                        fileStream.Value.CopyTo(stream);
-                        stream.Position = 0;
-                    }
                     var entity = new T();
-
                     StoreFromListItem(entity, file.ListItemAllFields);
-                    allFiles.Add(new AweCsomeLibraryFile
-                    {
-                        Filename = file.Name,
-                        Stream = stream,
-                        Entity = entity
-                    });
+                    CastFileToAweCsomeFile(file, entity);
                 }
                 return allFiles;
             }
         }
 
-        public AweCsomeLibraryFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new()
+        public AweCsomeFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
-            var allFiles = new List<AweCsomeLibraryFile>();
+            var allFiles = new List<AweCsomeFile>();
             using (ClientContext context = GetClientContext())
             {
                 var folder = GetFolderFromDocumentLibrary<T>(context, foldername);
@@ -1096,7 +1104,7 @@ namespace AweCsome
                 var entity = new T();
 
                 StoreFromListItem(entity, file.ListItemAllFields);
-                return new AweCsomeLibraryFile
+                return new AweCsomeFile
                 {
                     Filename = file.Name,
 
@@ -1130,7 +1138,7 @@ namespace AweCsome
         public List<string> SelectFileNamesFromLibrary<T>(string foldername)
         {
 
-            var allFiles = new List<AweCsomeLibraryFile>();
+            var allFiles = new List<AweCsomeFile>();
             using (ClientContext context = GetClientContext())
             {
                 var folder = GetFolderFromDocumentLibrary<T>(context, foldername);
