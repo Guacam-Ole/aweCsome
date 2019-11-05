@@ -1,10 +1,12 @@
-﻿
-using AweCsome.Attributes;
+﻿using AweCsome.Attributes;
 using AweCsome.Attributes.FieldAttributes;
 using AweCsome.Attributes.TableAttributes;
+
 using log4net;
+
 using Microsoft.SharePoint.Client;
 using Microsoft.SharePoint.Client.Taxonomy;
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -46,9 +48,6 @@ namespace AweCsome
             var internalNameAttribute = entityType.GetCustomAttribute<InternalNameAttribute>();
             return internalNameAttribute == null ? entityType.Name : internalNameAttribute.InternalName;
         }
-
-    
-
 
         public static string GetDisplayNameFromEntityType(Type entityType)
         {
@@ -112,7 +111,6 @@ namespace AweCsome
             return (property.GetCustomAttribute<UserAttribute>(true) != null);
         }
 
-
         public static bool PropertyIsUrl(PropertyInfo property)
         {
             return property.GetCustomAttribute<UrlAttribute>() != null;
@@ -146,7 +144,6 @@ namespace AweCsome
 
             if (propertyType.IsArray) propertyType = propertyType.GetElementType();
 
-
             if (propertyType.IsEnum)
                 return nameof(FieldType.Choice);
             switch (Type.GetTypeCode(propertyType))
@@ -162,13 +159,17 @@ namespace AweCsome
                 case TypeCode.Double:
                 case TypeCode.Single:
                     return nameof(FieldType.Number);
+
                 case TypeCode.Decimal:
                     return nameof(FieldType.Currency);
+
                 case TypeCode.Boolean:
                     return nameof(FieldType.Boolean);
+
                 case TypeCode.String:
                 case TypeCode.Char:
                     return nameof(FieldType.Text);
+
                 case TypeCode.DateTime:
                     return nameof(FieldType.DateTime);
 
@@ -267,7 +268,8 @@ namespace AweCsome
                         return targetEntityObject;
                     }
                 }
-            } else if (PropertyIsUrl(property))
+            }
+            else if (PropertyIsUrl(property))
             {
                 return ((FieldUrlValue)itemValue).Url;
             }
@@ -312,13 +314,12 @@ namespace AweCsome
 
         public static PropertyInfo PropertyFromField(this Type entityType, string fieldName)
         {
-            foreach (var property in entityType.GetProperties())            {
+            foreach (var property in entityType.GetProperties())
+            {
                 if (GetInternalNameFromProperty(property) == fieldName) return property;
             }
             return null;
         }
-
-   
 
         public static object GetItemValueFromProperty<T>(PropertyInfo property, T entity)
         {
@@ -347,7 +348,7 @@ namespace AweCsome
                     return CreateLookupFromId(((int)property.PropertyType.GetProperty(AweCsomeField.SuffixId).GetValue(item)));
                 }
             }
-    
+
             if (propertyType.IsEnum)
             {
                 return property.PropertyType.GetEnumDisplayNameFromInternalname(property.GetValue(entity).ToString());

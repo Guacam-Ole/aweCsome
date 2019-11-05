@@ -913,19 +913,26 @@ namespace AweCsome
             return attachments.Select(q => new KeyValuePair<DateTime, string>(q.TimeCreated, q.Name)).ToList();
         }
 
-        private AweCsomeFile CastFileToAweCsomeFile(File file, object entity)
+        private AweCsomeFile CastFileToAweCsomeFile(File file, string folder, object entity)
         {
             using (var clientContext = GetClientContext())
             {
+                clientContext.Load(file.Author);
+                clientContext.Load(file.CheckedOutByUser);
+
                 MemoryStream targetStream = new MemoryStream();
                 var stream = file.OpenBinaryStream();
                 clientContext.ExecuteQuery();
                 stream.Value.CopyTo(targetStream);
 
+                int authorId = file.Author.Id;
+                int? checkedOutByUser = null;
+                if (file.CheckOutType != CheckOutType.None) checkedOutByUser = file.CheckedOutByUser.Id;
+
                 return new AweCsomeFile
                 {
-                    Author = file.Author.Id,
-                    CheckedOutBy = file.CheckedOutByUser.Id,
+                    Author = authorId,
+                    CheckedOutBy = checkedOutByUser,
                     CheckInComment = file.CheckInComment,
                     CheckoutType = (AweCsomeFile.CheckoutTypes)Enum.Parse(typeof(AweCsomeFile.CheckoutTypes), file.CheckOutType.ToString()),
                     Created = file.TimeCreated,
@@ -935,7 +942,9 @@ namespace AweCsome
                     Level = (AweCsomeFile.FileLevels)Enum.Parse(typeof(AweCsomeFile.FileLevels), file.Level.ToString()),
                     Version = $"{file.MajorVersion}.{file.MinorVersion}",
                     Stream=targetStream,
-                    Entity=entity
+                    Entity=entity,
+                    Folder=folder
+
                 };
             }
         }
@@ -955,13 +964,13 @@ namespace AweCsome
                     foreach (var attachment in attachments)
                     {
                         if (filename != null && filename != attachment.Name) continue;
-                        attachmentStreams.Add(CastFileToAweCsomeFile(attachment, null));
+                        attachmentStreams.Add(CastFileToAweCsomeFile(attachment, null, null));
                     }
                 }
             }
 
             long totalSize = attachmentStreams.Sum(q => q.Length);
-            _log.DebugFormat($"Retrieved '{attachments?.Count}' attachments from {listname}({id}). Size:{totalSize} Bytes");
+            _log.DebugFormat($"Retrieved {attachments?.Count??0} attachments from {listname}({id}). Size:{FileHelper.PrettyLong(totalSize)}");
             return attachmentStreams;
         }
 
@@ -1077,7 +1086,7 @@ namespace AweCsome
                 {
                     var entity = new T();
                     StoreFromListItem(entity, file.ListItemAllFields);
-                    CastFileToAweCsomeFile(file, entity);
+                    allFiles.Add(CastFileToAweCsomeFile(file, foldername, entity));
                 }
                 return allFiles;
             }

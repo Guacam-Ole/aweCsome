@@ -48,7 +48,7 @@
       <HintPath>..\..\packages\AngleSharp.0.13.0\lib\net46\AngleSharp.dll</HintPath>
     </Reference>
     <Reference Include="AweCsome.Interfaces, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\AweCsome.Interfaces.4.0.0-CI-20191105.2\lib\net452\AweCsome.Interfaces.dll</HintPath>
+      <HintPath>..\..\..\Mydea\MydeaEntityO365\packages\AweCsome.Interfaces.4.0.0-CI-20191105.6\lib\net452\AweCsome.Interfaces.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
@@ -235,6 +235,7 @@
     <Compile Include="..\AweCsomeTaxonomy.cs" />
     <Compile Include="..\EntityHelper.cs" />
     <Compile Include="AweCsomeHelpers.cs" />
+    <Compile Include="FileHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
