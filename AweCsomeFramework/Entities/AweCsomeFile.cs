@@ -15,7 +15,7 @@ namespace AweCsome.Entities
         public long Length { get; set; }
         public string Version { get; set; }
         public int Author { get; set; }
-        public int CheckedOutBy { get; set; }
+        public int? CheckedOutBy { get; set; }
         public string CheckInComment { get; set; }
         public CheckoutTypes CheckoutType { get; set; }
         public FileLevels Level { get; set; }
