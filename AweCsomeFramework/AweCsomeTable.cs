@@ -970,7 +970,7 @@ namespace AweCsome
             }
 
             long totalSize = attachmentStreams.Sum(q => q.Length);
-            _log.DebugFormat($"Retrieved {attachments?.Count??0} attachments from {listname}({id}). Size:{FileHelper.PrettyLong(totalSize)}");
+            _log.DebugFormat($"Retrieved {attachments?.Count??0} attachments from {listname}({id}). Size:{EntityHelper.PrettyLong(totalSize)}");
             return attachmentStreams;
         }
 
