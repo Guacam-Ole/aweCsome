@@ -803,7 +803,7 @@ namespace AweCsome
             }
         }
 
-        public bool IsLikedBy<T>(int id, int userId) where T:new()
+        public bool IsLikedBy<T>(int id, int userId) 
         {
             var likes = GetLikes<T>(id);
             return likes.ContainsKey(userId);
