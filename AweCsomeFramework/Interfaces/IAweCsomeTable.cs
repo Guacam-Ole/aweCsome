@@ -42,8 +42,8 @@ namespace AweCsome.Interfaces
         List<KeyValuePair<AweCsomeListUpdate, T>> ModifiedItemsSince<T>(DateTime compareDate) where T : new();
         bool Exists<T>();
         void UpdateTableStructure<T>();
-        bool IsLikedBy<T>(int id, int userId);
-        Dictionary<int, string> GetLikes<T>(int id);
+        bool IsLikedBy<T>(int id, int userId) where T : new();
+        Dictionary<int, string> GetLikes<T>(int id) where T : new();
 
     }
 }
