@@ -803,13 +803,13 @@ namespace AweCsome
             }
         }
 
-        public bool IsLikedBy<T>(int id, int userId) 
+        public bool IsLikedBy<T>(int id, int userId) where T:new()
         {
             var likes = GetLikes<T>(id);
             return likes.ContainsKey(userId);
         }
 
-        public Dictionary<int,string> GetLikes<T>(int id)
+        public Dictionary<int,string> GetLikes<T>(int id) where T:new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             ListItem item = GetListItemById(listname, id);
