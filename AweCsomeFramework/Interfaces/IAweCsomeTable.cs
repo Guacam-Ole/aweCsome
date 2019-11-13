@@ -1,7 +1,7 @@
-﻿using System;
+﻿using AweCsome.Entities;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using AweCsome.Entities;
 
 namespace AweCsome.Interfaces
 {
@@ -24,12 +24,12 @@ namespace AweCsome.Interfaces
         T Like<T>(int id, int userId) where T : new();
         T Unlike<T>(int id, int userId) where T : new();
         List<KeyValuePair<DateTime, string>> SelectFileNamesFromItem<T>(int id);
-        Dictionary<string, Stream> SelectFilesFromItem<T>(int id, string filename = null);
+        List<AweCsomeFile> SelectFilesFromItem<T>(int id, string filename = null);
         void AttachFileToItem<T>(int id, string filename, Stream filestream);
         void DeleteFileFromItem<T>(int id, string filename);
         string AttachFileToLibrary<T>(string folder, string filename, Stream filestream, T entity);
-        List<AweCsomeLibraryFile> SelectFilesFromLibrary<T>(string foldername, bool retrieveContent = true) where T : new();
-        AweCsomeLibraryFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new();
+        List<AweCsomeFile> SelectFilesFromLibrary<T>(string foldername, bool retrieveContent = true) where T : new();
+        AweCsomeFile SelectFileFromLibrary<T>(string foldername, string filename) where T : new();
         List<string> SelectFileNamesFromLibrary<T>(string foldername);
         string AddFolderToLibrary<T>(string folder);
         int CountItems<T>();
@@ -42,7 +42,8 @@ namespace AweCsome.Interfaces
         List<KeyValuePair<AweCsomeListUpdate, T>> ModifiedItemsSince<T>(DateTime compareDate) where T : new();
         bool Exists<T>();
         void UpdateTableStructure<T>();
- 
+        bool IsLikedBy<T>(int id, int userId) where T : new();
+        Dictionary<int, string> GetLikes<T>(int id) where T : new();
 
     }
 }

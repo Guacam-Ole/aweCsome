@@ -18,6 +18,7 @@ Simply type `Update-Package -reinstall` and you should be ready to go.
 Documentation can be found at the **Wiki**
 
 ## Build status:
+This is the most current Build status. Even if the status is "failed", there most likely is an older version that works just fine.
 ### Develop (CI)
 * Interfaces 
 [![Build Status](https://olealbers.visualstudio.com/AweCsome/_apis/build/status/Debug/AweCsome-Interfaces-Develop?branchName=develop)](https://olealbers.visualstudio.com/AweCsome/_build/latest?definitionId=7&branchName=develop)
