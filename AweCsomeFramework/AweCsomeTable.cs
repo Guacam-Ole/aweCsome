@@ -803,6 +803,25 @@ namespace AweCsome
             }
         }
 
+        public bool IsLikedBy<T>(int id, int userId) where T:new()
+        {
+            var likes = GetLikes<T>(id);
+            return likes.ContainsKey(userId);
+        }
+
+        public Dictionary<int,string> GetLikes<T>(int id)
+        {
+            string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
+            ListItem item = GetListItemById(listname, id);
+            var likeArray = ((FieldUserValue[])item.FieldValues.First(fn => fn.Key == "LikedBy").Value)?.ToList() ?? new List<FieldUserValue>();
+            var likes = new Dictionary<int, string>();
+            foreach (var like in likeArray)
+            {
+                likes.Add(like.LookupId, like.LookupValue);
+            }
+            return likes;
+        }
+
         public T Like<T>(int id, int userId) where T : new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
