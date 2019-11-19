@@ -717,13 +717,37 @@ namespace AweCsome
 
         public bool Exists<T>()
         {
-            using (var clientContext = GetClientContext())
+            int retries = MaxRetries;
+            while (retries > 0)
             {
-                var web = clientContext.Web;
-                clientContext.Load(web);
-                clientContext.ExecuteQuery();
-                return web.ListExists(EntityHelper.GetInternalNameFromEntityType(typeof(T)));
+                try
+                {
+                    using (var clientContext = GetClientContext())
+                    {
+                        var web = clientContext.Web;
+                        clientContext.Load(web);
+                        clientContext.ExecuteQuery();
+                        bool listExists = web.ListExists(EntityHelper.GetInternalNameFromEntityType(typeof(T)));
+                        retries = 0;
+                        return listExists;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    retries--;
+                    if (ex.Message.Contains("(500)") && retries > 0)
+                    {
+                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        System.Threading.Thread.Sleep(1000);
+                    }
+                    else
+                    {
+                        throw new Exception($"Cannot check if list '{typeof(T).Name}' exists", ex);
+                        throw;
+                    }
+                }
             }
+            throw new Exception("too many retries");
         }
 
         private ListItem GetListItemById(string listname, int id)
