@@ -31,7 +31,6 @@ namespace AweCsome
             _clientContext = clientContext;
         }
 
-
         #region Helpers
 
         private ClientContext GetClientContext()
@@ -86,8 +85,6 @@ namespace AweCsome
                 }
             }
         }
-
-
 
         private E.QuickLaunchOptions? GetQuickLaunchOption(Type entityType)
         {
@@ -207,6 +204,7 @@ namespace AweCsome
         #endregion Helpers
 
         #region Structure
+
         private ListCreationInformation BuildListCreationInformation(ClientContext context, Type entityType)
         {
             ListCreationInformation listCreationInfo = new ListCreationInformation
@@ -468,6 +466,7 @@ namespace AweCsome
         #endregion Structure
 
         #region Insert
+
         public int InsertItem<T>(T entity)
         {
             Type entityType = typeof(T);
@@ -491,7 +490,8 @@ namespace AweCsome
                     return newItem.Id;
                 }
             }
-            catch (Microsoft.SharePoint.Client.ServerException ex) {
+            catch (Microsoft.SharePoint.Client.ServerException ex)
+            {
                 _log.Warn($"ErrorCode: {ex.ServerErrorCode},Correlation: {ex.ServerErrorTraceCorrelationId}, Type: {ex.ServerErrorTypeName}, Value: {ex.ServerErrorValue}");
                 throw;
             }
@@ -501,6 +501,7 @@ namespace AweCsome
                 throw;
             }
         }
+
         #endregion Insert
 
         #region Select
@@ -585,7 +586,6 @@ namespace AweCsome
                         targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
                         sourceType = Nullable.GetUnderlyingType(sourceValue.GetType()) ?? sourceValue.GetType();
 
-
                         object propertyValue = EntityHelper.GetPropertyFromItemValue(property, item.FieldValues[fieldname]);
                         if (property.PropertyType.IsAssignableFrom(propertyValue.GetType()))
                         {
@@ -625,7 +625,6 @@ namespace AweCsome
                     exception.Data.Add("SourceValue", sourceValue);
                     exception.Data.Add("SourceType", sourceType);
                     exception.Data.Add("TargetType", targetType);
-                   
                 }
             }
         }
@@ -687,36 +686,46 @@ namespace AweCsome
             Type entityType = typeof(T);
             var entities = new List<T>();
 
-            try
+            int errorCount = 0;
+
+            while (true)
             {
-                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
-                using (var clientContext = GetClientContext())
+                try
                 {
-                    Web web = clientContext.Web;
-                    ListCollection listCollection = web.Lists;
-                    clientContext.Load(listCollection);
-                    clientContext.ExecuteQuery();
-                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
-                    if (list == null) throw new ListNotFoundException();
-                    ListItemCollection items = list.GetItems(query);
-                    clientContext.Load(items);
-                    clientContext.ExecuteQuery();
-                    foreach (var item in items)
+                    string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                    using (var clientContext = GetClientContext())
                     {
-                        var entity = new T();
-                        StoreFromListItem(entity, item);
-                        entities.Add(entity);
+                        Web web = clientContext.Web;
+                        ListCollection listCollection = web.Lists;
+                        clientContext.Load(listCollection);
+                        clientContext.ExecuteQuery();
+                        List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                        if (list == null) throw new ListNotFoundException();
+                        ListItemCollection items = list.GetItems(query);
+                        clientContext.Load(items);
+                        clientContext.ExecuteQuery();
+                        foreach (var item in items)
+                        {
+                            var entity = new T();
+                            StoreFromListItem(entity, item);
+                            entities.Add(entity);
+                        }
                     }
+                    return entities;
                 }
-                return entities;
-            }
-            catch (Exception ex)
-            {
-                _log.Error($"Cannot select items from table of entity with type '{entityType.Name}", ex);
-                throw;
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("(500)") && errorCount < 3)
+                    {
+                        _log.Warn($"Internal Server. Will try again. ErrorCount: {errorCount}");
+                        System.Threading.Thread.Sleep(1000);
+                        errorCount++;
+                    }
+                    _log.Error($"Cannot select items from table of entity with type '{entityType.Name}", ex);
+                    throw;
+                }
             }
         }
-
 
         public List<T> SelectItemsByQuery<T>(string query) where T : new()
         {
@@ -774,7 +783,7 @@ namespace AweCsome
                                 }
                             }
 
-                            if (value is KeyValuePair<int, string> && ((KeyValuePair<int, string>)value).Key == 0) value = null; // Lookup/Person with no value 
+                            if (value is KeyValuePair<int, string> && ((KeyValuePair<int, string>)value).Key == 0) value = null; // Lookup/Person with no value
                             existingItem[EntityHelper.GetInternalNameFromProperty(property)] = value;
                         }
                         catch (Exception ex)
@@ -803,13 +812,13 @@ namespace AweCsome
             }
         }
 
-        public bool IsLikedBy<T>(int id, int userId) where T:new()
+        public bool IsLikedBy<T>(int id, int userId) where T : new()
         {
             var likes = GetLikes<T>(id);
             return likes.ContainsKey(userId);
         }
 
-        public Dictionary<int,string> GetLikes<T>(int id) where T:new()
+        public Dictionary<int, string> GetLikes<T>(int id) where T : new()
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             ListItem item = GetListItemById(listname, id);
@@ -919,16 +928,16 @@ namespace AweCsome
             }
         }
 
-
         #endregion Delete
 
         #region Files
+
         public List<KeyValuePair<DateTime, string>> SelectFileNamesFromItem<T>(int id)
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             FileCollection attachments = GetAttachments(listname, id);
             if (attachments == null) return new List<KeyValuePair<DateTime, string>>();
-            
+
             return attachments.Select(q => new KeyValuePair<DateTime, string>(q.TimeCreated, q.Name)).ToList();
         }
 
@@ -960,10 +969,9 @@ namespace AweCsome
                     Modified = file.TimeLastModified,
                     Level = (AweCsomeFile.FileLevels)Enum.Parse(typeof(AweCsomeFile.FileLevels), file.Level.ToString()),
                     Version = $"{file.MajorVersion}.{file.MinorVersion}",
-                    Stream=targetStream,
-                    Entity=entity,
-                    Folder=folder
-
+                    Stream = targetStream,
+                    Entity = entity,
+                    Folder = folder
                 };
             }
         }
@@ -989,7 +997,7 @@ namespace AweCsome
             }
 
             long totalSize = attachmentStreams.Sum(q => q.Length);
-            _log.DebugFormat($"Retrieved {attachments?.Count??0} attachments from {listname}({id}). Size:{EntityHelper.PrettyLong(totalSize)}");
+            _log.DebugFormat($"Retrieved {attachments?.Count ?? 0} attachments from {listname}({id}). Size:{EntityHelper.PrettyLong(totalSize)}");
             return attachmentStreams;
         }
 
@@ -1165,7 +1173,6 @@ namespace AweCsome
 
         public List<string> SelectFileNamesFromLibrary<T>(string foldername)
         {
-
             var allFiles = new List<AweCsomeFile>();
             using (ClientContext context = GetClientContext())
             {
@@ -1206,30 +1213,43 @@ namespace AweCsome
         #endregion Files
 
         #region Counts
+
         private int CountItems<T>(CamlQuery query)
         {
             Type entityType = typeof(T);
-            try
+
+            int errorCount = 0;
+
+            while (true)
             {
-                string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
-                using (var clientContext = GetClientContext())
+                try
                 {
-                    Web web = clientContext.Web;
-                    ListCollection listCollection = web.Lists;
-                    clientContext.Load(listCollection);
-                    clientContext.ExecuteQuery();
-                    List list = listCollection.FirstOrDefault(q => q.Title == listName);
-                    if (list == null) throw new ListNotFoundException();
-                    ListItemCollection items = list.GetItems(query);
-                    clientContext.Load(items, q => q.Include(l => l.Id));
-                    clientContext.ExecuteQuery();
-                    return items.Count;
+                    string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
+                    using (var clientContext = GetClientContext())
+                    {
+                        Web web = clientContext.Web;
+                        ListCollection listCollection = web.Lists;
+                        clientContext.Load(listCollection);
+                        clientContext.ExecuteQuery();
+                        List list = listCollection.FirstOrDefault(q => q.Title == listName);
+                        if (list == null) throw new ListNotFoundException();
+                        ListItemCollection items = list.GetItems(query);
+                        clientContext.Load(items, q => q.Include(l => l.Id));
+                        clientContext.ExecuteQuery();
+                        return items.Count;
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                _log.Error($"Cannot select items from table of entity with type '{entityType.Name}", ex);
-                throw;
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("(500)") && errorCount < 3)
+                    {
+                        _log.Warn($"Internal Server. Will try again. ErrorCount: {errorCount}");
+                        System.Threading.Thread.Sleep(1000);
+                        errorCount++;
+                    }
+                    _log.Error($"Cannot select items from table of entity with type '{entityType.Name}", ex);
+                    throw;
+                }
             }
         }
 
@@ -1256,9 +1276,6 @@ namespace AweCsome
         {
             return CountItems<T>(new CamlQuery { ViewXml = query });
         }
-
-
-
 
         #endregion Counts
 
@@ -1304,9 +1321,11 @@ namespace AweCsome
                         case ChangeType.Add:
                             updateInfo.ChangeType = AweCsomeListUpdate.ChangeTypes.Add;
                             break;
+
                         case ChangeType.DeleteObject:
                             updateInfo.ChangeType = AweCsomeListUpdate.ChangeTypes.Delete;
                             break;
+
                         case ChangeType.Update:
                             updateInfo.ChangeType = AweCsomeListUpdate.ChangeTypes.Update;
                             break;
@@ -1323,7 +1342,6 @@ namespace AweCsome
             return modifiedItems;
         }
 
-
-        #endregion
+        #endregion Changes
     }
 }
