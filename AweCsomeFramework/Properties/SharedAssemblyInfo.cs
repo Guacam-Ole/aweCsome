@@ -7,4 +7,4 @@ using System.Reflection;
 [assembly: AssemblyCopyright("Copyright © 2019 Ole Albers")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("4.1.3")]
+[assembly: AssemblyVersion("4.2.0")]

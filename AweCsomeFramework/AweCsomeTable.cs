@@ -13,6 +13,7 @@ using Microsoft.SharePoint.Client;
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -30,7 +31,24 @@ namespace AweCsome
         private IAweCsomeField _awecsomeField = new AweCsomeField();
         private IAweCsomeTaxonomy _awecsomeTaxonomy = null;
         private ClientContext _clientContext;
-        private const int MaxRetries = 10;
+        private int? _maxRetriesOnServerError = null;
+
+        public int MaxRetriesOnServerError
+        {
+            get
+            {
+                if (_maxRetriesOnServerError != null) return _maxRetriesOnServerError.Value;
+                _maxRetriesOnServerError = 1;
+
+                var configSetting = ConfigurationManager.AppSettings["AweCsomeMaxRetriesOnServerError"];
+                if (int.TryParse(configSetting, out int configSettingValue))
+                {
+                    _maxRetriesOnServerError = configSettingValue;
+                }
+                return _maxRetriesOnServerError.Value;
+
+            }
+        }
 
         public AweCsomeTable(ClientContext clientContext)
         {
@@ -257,7 +275,7 @@ namespace AweCsome
             int columnsModifiedCount = 0;
             int columnsRemovedCount = 0;
 
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
 
             while (retries > 0)
             {
@@ -330,7 +348,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else throw;
@@ -343,7 +361,7 @@ namespace AweCsome
             Type entityType = typeof(T);
             string listName = EntityHelper.GetInternalNameFromEntityType(entityType);
 
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -404,7 +422,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -421,7 +439,7 @@ namespace AweCsome
         {
             foreach (var property in properties)
             {
-                int retries = MaxRetries;
+                int retries = MaxRetriesOnServerError;
                 while (retries > 0)
                 {
                     try
@@ -457,7 +475,7 @@ namespace AweCsome
                         retries--;
                         if (ex.Message.Contains("(500)") && retries > 0)
                         {
-                            _log.Warn($"Failed to create field '{property.Name}'. Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                            _log.Warn($"Failed to create field '{property.Name}'. Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                             System.Threading.Thread.Sleep(1000);
                         }
                         else
@@ -535,7 +553,7 @@ namespace AweCsome
         public int InsertItem<T>(T entity)
         {
             Type entityType = typeof(T);
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -569,7 +587,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -717,7 +735,7 @@ namespace AweCsome
 
         public bool Exists<T>()
         {
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -737,7 +755,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -791,7 +809,7 @@ namespace AweCsome
             Type entityType = typeof(T);
             var entities = new List<T>();
 
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -823,7 +841,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -854,7 +872,7 @@ namespace AweCsome
         {
             if (entity == null) throw new Exception("Entity is null");
             Type entityType = entity.GetType();
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -913,7 +931,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -927,7 +945,7 @@ namespace AweCsome
 
         private void UpdateLikes(ListItem item, List<FieldUserValue> likeArray)
         {
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -946,7 +964,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -966,7 +984,7 @@ namespace AweCsome
 
         public Dictionary<int, string> GetLikes<T>(int id) where T : new()
         {
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -987,7 +1005,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1001,7 +1019,7 @@ namespace AweCsome
 
         public T Like<T>(int id, int userId) where T : new()
         {
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -1027,7 +1045,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1042,7 +1060,7 @@ namespace AweCsome
 
         public T Unlike<T>(int id, int userId) where T : new()
         {
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -1068,7 +1086,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1367,7 +1385,7 @@ namespace AweCsome
         public string AddFolderToLibrary<T>(string folder)
         {
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -1394,7 +1412,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1410,7 +1428,7 @@ namespace AweCsome
         public List<string> SelectFileNamesFromLibrary<T>(string foldername)
         {
             var allFiles = new List<AweCsomeFile>();
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -1430,7 +1448,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1445,7 +1463,7 @@ namespace AweCsome
 
         public void DeleteFilesFromDocumentLibrary<T>(string path, List<string> filenames)
         {
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -1470,7 +1488,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1484,7 +1502,7 @@ namespace AweCsome
 
         public void DeleteFolderFromDocumentLibrary<T>(string path, string foldername)
         {
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -1503,7 +1521,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1523,7 +1541,7 @@ namespace AweCsome
         {
             Type entityType = typeof(T);
 
-            int retries = MaxRetries;
+            int retries = MaxRetriesOnServerError;
             while (retries > 0)
             {
                 try
@@ -1549,7 +1567,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetriesOnServerError - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
