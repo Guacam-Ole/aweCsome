@@ -389,11 +389,13 @@ namespace AweCsome
                         }
                         catch (Exception ex)
                         {
-                            var outerException = new Exception("error creating list", ex);
-                            outerException.Data.Add("List", listName);
+                            //var outerException = new Exception("error creating list", ex);
+                            //outerException.Data.Add("List", listName);
 
-                            _log.Error($"Failed creating list {listName}", ex);
-                            throw outerException;
+                            //_log.Error($"Failed creating list {listName}", ex);
+                            //outerException.Message = ex.Message;
+                            //throw outerException;
+                            throw;
                         }
                     }
                 }
@@ -448,6 +450,7 @@ namespace AweCsome
                         {
                             context.ExecuteQuery();
                         }
+                        retries = 0;
                     }
                     catch (Exception ex)
                     {
@@ -552,6 +555,7 @@ namespace AweCsome
 
                         newItem.Update();
                         clientContext.ExecuteQuery();
+                        retries = 0;
                         return newItem.Id;
                     }
                 }
@@ -787,6 +791,7 @@ namespace AweCsome
                             entities.Add(entity);
                         }
                     }
+                    retries = 0;
                     return entities;
                 }
                 catch (Exception ex)
@@ -876,6 +881,7 @@ namespace AweCsome
                         }
                         existingItem.Update();
                         clientContext.ExecuteQuery();
+                        retries = 0;
                     }
                 }
                 catch (Exception ex)
@@ -908,6 +914,7 @@ namespace AweCsome
                         item["LikesCount"] = likeArray.Count;
                         item.Update();
                         clientContext.ExecuteQuery();
+                        retries = 0;
                     }
                 }
                 catch (Exception ex)
@@ -948,6 +955,7 @@ namespace AweCsome
                     {
                         likes.Add(like.LookupId, like.LookupValue);
                     }
+                    retries = 0;
                     return likes;
                 }
                 catch (Exception ex)
@@ -987,6 +995,7 @@ namespace AweCsome
                     }
                     var entity = new T();
                     StoreFromListItem(entity, item);
+                    retries = 0;
                     return entity;
                 }
                 catch (Exception ex)
@@ -1027,6 +1036,7 @@ namespace AweCsome
                     }
                     var entity = new T();
                     StoreFromListItem(entity, item);
+                    retries = 0;
                     return entity;
                 }
                 catch (Exception ex)
@@ -1351,6 +1361,7 @@ namespace AweCsome
                             targetFolder = targetFolder.EnsureFolder(part);
                         }
                         context.ExecuteQuery();
+                        retries = 0;
                         return targetFolder.ServerRelativeUrl;
                     }
                 }
@@ -1386,6 +1397,7 @@ namespace AweCsome
                         context.Load(folder.Files);
                         context.ExecuteQuery();
                         if (folder.Files == null) return null;
+                        retries = 0;
                         return folder.Files.Select(q => q.Name).ToList();
                     }
                 }
@@ -1425,6 +1437,7 @@ namespace AweCsome
                             existingFiles.First(q => q.Name == filename).DeleteObject();
                         }
                         context.ExecuteQuery();
+                        retries = 0;
                         return;
                     }
                 }
@@ -1457,6 +1470,7 @@ namespace AweCsome
                         var folder = GetFolderFromDocumentLibrary<T>(context, path);
                         folder.DeleteObject();
                         context.ExecuteQuery();
+                        retries = 0;
                         return;
                     }
                 }
@@ -1502,6 +1516,7 @@ namespace AweCsome
                         ListItemCollection items = list.GetItems(query);
                         clientContext.Load(items, q => q.Include(l => l.Id));
                         clientContext.ExecuteQuery();
+                        retries = 0;
                         return items.Count;
                     }
                 }
