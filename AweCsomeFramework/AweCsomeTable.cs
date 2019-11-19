@@ -30,7 +30,7 @@ namespace AweCsome
         private IAweCsomeField _awecsomeField = new AweCsomeField();
         private IAweCsomeTaxonomy _awecsomeTaxonomy = null;
         private ClientContext _clientContext;
-        private const int MaxRetries = 3;
+        private const int MaxRetries = 10;
 
         public AweCsomeTable(ClientContext clientContext)
         {
@@ -454,7 +454,7 @@ namespace AweCsome
                         retries--;
                         if (ex.Message.Contains("(500)") && retries > 0)
                         {
-                            _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
+                            _log.Warn($"Failed to create field '{property.Name}'. Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                             System.Threading.Thread.Sleep(1000);
                         }
                         else
