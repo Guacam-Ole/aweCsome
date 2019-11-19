@@ -330,7 +330,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else throw;
@@ -402,7 +402,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -454,7 +454,7 @@ namespace AweCsome
                         retries--;
                         if (ex.Message.Contains("(500)") && retries > 0)
                         {
-                            _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                            _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                             System.Threading.Thread.Sleep(1000);
                         }
                         else
@@ -565,7 +565,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -794,7 +794,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -883,7 +883,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -915,7 +915,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -955,7 +955,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -994,7 +994,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1034,7 +1034,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1359,7 +1359,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1394,7 +1394,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1433,7 +1433,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1465,7 +1465,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
@@ -1510,7 +1510,7 @@ namespace AweCsome
                     retries--;
                     if (ex.Message.Contains("(500)") && retries > 0)
                     {
-                        _log.Warn($"Internal Server. Will try again. ErrorCount: {MaxRetries - retries}");
+                        _log.Warn($"Internal Server Error. Will try again. ErrorCount: {MaxRetries - retries}");
                         System.Threading.Thread.Sleep(1000);
                     }
                     else
