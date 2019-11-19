@@ -40,7 +40,7 @@ namespace AweCsome
                 if (_maxRetriesOnServerError != null) return _maxRetriesOnServerError.Value;
                 _maxRetriesOnServerError = 1;
 
-                var configSetting = ConfigurationManager.AppSettings["AweCsomeMaxRetriesOnServerError"];
+                var configSetting = ConfigurationManager.AppSettings["AweCsome.MaxRetriesOnServerError"];
                 if (int.TryParse(configSetting, out int configSettingValue))
                 {
                     _maxRetriesOnServerError = configSettingValue;
