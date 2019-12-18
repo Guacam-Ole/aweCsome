@@ -15,7 +15,7 @@ If you want to build the source by yourself using Visual Studio you need to upda
 Simply type `Update-Package -reinstall` and you should be ready to go.
 
 ## Getting Help
-Documentation can be found at the **Wiki**
+Documentation can be found at the [Wiki](../../../wiki)
 
 ## Build status:
 This is the most current Build status. Even if the status is "failed", there most likely is an older version that works just fine.
