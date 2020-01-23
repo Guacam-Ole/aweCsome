@@ -32,6 +32,7 @@ namespace AweCsome
         private IAweCsomeTaxonomy _awecsomeTaxonomy = null;
         private ClientContext _clientContext;
         private int? _maxRetriesOnServerError = null;
+        private const string VirusStatusField = "_VirusStatus";
 
         public int MaxRetriesOnServerError
         {
@@ -1179,22 +1180,31 @@ namespace AweCsome
             {
                 clientContext.Load(file.Author);
                 clientContext.Load(file.CheckedOutByUser);
-
-                MemoryStream targetStream = new MemoryStream();
-                var stream = file.OpenBinaryStream();
+                var fields = file.ListItemAllFields;
+                clientContext.Load(fields);
+                
                 clientContext.ExecuteQuery();
-                stream.Value.CopyTo(targetStream);
 
                 int authorId = file.Author.Id;
                 int? checkedOutByUser = null;
                 if (file.CheckOutType != CheckOutType.None) checkedOutByUser = file.CheckedOutByUser.Id;
 
-                var virusStatus = file.ListItemAllFields["_VirusStatus"];
-                _log.Debug($"Vstatus: {virusStatus}. Type: {virusStatus?.GetType()}");
-                var status = AweCsomeFile.VirusStatusValues.Clean;
-                if (virusStatus != null) status = (AweCsomeFile.VirusStatusValues)(int)virusStatus;
+                AweCsomeFile.VirusStatusValues virusStatus = AweCsomeFile.VirusStatusValues.Unknown;
+                if (!file.ListItemAllFields.FieldValues.ContainsKey(VirusStatusField))
+                {
+                    // If missing: File has been blocked because of virus
+                    virusStatus = AweCsomeFile.VirusStatusValues.Blocked;
+                }
+                else if (file.ListItemAllFields[VirusStatusField]!=null)
+                {
+                    virusStatus = (AweCsomeFile.VirusStatusValues)int.Parse(file.ListItemAllFields[VirusStatusField] as string);
+                }
+                if (virusStatus!= AweCsomeFile.VirusStatusValues.Clean)
+                {
+                    _log.Warn($"Virus found in '{file.Name}' from {file.Author?.LoginName}");
+                }
 
-                return new AweCsomeFile
+                var aweCsomeFile = new AweCsomeFile
                 {
                     Author = authorId,
                     CheckedOutBy = checkedOutByUser,
@@ -1204,13 +1214,22 @@ namespace AweCsome
                     Filename = file.Name,
                     Length = file.Length,
                     Modified = file.TimeLastModified,
-                    VirusStatus = status,
+                    VirusStatus = virusStatus,
                     Level = (AweCsomeFile.FileLevels)Enum.Parse(typeof(AweCsomeFile.FileLevels), file.Level.ToString()),
                     Version = $"{file.MajorVersion}.{file.MinorVersion}",
-                    Stream = targetStream,
                     Entity = entity,
                     Folder = folder
                 };
+
+                if (virusStatus == AweCsomeFile.VirusStatusValues.Clean)
+                {
+                    MemoryStream targetStream = new MemoryStream();
+                    var stream = file.OpenBinaryStream();
+                    clientContext.ExecuteQuery();
+                    stream.Value.CopyTo(targetStream);
+                    aweCsomeFile.Stream = targetStream;
+                }
+                return aweCsomeFile;
             }
         }
 
@@ -1240,6 +1259,7 @@ namespace AweCsome
 
         public void AttachFileToItem<T>(int id, string filename, Stream filestream)
         {
+            if (filestream == null) return;
             long fileSize = filestream.Length;
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             using (ClientContext context = GetClientContext())
