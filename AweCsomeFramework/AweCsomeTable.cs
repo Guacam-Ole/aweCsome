@@ -1189,6 +1189,11 @@ namespace AweCsome
                 int? checkedOutByUser = null;
                 if (file.CheckOutType != CheckOutType.None) checkedOutByUser = file.CheckedOutByUser.Id;
 
+                var virusStatus = file.ListItemAllFields["_VirusStatus"];
+                _log.Debug($"Vstatus: {virusStatus}. Type: {virusStatus?.GetType()}");
+                var status = AweCsomeFile.VirusStatusValues.Clean;
+                if (virusStatus != null) status = (AweCsomeFile.VirusStatusValues)(int)virusStatus;
+
                 return new AweCsomeFile
                 {
                     Author = authorId,
@@ -1199,6 +1204,7 @@ namespace AweCsome
                     Filename = file.Name,
                     Length = file.Length,
                     Modified = file.TimeLastModified,
+                    VirusStatus = status,
                     Level = (AweCsomeFile.FileLevels)Enum.Parse(typeof(AweCsomeFile.FileLevels), file.Level.ToString()),
                     Version = $"{file.MajorVersion}.{file.MinorVersion}",
                     Stream = targetStream,
