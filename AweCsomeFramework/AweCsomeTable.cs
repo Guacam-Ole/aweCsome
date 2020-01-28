@@ -1239,13 +1239,19 @@ namespace AweCsome
                     Folder = folder
                 };
 
-                if (virusStatus == AweCsomeFile.VirusStatusValues.Clean)
+                    if (virusStatus != AweCsomeFile.VirusStatusValues.Clean) _log.Debug($"Status is '{virusStatus}'. Trying nonetheless ({folder}\\{file.Name})");
+
+                try
                 {
                     MemoryStream targetStream = new MemoryStream();
                     var stream = file.OpenBinaryStream();
                     clientContext.ExecuteQuery();
                     stream.Value.CopyTo(targetStream);
                     aweCsomeFile.Stream = targetStream;
+                }
+                catch (Exception ex)
+                {
+                    _log.Error("Error storing file",ex);
                 }
                 return aweCsomeFile;
             }
