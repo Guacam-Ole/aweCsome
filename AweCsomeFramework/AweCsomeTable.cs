@@ -1190,19 +1190,37 @@ namespace AweCsome
                 if (file.CheckOutType != CheckOutType.None) checkedOutByUser = file.CheckedOutByUser.Id;
 
                 AweCsomeFile.VirusStatusValues virusStatus = AweCsomeFile.VirusStatusValues.Unknown;
-                if (!file.ListItemAllFields.FieldValues.ContainsKey(VirusStatusField))
+                try
                 {
-                    // If missing: File has been blocked because of virus
-                    virusStatus = AweCsomeFile.VirusStatusValues.Blocked;
+                    if (!file.ListItemAllFields.FieldValues.ContainsKey(VirusStatusField))
+                    {
+                        // If missing: File has been blocked because of virus
+                        virusStatus = AweCsomeFile.VirusStatusValues.Blocked;
+                        _log.Warn($"File '{folder}\\{file.Name}' has been blocked");
+                    }
+                    else if (file.ListItemAllFields[VirusStatusField] != null)
+                    {
+                        var vStatus = file.ListItemAllFields[VirusStatusField];
+                        if (int.TryParse(vStatus as string, out int tmpvirusStatus))
+                        {
+                            virusStatus = (AweCsomeFile.VirusStatusValues)tmpvirusStatus;
+                        }
+                        else
+                        {
+                            virusStatus = AweCsomeFile.VirusStatusValues.Clean;
+                            _log.Warn($"Cannot assign Virusstatus '{vStatus}' on file '{folder}\\{file.Name}'. Assume to be fine...");
+                        }
+                    }
+                    if (virusStatus != AweCsomeFile.VirusStatusValues.Clean)
+                    {
+                        _log.Warn($"Virus found in '{folder}\\{file.Name}' from {file.Author?.LoginName}. Status: {virusStatus}");
+                    }
                 }
-                else if (file.ListItemAllFields[VirusStatusField]!=null)
+                catch (Exception ex)
                 {
-                    virusStatus = (AweCsomeFile.VirusStatusValues)int.Parse(file.ListItemAllFields[VirusStatusField] as string);
+                    _log.Error("Error when trying to receive Virus - Status", ex);
                 }
-                if (virusStatus!= AweCsomeFile.VirusStatusValues.Clean)
-                {
-                    _log.Warn($"Virus found in '{file.Name}' from {file.Author?.LoginName}");
-                }
+
 
                 var aweCsomeFile = new AweCsomeFile
                 {
