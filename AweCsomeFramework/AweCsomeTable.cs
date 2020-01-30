@@ -31,25 +31,18 @@ namespace AweCsome
         private IAweCsomeField _awecsomeField = new AweCsomeField();
         private IAweCsomeTaxonomy _awecsomeTaxonomy = null;
         private ClientContext _clientContext;
-        private int? _maxRetriesOnServerError = null;
+        private int MaxRetriesOnServerError
+        {
+            get { return EntityHelper.GetConfigSetting<int>(nameof(MaxRetriesOnServerError), 1); }
+        }
+
+        private bool ErrorDeleteMissingFile
+        {
+            get { return EntityHelper.GetConfigSetting<bool>(nameof(ErrorDeleteMissingFile), true); }
+        }
+
         private const string VirusStatusField = "_VirusStatus";
 
-        public int MaxRetriesOnServerError
-        {
-            get
-            {
-                if (_maxRetriesOnServerError != null) return _maxRetriesOnServerError.Value;
-                _maxRetriesOnServerError = 1;
-
-                var configSetting = ConfigurationManager.AppSettings["AweCsome.MaxRetriesOnServerError"];
-                if (int.TryParse(configSetting, out int configSettingValue))
-                {
-                    _maxRetriesOnServerError = configSettingValue;
-                }
-                return _maxRetriesOnServerError.Value;
-
-            }
-        }
 
         public AweCsomeTable(ClientContext clientContext)
         {
@@ -1182,7 +1175,7 @@ namespace AweCsome
                 clientContext.Load(file.CheckedOutByUser);
                 var fields = file.ListItemAllFields;
                 clientContext.Load(fields);
-                
+
                 clientContext.ExecuteQuery();
 
                 int authorId = file.Author.Id;
@@ -1221,7 +1214,6 @@ namespace AweCsome
                     _log.Error("Error when trying to receive Virus - Status", ex);
                 }
 
-
                 var aweCsomeFile = new AweCsomeFile
                 {
                     Author = authorId,
@@ -1239,7 +1231,7 @@ namespace AweCsome
                     Folder = folder
                 };
 
-                    if (virusStatus != AweCsomeFile.VirusStatusValues.Clean) _log.Debug($"Status is '{virusStatus}'. Trying nonetheless ({folder}\\{file.Name})");
+                if (virusStatus != AweCsomeFile.VirusStatusValues.Clean) _log.Debug($"Status is '{virusStatus}'. Trying nonetheless ({folder}\\{file.Name})");
 
                 try
                 {
@@ -1251,7 +1243,7 @@ namespace AweCsome
                 }
                 catch (Exception ex)
                 {
-                    _log.Error("Error storing file",ex);
+                    _log.Error("Error storing file", ex);
                 }
                 return aweCsomeFile;
             }
@@ -1317,7 +1309,7 @@ namespace AweCsome
                 context.Load(allFiles);
                 context.ExecuteQuery();
                 var oldFile = allFiles.FirstOrDefault(af => af.FileName == filename);
-                if (oldFile == null) throw new FileNotFoundException($"File '{filename}' not found on {listname}/{id}");
+                if (oldFile == null && ErrorDeleteMissingFile) throw new FileNotFoundException($"File '{filename}' not found on {listname}/{id}");
                 oldFile.DeleteObject();
                 context.ExecuteQuery();
                 _log.DebugFormat($"File '{filename}' deleted from {listname}/{id}");
