@@ -31,24 +31,18 @@ namespace AweCsome
         private IAweCsomeField _awecsomeField = new AweCsomeField();
         private IAweCsomeTaxonomy _awecsomeTaxonomy = null;
         private ClientContext _clientContext;
-        private int? _maxRetriesOnServerError = null;
-
-        public int MaxRetriesOnServerError
+        private int MaxRetriesOnServerError
         {
-            get
-            {
-                if (_maxRetriesOnServerError != null) return _maxRetriesOnServerError.Value;
-                _maxRetriesOnServerError = 1;
-
-                var configSetting = ConfigurationManager.AppSettings["AweCsome.MaxRetriesOnServerError"];
-                if (int.TryParse(configSetting, out int configSettingValue))
-                {
-                    _maxRetriesOnServerError = configSettingValue;
-                }
-                return _maxRetriesOnServerError.Value;
-
-            }
+            get { return EntityHelper.GetConfigSetting<int>(nameof(MaxRetriesOnServerError), 1); }
         }
+
+        private bool ErrorDeleteMissingFile
+        {
+            get { return EntityHelper.GetConfigSetting<bool>(nameof(ErrorDeleteMissingFile), true); }
+        }
+
+        private const string VirusStatusField = "_VirusStatus";
+
 
         public AweCsomeTable(ClientContext clientContext)
         {
@@ -1179,17 +1173,48 @@ namespace AweCsome
             {
                 clientContext.Load(file.Author);
                 clientContext.Load(file.CheckedOutByUser);
+                var fields = file.ListItemAllFields;
+                clientContext.Load(fields);
 
-                MemoryStream targetStream = new MemoryStream();
-                var stream = file.OpenBinaryStream();
                 clientContext.ExecuteQuery();
-                stream.Value.CopyTo(targetStream);
 
                 int authorId = file.Author.Id;
                 int? checkedOutByUser = null;
                 if (file.CheckOutType != CheckOutType.None) checkedOutByUser = file.CheckedOutByUser.Id;
 
-                return new AweCsomeFile
+                AweCsomeFile.VirusStatusValues virusStatus = AweCsomeFile.VirusStatusValues.Unknown;
+                try
+                {
+                    if (!file.ListItemAllFields.FieldValues.ContainsKey(VirusStatusField))
+                    {
+                        // If missing: File has been blocked because of virus
+                        virusStatus = AweCsomeFile.VirusStatusValues.Blocked;
+                        _log.Warn($"File '{folder}\\{file.Name}' has been blocked");
+                    }
+                    else if (file.ListItemAllFields[VirusStatusField] != null)
+                    {
+                        var vStatus = file.ListItemAllFields[VirusStatusField];
+                        if (int.TryParse(vStatus as string, out int tmpvirusStatus))
+                        {
+                            virusStatus = (AweCsomeFile.VirusStatusValues)tmpvirusStatus;
+                        }
+                        else
+                        {
+                            virusStatus = AweCsomeFile.VirusStatusValues.Clean;
+                            _log.Warn($"Cannot assign Virusstatus '{vStatus}' on file '{folder}\\{file.Name}'. Assume to be fine...");
+                        }
+                    }
+                    if (virusStatus != AweCsomeFile.VirusStatusValues.Clean)
+                    {
+                        _log.Warn($"Virus found in '{folder}\\{file.Name}' from {file.Author?.LoginName}. Status: {virusStatus}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.Error("Error when trying to receive Virus - Status", ex);
+                }
+
+                var aweCsomeFile = new AweCsomeFile
                 {
                     Author = authorId,
                     CheckedOutBy = checkedOutByUser,
@@ -1199,12 +1224,28 @@ namespace AweCsome
                     Filename = file.Name,
                     Length = file.Length,
                     Modified = file.TimeLastModified,
+                    VirusStatus = virusStatus,
                     Level = (AweCsomeFile.FileLevels)Enum.Parse(typeof(AweCsomeFile.FileLevels), file.Level.ToString()),
                     Version = $"{file.MajorVersion}.{file.MinorVersion}",
-                    Stream = targetStream,
                     Entity = entity,
                     Folder = folder
                 };
+
+                if (virusStatus != AweCsomeFile.VirusStatusValues.Clean) _log.Debug($"Status is '{virusStatus}'. Trying nonetheless ({folder}\\{file.Name})");
+
+                try
+                {
+                    MemoryStream targetStream = new MemoryStream();
+                    var stream = file.OpenBinaryStream();
+                    clientContext.ExecuteQuery();
+                    stream.Value.CopyTo(targetStream);
+                    aweCsomeFile.Stream = targetStream;
+                }
+                catch (Exception ex)
+                {
+                    _log.Error("Error storing file", ex);
+                }
+                return aweCsomeFile;
             }
         }
 
@@ -1234,6 +1275,7 @@ namespace AweCsome
 
         public void AttachFileToItem<T>(int id, string filename, Stream filestream)
         {
+            if (filestream == null) return;
             long fileSize = filestream.Length;
             string listname = EntityHelper.GetInternalNameFromEntityType(typeof(T));
             using (ClientContext context = GetClientContext())
@@ -1267,7 +1309,7 @@ namespace AweCsome
                 context.Load(allFiles);
                 context.ExecuteQuery();
                 var oldFile = allFiles.FirstOrDefault(af => af.FileName == filename);
-                if (oldFile == null) throw new FileNotFoundException($"File '{filename}' not found on {listname}/{id}");
+                if (oldFile == null && ErrorDeleteMissingFile) throw new FileNotFoundException($"File '{filename}' not found on {listname}/{id}");
                 oldFile.DeleteObject();
                 context.ExecuteQuery();
                 _log.DebugFormat($"File '{filename}' deleted from {listname}/{id}");

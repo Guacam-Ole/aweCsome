@@ -11,6 +11,7 @@ namespace AweCsome.Entities
 
         public enum CheckoutTypes { None, Online, Offline }
         public enum FileLevels { Checkout, Draft, Published }
+        public enum VirusStatusValues {  Clean=0, Reported=1, CanBeRemoved=2, Removed=3, CantClean=4, DeleteRequested=5, Timeout=6, Unknown=100, Blocked=101};
 
         public long Length { get; set; }
         public string Version { get; set; }
@@ -22,5 +23,7 @@ namespace AweCsome.Entities
         public DateTime Created { get; set; }
         public DateTime? Modified { get; set; }
         public string Folder { get; set; }
+
+        public VirusStatusValues VirusStatus { get; set; }
     }
 }
