@@ -10,6 +10,8 @@ using Microsoft.SharePoint.Client.Taxonomy;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Configuration;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -19,7 +21,23 @@ namespace AweCsome
 {
     public static class EntityHelper
     {
+        private const string ConfigSectionName= "awecsome";
         private static ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public static string GetConfigSetting(string settingname, string defaultValue)
+        {
+            var  section = (NameValueCollection)ConfigurationManager.GetSection(ConfigSectionName);
+            if (section == null) return defaultValue;
+            if (!section.AllKeys.Contains(settingname)) return defaultValue;
+            return section[settingname];
+        }
+
+        public static T GetConfigSetting<T>(string settingname, T defaultValue)
+        {
+            var stringValue = GetConfigSetting(settingname, defaultValue.ToString());
+            if (stringValue == null) return defaultValue;
+            return (T)Convert.ChangeType(stringValue, typeof(T));
+        }
+
 
         private static void RemoveSuffixFromName(ref string name, string suffix)
         {
