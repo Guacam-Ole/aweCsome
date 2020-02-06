@@ -1517,7 +1517,9 @@ namespace AweCsome
                         context.ExecuteQuery();
                         foreach (string filename in filenames)
                         {
-                            existingFiles.First(q => q.Name == filename).DeleteObject();
+                            var existingFile = existingFiles.FirstOrDefault(q => q.Name == filename);
+                            if (existingFile == null && !ErrorDeleteMissingFile) continue;
+                            existingFile.DeleteObject();
                         }
                         context.ExecuteQuery();
                         retries = 0;
