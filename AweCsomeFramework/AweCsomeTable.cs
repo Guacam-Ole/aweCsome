@@ -1187,9 +1187,8 @@ namespace AweCsome
                 {
                     if (!file.ListItemAllFields.FieldValues.ContainsKey(VirusStatusField))
                     {
-                        // If missing: File has been blocked because of virus
-                        virusStatus = AweCsomeFile.VirusStatusValues.Blocked;
-                        _log.Warn($"File '{folder}\\{file.Name}' has been blocked");
+                        virusStatus = AweCsomeFile.VirusStatusValues.Clean;
+                        _log.Debug($"File '{folder}\\{file.Name}' contains no virus information.");
                     }
                     else if (file.ListItemAllFields[VirusStatusField] != null)
                     {
