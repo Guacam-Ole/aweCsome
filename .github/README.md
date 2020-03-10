@@ -42,8 +42,8 @@ This is the most current Build status. Even if the status is "failed", there mos
 ## NuGet-Packages
 All AweCsome-Packages are available as NuGet-Packages. They can be found here:
 
-[AweCsome.Interfaces](https://www.nuget.org/packages/AweCsome.Interfaces/)
+[AweCsome.Interfaces](https://www.nuget.org/packages/AweCsome.Interfaces/) https://img.shields.io/nuget/v/AweCsome.Interfaces https://img.shields.io/nuget/dt/AweCsome.Interfaces
 
-[AweCsome.O365](https://www.nuget.org/packages/AweCsome.O365/)
+[AweCsome.O365](https://www.nuget.org/packages/AweCsome.O365/) https://img.shields.io/nuget/v/AweCsome.O365 https://img.shields.io/nuget/dt/AweCsome.O365
 
-[AweCSome.2013](https://www.nuget.org/packages/AweCsome.2013/)
+[AweCSome.2013](https://www.nuget.org/packages/AweCsome.2013/) https://img.shields.io/nuget/v/AweCsome.2013 https://img.shields.io/nuget/dt/AweCsome.2013
