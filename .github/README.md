@@ -46,4 +46,4 @@ All AweCsome-Packages are available as NuGet-Packages. They can be found here:
 
 [AweCsome.O365](https://www.nuget.org/packages/AweCsome.O365/) ![O365 Version](https://img.shields.io/nuget/v/AweCsome.O365) ![O365 Downloads](https://img.shields.io/nuget/dt/AweCsome.O365)
 
-[AweCSome.2013](https://www.nuget.org/packages/AweCsome.2013/) ![2013 Version](https://img.shields.io/nuget/v/AweCsome.2013) ![2913 Downloads](https://img.shields.io/nuget/dt/AweCsome.2013)
+[AweCSome.2013](https://www.nuget.org/packages/AweCsome.2013/) ![2013 Version](https://img.shields.io/nuget/v/AweCsome.2013) ![2013 Downloads](https://img.shields.io/nuget/dt/AweCsome.2013)
